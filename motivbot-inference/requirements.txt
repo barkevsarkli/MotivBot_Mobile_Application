@@ -1,0 +1,17 @@
+# Python 3.11. torch from PyPI is CPU (plus MPS on Apple Silicon); the service runs on CPU.
+torch==2.14.1
+transformers==5.18.0
+huggingface-hub==1.33.0
+safetensors==0.8.0
+sentencepiece==0.2.2
+protobuf==7.36.2
+numpy==2.4.6
+pydantic==2.13.5
+fastapi==0.142.2
+starlette==1.7.0
+httpx==0.28.1  # required by huggingface-hub
+uvicorn[standard]==0.54.0
+
+# tests
+pytest==9.1.1
+httpx2==2.13.1
