@@ -86,6 +86,11 @@ def test_build_model_inputs_trims_text():
     assert (inputs.age, inputs.sex, inputs.phq, inputs.rses) == (25, 0.0, 10, 30)
 
 
+def test_text_whitespace_is_collapsed():
+    inputs = build_model_inputs("Bugün\n\n çok   yorgunum\t ", 25, "male", [0] * 9, [0] * 10)
+    assert inputs.text == "Bugün çok yorgunum"
+
+
 def test_empty_text_rejected():
     with pytest.raises(ScoringError):
         build_model_inputs("   \n", 25, "male", [0] * 9, [0] * 10)

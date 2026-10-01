@@ -30,7 +30,8 @@ class ModelInputs:
 
 
 def clean_text(text: str) -> str:
-    cleaned = text.strip()
+    """Basic cleaning as in training: collapse runs of whitespace and trim."""
+    cleaned = " ".join(text.split())
     if not cleaned:
         raise ScoringError("text must not be empty")
     return cleaned

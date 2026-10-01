@@ -88,15 +88,16 @@ notebook output within ±0.5 percentage points.
 ATS allows plain HTTP only for local networking (`NSAllowsLocalNetworking`), so this works for
 LAN IPs and `localhost` but not for public hosts.
 
-## Open assumptions (pending the model author)
+## Model inputs: confirmed and open
 
 All of these live in `app/config.py` and can be overridden with env vars.
 
-| Setting | Current value | Question |
+| Setting | Current value | Status |
 |---|---|---|
-| `GENDER_MAP` | male 0.0, female 1.0, unspecified 0.5 | The notebook only says "e.g. 0=male, 1=female". How was gender encoded in training, and what should "prefer not to say" be? |
-| `NORMALIZE_METADATA` | `False` (raw values) | The notebook's test cell passes raw values, but its commented `predict_text_only` calls zeros "population mean (Z-Score = 0.0)", which suggests training z-scored the metadata. If so, we need the training mean/std (`METADATA_MEAN`/`METADATA_STD`). |
-| `TEMPERATURE` | 0.45 | Taken from the notebook. Confirm it is the calibrated value for this checkpoint. |
+| `NORMALIZE_METADATA` | `False` (raw values) | Confirmed by the model author: training used raw inputs; normalisation hurt performance. |
+| `GENDER_MAP` | male 0.0, female 1.0, unspecified 0.5 | male/female confirmed. "unspecified" = 0.5 is our assumption; training data only had 0 and 1. |
+| Text cleaning | collapse whitespace, trim | Confirmed as "basic cleaning such as removing extra white space". Any further cleaning steps are still to be confirmed. |
+| `TEMPERATURE` | 0.45 | Taken from the notebook. Not yet confirmed for this checkpoint. |
 | `MAX_LEN` | 256 | Taken from the notebook. |
 
 Env vars: `MOTIVBOT_MODEL_ID`, `MOTIVBOT_TEMPERATURE`, `MOTIVBOT_MAX_LEN`,

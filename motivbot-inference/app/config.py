@@ -39,16 +39,16 @@ LEVELS: list[str] = ["No", "Low", "High"]
 MAX_LEN: int = _env_int("MOTIVBOT_MAX_LEN", 256)
 TEMPERATURE: float = _env_float("MOTIVBOT_TEMPERATURE", 0.45)
 
-# The gender encoding and normalisation are unconfirmed assumptions pending the
-# model author (Amir). Change them only here.
+# Confirmed by the model author (Amir): male = 0, female = 1, and metadata is used
+# raw (no normalisation). "unspecified" = 0.5 is still our own assumption; training
+# data only had 0 and 1. Change these only here.
 GENDER_MAP: dict[str, float] = _env_json(
     "MOTIVBOT_GENDER_MAP", {"male": 0.0, "female": 1.0, "unspecified": 0.5}
 )
-# False = raw values, as in the notebook's test cell. When True, each metadata
-# feature [age, sex, rses, phq] becomes (value - mean) / std.
+# False = raw values, as used in training (confirmed). Kept only for experiments:
+# when True, each metadata feature [age, sex, rses, phq] becomes (value - mean) / std.
 NORMALIZE_METADATA: bool = _env_bool("MOTIVBOT_NORMALIZE_METADATA", False)
-# Placeholders: only used when NORMALIZE_METADATA is True. Replace with the
-# training-set statistics once Amir provides them.
+# Placeholders: only used when NORMALIZE_METADATA is True.
 METADATA_MEAN: list[float] = _env_json("MOTIVBOT_METADATA_MEAN", [0.0, 0.0, 0.0, 0.0])
 METADATA_STD: list[float] = _env_json("MOTIVBOT_METADATA_STD", [1.0, 1.0, 1.0, 1.0])
 
