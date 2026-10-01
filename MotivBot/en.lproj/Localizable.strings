@@ -167,18 +167,17 @@
 "qg_7" = "Please select 'Neither Agree nor Disagree' for this question.";
 
 /* Screen 3: Loading */
-"loading_title" = "Analyzing Your Responses";
-"loading_subtitle" = "We are preparing a personalized message for you...";
+"loading_title" = "Analysing…";
+"loading_subtitle" = "We are looking at what you shared. This usually takes a few seconds.";
 "loading_tip_1" = "💡 Taking a deep breath can reset your nervous system";
 "loading_tip_2" = "🌱 Every small step toward self-awareness matters";
 "loading_tip_3" = "✨ Expressing yourself honestly is a sign of courage";
 "retry_button" = "Retry";
-"api_error_fallback" = "\"Every moment is a fresh beginning.\" — T.S. Eliot\n\nEven when facing barriers, your willingness to reflect shows incredible strength.";
 
 /* Screen 4: Result */
-"result_title" = "Your Personalized Message";
+"result_title" = "What you shared today";
 "reflection_title" = "Final Reflection";
-"reflection_question" = "How did this message make you feel? Do you feel any better?";
+"reflection_question" = "How do you feel after this check-in?";
 "reflection_optional" = "Share your thoughts (optional)";
 "reflection_placeholder" = "Type your reflections here...";
 "submit_reflection" = "Complete Session";
@@ -195,25 +194,42 @@
 "completion_message" = "Thank you for taking the time to reflect on your well-being. Remember, every step toward self-awareness is a step toward growth.";
 "restart_button" = "Restart";
 
-/* Screen 4: Motivation cards */
-"cards_subtitle" = "Three messages, three parts of your profile. Swipe right if it resonates, left if it doesn't.";
-"cards_done_subtitle" = "Thanks for the feedback on all three messages.";
-"card_liked" = "LIKED";
-"card_disliked" = "NOT FOR ME";
-"card_swipe_left_hint" = "Swipe left";
-"card_swipe_right_hint" = "Swipe right";
-"card_section_generic" = "For you";
+/* Screen 4: Result (model results) */
+/* Wording is gentle and non-diagnostic. Never add percentages or diagnostic labels here. */
+"loading_model_starting" = "Model is starting up, this can take a minute.";
+"loading_failed_subtitle" = "We couldn't finish the analysis just yet.";
+"error_server_unreachable" = "We couldn't reach the analysis service. Please make sure it is running, then try again.";
+"error_model_loading" = "The model is still starting up. Please try again in a moment.";
+"error_invalid_input" = "Some of your answers couldn't be processed. Please try again.";
+"error_generic" = "Something went wrong while preparing your results. Please try again.";
+"integer_invalid_hint" = "Please enter a whole number between %1$d and %2$d.";
 
-/* Offline fallback cards */
-"fallback_card_1_section" = "Emotional Awareness";
-"fallback_card_1_quote" = "Every moment is a fresh beginning.";
-"fallback_card_1_author" = "T.S. Eliot";
-"fallback_card_1_message" = "Naming what you feel is already a step forward. The willingness you showed today is the same strength you can lean on tomorrow.";
-"fallback_card_2_section" = "Self-Esteem";
-"fallback_card_2_quote" = "You are not required to be perfect to be worthy.";
-"fallback_card_2_author" = "";
-"fallback_card_2_message" = "Being hard on yourself is not the same as growing. Give yourself the patience you would offer a close friend.";
-"fallback_card_3_section" = "Mood and Energy";
-"fallback_card_3_quote" = "Rest is not a reward for finished work; it is part of the work.";
-"fallback_card_3_author" = "";
-"fallback_card_3_message" = "Low energy is information, not failure. One small, kind act toward yourself today is enough.";
+"result_subtitle" = "A gentle look at how things seem for you right now.";
+"result_disclaimer" = "This is not a diagnosis. These results are a reflection of what you shared today.";
+"share_results_button" = "Share results";
+
+"support_title" = "You don't have to carry this alone";
+"support_body" = "It may help to talk to someone you trust, or to a mental-health professional. Reaching out is a sign of strength.";
+// TODO: text to be approved by the psychology team
+"support_resources_body" = "Information about support services will be added here.";
+
+"dim_anxiety_title" = "Worry and unease";
+"dim_anxiety_no" = "You seem fairly calm right now.";
+"dim_anxiety_low" = "A little worry seems to be on your mind. That's a very human thing.";
+"dim_anxiety_high" = "It sounds like worry is taking up a lot of space lately.";
+"dim_mood_title" = "Mood and hope";
+"dim_mood_no" = "Your mood seems fairly steady at the moment.";
+"dim_mood_low" = "You may be feeling a bit low lately. Be gentle with yourself.";
+"dim_mood_high" = "It sounds like things have felt heavy lately. You don't have to carry that alone.";
+"dim_self_esteem_title" = "How you see yourself";
+"dim_self_esteem_no" = "You seem to see yourself with kindness right now.";
+"dim_self_esteem_low" = "You might be a little hard on yourself at times.";
+"dim_self_esteem_high" = "It sounds like you've been quite hard on yourself lately. You deserve the same kindness you'd give a friend.";
+"dim_positive_title" = "Joy and energy";
+"dim_positive_no" = "Joy may feel a bit out of reach right now. Small, gentle moments can still help.";
+"dim_positive_low" = "There are some bright moments in what you shared.";
+"dim_positive_high" = "There seems to be real joy and energy in what you shared.";
+"dim_tension_title" = "Tension and difficult feelings";
+"dim_tension_no" = "Difficult feelings don't seem to weigh on you much right now.";
+"dim_tension_low" = "Some difficult feelings seem to be present. That's okay.";
+"dim_tension_high" = "It sounds like frustration or tension has been strong lately. These feelings make sense, and it can help to give them some room.";

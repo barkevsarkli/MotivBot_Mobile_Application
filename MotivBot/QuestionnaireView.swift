@@ -5,6 +5,7 @@ struct QuestionnaireView: View {
     @Environment(WellBeingViewModel.self) var viewModel
     @Environment(LocalizationManager.self) var localization
     @State private var showContent = false
+    @FocusState private var isInputFocused: Bool
     
     var body: some View {
         VStack(spacing: 0) {
@@ -271,6 +272,8 @@ struct QuestionnaireView: View {
                 scaleInput(range: range)
             case .freeText:
                 freeTextInput
+            case .integer(let range):
+                integerInput(range: range)
             }
         }
         .padding(20)
@@ -314,6 +317,7 @@ struct QuestionnaireView: View {
             get: { viewModel.freeTextAnswer },
             set: { viewModel.freeTextAnswer = $0 }
         ))
+        .focused($isInputFocused)
         .font(.system(size: 16, design: .rounded))
         .frame(minHeight: 120)
         .padding(12)
@@ -325,6 +329,40 @@ struct QuestionnaireView: View {
         )
     }
     
+    private func integerInput(range: ClosedRange<Int>) -> some View {
+        let text = viewModel.freeTextAnswer.trimmingCharacters(in: .whitespacesAndNewlines)
+        let showsHint = !text.isEmpty && viewModel.integerAnswer(in: range) == nil
+
+        return VStack(alignment: .leading, spacing: 8) {
+            TextField("", text: Binding(
+                get: { viewModel.freeTextAnswer },
+                set: { viewModel.freeTextAnswer = String($0.prefix(3)) }
+            ))
+            .keyboardType(.numberPad)
+            .focused($isInputFocused)
+            .font(.system(size: 22, weight: .semibold, design: .rounded))
+            .padding(14)
+            .background(Color.gray.opacity(0.05))
+            .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(
+                        showsHint ? Color.orange.opacity(0.6) : Color.gray.opacity(0.2),
+                        lineWidth: 1
+                    )
+            )
+
+            if showsHint {
+                Text(String(format: localization.localizedString("integer_invalid_hint"), range.lowerBound, range.upperBound))
+                    .font(.system(size: 13, design: .rounded))
+                    .foregroundColor(.orange)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: showsHint)
+    }
+
     // MARK: - Option Row
     
     private func optionRow(_ option: AnswerOption) -> some View {
@@ -383,6 +421,8 @@ struct QuestionnaireView: View {
                         lineWidth: 1
                     )
             )
+            // Make the whole row tappable, not only the text and the radio outline.
+            .contentShape(RoundedRectangle(cornerRadius: 14))
         }
         .buttonStyle(.plain)
     }
@@ -393,6 +433,7 @@ struct QuestionnaireView: View {
         HStack(spacing: 12) {
             if viewModel.currentSectionIndex > 0 || viewModel.currentQuestionIndex > 0 {
                 Button(action: {
+                    isInputFocused = false
                     viewModel.previousQuestion()
                 }) {
                     Image(systemName: "arrow.left")
@@ -407,6 +448,8 @@ struct QuestionnaireView: View {
             }
             
             Button(action: {
+                // Dismiss the keyboard before the text field leaves the screen.
+                isInputFocused = false
                 viewModel.nextQuestion()
             }) {
                 HStack(spacing: 8) {

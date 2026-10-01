@@ -158,17 +158,16 @@
 "qg_6" = "Aptal gibi göründüğümden endişeliyim.";
 "qg_7" = "Bu soruyu lütfen 'ne katılıyorum ne katılmıyorum' şeklince yanıtlayınız.";
 
-"loading_title" = "Yanıtlarınız Analiz Ediliyor";
-"loading_subtitle" = "Sizin için kişiselleştirilmiş bir mesaj hazırlıyoruz...";
+"loading_title" = "Analiz ediliyor…";
+"loading_subtitle" = "Paylaştıklarınıza bakıyoruz. Bu genellikle birkaç saniye sürer.";
 "loading_tip_1" = "💡 Derin bir nefes almak sinir sisteminizi sıfırlayabilir";
 "loading_tip_2" = "🌱 Öz farkındalığa yönelik her küçük adım önemlidir";
 "loading_tip_3" = "✨ Kendinizi dürüstçe ifade ederek cesaret gösterdiniz";
 "retry_button" = "Tekrar Dene";
-"api_error_fallback" = "\"Her an yeni bir başlangıçtır.\" — T.S. Eliot\n\nEngellerle karşılaştığımızda bile, duygularınız üzerine düşünme isteğiniz inanılmaz bir güç gösterir.";
 
-"result_title" = "Kişiselleştirilmiş Mesajınız";
+"result_title" = "Bugün paylaştıklarınız";
 "reflection_title" = "Son Düşünce";
-"reflection_question" = "Bu mesaj sizi nasıl hissettirdi? Kendinizi daha iyi hissediyor musunuz?";
+"reflection_question" = "Bu değerlendirmeden sonra kendinizi nasıl hissediyorsunuz?";
 "reflection_optional" = "Düşüncelerinizi paylaşın (isteğe bağlı)";
 "reflection_placeholder" = "Düşüncelerinizi buraya yazın...";
 "submit_reflection" = "Oturumu Tamamla";
@@ -183,25 +182,42 @@
 "completion_message" = "Ruhsal sağlığınız üzerine düşünmeye zaman ayırdığınız için teşekkürler. Unutmayın, öz farkındalığa doğru attığınız her adım, büyümeye doğru atılmış bir adımdır.";
 "restart_button" = "Tekrar Başla";
 
-/* Ekran 4: Motivasyon kartları */
-"cards_subtitle" = "Üç mesaj, profilinizin üç farklı yönü. Size iyi geldiyse sağa, gelmediyse sola kaydırın.";
-"cards_done_subtitle" = "Üç mesajın tümü için geri bildiriminiz alındı, teşekkürler.";
-"card_liked" = "BEĞENDİM";
-"card_disliked" = "BANA GÖRE DEĞİL";
-"card_swipe_left_hint" = "Sola kaydır";
-"card_swipe_right_hint" = "Sağa kaydır";
-"card_section_generic" = "Size özel";
+/* Ekran 4: Sonuç (model sonuçları) */
+/* Wording is gentle and non-diagnostic. Never add percentages or diagnostic labels here. */
+"loading_model_starting" = "Model başlatılıyor, bu bir dakika kadar sürebilir.";
+"loading_failed_subtitle" = "Analizi henüz tamamlayamadık.";
+"error_server_unreachable" = "Analiz servisine ulaşılamadı. Lütfen servisin çalıştığından emin olup tekrar deneyin.";
+"error_model_loading" = "Model hâlâ başlatılıyor. Lütfen birazdan tekrar deneyin.";
+"error_invalid_input" = "Yanıtlarınızın bir kısmı işlenemedi. Lütfen tekrar deneyin.";
+"error_generic" = "Sonuçlarınız hazırlanırken bir sorun oluştu. Lütfen tekrar deneyin.";
+"integer_invalid_hint" = "Lütfen %1$d ile %2$d arasında bir tam sayı girin.";
 
-/* Çevrimdışı yedek kartlar */
-"fallback_card_1_section" = "Duygusal Farkındalık";
-"fallback_card_1_quote" = "Her an yeni bir başlangıçtır.";
-"fallback_card_1_author" = "T.S. Eliot";
-"fallback_card_1_message" = "Ne hissettiğinizi adlandırmak bile başlı başına bir adım. Bugün gösterdiğiniz istek, yarın da dayanabileceğiniz bir güç.";
-"fallback_card_2_section" = "Öz Saygı";
-"fallback_card_2_quote" = "Değerli olmak için kusursuz olmanız gerekmiyor.";
-"fallback_card_2_author" = "";
-"fallback_card_2_message" = "Kendinize sert davranmak, gelişmekle aynı şey değil. Yakın bir arkadaşınıza göstereceğiniz sabrı kendinize de gösterin.";
-"fallback_card_3_section" = "Ruh Hali ve Enerji";
-"fallback_card_3_quote" = "Dinlenmek işin ödülü değil, işin bir parçasıdır.";
-"fallback_card_3_author" = "";
-"fallback_card_3_message" = "Düşük enerji bir başarısızlık değil, bir bilgi. Bugün kendinize yapacağınız küçük bir iyilik yeterli.";
+"result_subtitle" = "Şu an kendinizi nasıl hissettiğinize nazik bir bakış.";
+"result_disclaimer" = "Bu bir tanı değildir. Bu sonuçlar bugün paylaştıklarınızın bir yansımasıdır.";
+"share_results_button" = "Sonuçları paylaş";
+
+"support_title" = "Bununla tek başınıza baş etmek zorunda değilsiniz";
+"support_body" = "Güvendiğiniz biriyle ya da bir ruh sağlığı uzmanıyla konuşmak iyi gelebilir. Destek istemek bir güç göstergesidir.";
+// TODO: text to be approved by the psychology team
+"support_resources_body" = "Destek hizmetleriyle ilgili bilgiler buraya eklenecektir.";
+
+"dim_anxiety_title" = "Endişe ve kaygı";
+"dim_anxiety_no" = "Şu an oldukça sakin görünüyorsunuz.";
+"dim_anxiety_low" = "Aklınızda biraz endişe var gibi görünüyor; bu çok insani bir şey.";
+"dim_anxiety_high" = "Son zamanlarda endişe hayatınızda epey yer kaplıyor gibi görünüyor.";
+"dim_mood_title" = "Ruh hali ve umut";
+"dim_mood_no" = "Ruh haliniz şu an oldukça dengeli görünüyor.";
+"dim_mood_low" = "Son zamanlarda biraz durgun hissediyor olabilirsiniz. Kendinize nazik davranın.";
+"dim_mood_high" = "Son zamanlarda her şey biraz ağır gelmiş gibi görünüyor. Bunu tek başınıza taşımak zorunda değilsiniz.";
+"dim_self_esteem_title" = "Kendinize bakışınız";
+"dim_self_esteem_no" = "Şu an kendinize şefkatle bakıyor gibisiniz.";
+"dim_self_esteem_low" = "Zaman zaman kendinize biraz sert davranıyor olabilirsiniz.";
+"dim_self_esteem_high" = "Son zamanlarda kendinize oldukça sert davranıyor gibisiniz. Bir arkadaşınıza göstereceğiniz nezaketi siz de hak ediyorsunuz.";
+"dim_positive_title" = "Neşe ve enerji";
+"dim_positive_no" = "Neşe şu an biraz uzak gelebilir. Küçük, nazik anlar yine de iyi gelebilir.";
+"dim_positive_low" = "Paylaştıklarınızda bazı aydınlık anlar var.";
+"dim_positive_high" = "Paylaştıklarınızda gerçek bir neşe ve enerji var gibi görünüyor.";
+"dim_tension_title" = "Gerginlik ve zor duygular";
+"dim_tension_no" = "Zor duygular şu an üzerinizde pek ağırlık yapmıyor gibi görünüyor.";
+"dim_tension_low" = "Bazı zor duygular var gibi görünüyor; bu gayet normal.";
+"dim_tension_high" = "Son zamanlarda öfke ya da gerginlik epey yoğun görünüyor. Bu duygular anlaşılır ve onlara biraz alan tanımak iyi gelebilir.";

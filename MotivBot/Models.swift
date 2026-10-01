@@ -13,6 +13,8 @@ enum QuestionType: Equatable {
     case singleChoice
     case scale(range: ClosedRange<Int>)
     case freeText
+    /// Whole number typed on a number pad, accepted only inside `range`.
+    case integer(range: ClosedRange<Int>)
 }
 
 struct Question: Identifiable {
@@ -21,13 +23,16 @@ struct Question: Identifiable {
     let type: QuestionType
     let options: [AnswerOption]?
     let imageName: String?
+    /// Optional questions can be skipped with an empty answer.
+    let isOptional: Bool
     
-    init(id: Int, textKey: String, type: QuestionType = .singleChoice, options: [AnswerOption]? = nil, imageName: String? = nil) {
+    init(id: Int, textKey: String, type: QuestionType = .singleChoice, options: [AnswerOption]? = nil, imageName: String? = nil, isOptional: Bool = false) {
         self.id = id
         self.textKey = textKey
         self.type = type
         self.options = options
         self.imageName = imageName
+        self.isOptional = isOptional
     }
 }
 
@@ -79,7 +84,7 @@ struct TestData {
             titleKey: "section_a_title",
             descriptionKey: "section_a_description",
             questions: [
-                Question(id: 1, textKey: "qa_1", type: .freeText),
+                Question(id: 1, textKey: "qa_1", type: .integer(range: PredictionRequestBuilder.ageRange)),
                 Question(
                     id: 2,
                     textKey: "qa_2",
@@ -125,7 +130,8 @@ struct TestData {
                 Question(
                     id: 6,
                     textKey: "qa_6",
-                    type: .freeText
+                    type: .freeText,
+                    isOptional: true
                 )
             ]
         ),
@@ -250,23 +256,63 @@ struct TestData {
     ]
 }
 
-// MARK: - Motivation Cards
+// MARK: - Model Result Dimensions
 
-/// One AI-generated motivational card. Each card is anchored to a different
-/// test section so the three cards address distinct aspects of the user's profile.
-struct MotivationCard: Identifiable, Equatable {
-    let id: Int
-    let sectionCode: String
-    let sectionTitle: String
-    let quote: String
-    let author: String?
-    let message: String
-}
+/// The five heads of the XLM-R classifier, in model order.
+enum WellBeingDimension: String, CaseIterable, Identifiable {
+    case anxiety = "Anxiety_Fear_Worry"
+    case depression = "Depression_Hopelessness_Sadness"
+    case selfEsteem = "Self_Esteem_Issue"
+    case positiveAffect = "Positive_Affect"
+    case negativeAffect = "Negative_Affect"
 
-/// Swipe direction on a motivation card. Left = disliked, right = liked.
-enum SwipeDirection {
-    case left
-    case right
+    var id: String { rawValue }
 
-    var isLiked: Bool { self == .right }
+    /// Positive affect is a strength (High = good). The other four are concerns (High = more difficulty).
+    var isPositiveTrait: Bool { self == .positiveAffect }
+
+    var iconName: String {
+        switch self {
+        case .anxiety: return "cloud.drizzle"
+        case .depression: return "sun.haze"
+        case .selfEsteem: return "person.crop.circle.badge.checkmark"
+        case .positiveAffect: return "sparkles"
+        case .negativeAffect: return "wind"
+        }
+    }
+
+    private var keyStem: String {
+        switch self {
+        case .anxiety: return "dim_anxiety"
+        case .depression: return "dim_mood"
+        case .selfEsteem: return "dim_self_esteem"
+        case .positiveAffect: return "dim_positive"
+        case .negativeAffect: return "dim_tension"
+        }
+    }
+
+    var titleKey: String { "\(keyStem)_title" }
+
+    func messageKey(for level: PredictionResponse.Level) -> String {
+        switch level {
+        case .no: return "\(keyStem)_no"
+        case .low: return "\(keyStem)_low"
+        case .high: return "\(keyStem)_high"
+        }
+    }
+
+    /// How the level should feel to the user, independent of the dimension's direction.
+    enum Tone {
+        case steady
+        case gentle
+        case care
+    }
+
+    func tone(for level: PredictionResponse.Level) -> Tone {
+        switch (isPositiveTrait, level) {
+        case (false, .no), (true, .high): return .steady
+        case (_, .low): return .gentle
+        case (false, .high), (true, .no): return .care
+        }
+    }
 }

@@ -55,6 +55,7 @@ struct LoadingView: View {
                     )
                     .frame(width: 100, height: 100)
                     .rotationEffect(.degrees(rotation))
+                    .opacity(isFailed ? 0 : 1)
                 
                 // Center icon
                 Image(systemName: "brain.head.profile")
@@ -75,11 +76,14 @@ struct LoadingView: View {
                     .font(.system(size: 22, weight: .bold, design: .rounded))
                     .foregroundColor(.primary)
                 
-                Text(localization.localizedString("loading_subtitle"))
+                Text(localization.localizedString(subtitleKey))
                     .font(.system(size: 15, design: .rounded))
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 40)
+                    .id(subtitleKey)
+                    .transition(.opacity)
+                    .animation(.easeInOut(duration: 0.3), value: subtitleKey)
             }
             .opacity(showText ? 1 : 0)
             .offset(y: showText ? 0 : 20)
@@ -95,17 +99,18 @@ struct LoadingView: View {
                 .animation(.easeInOut(duration: 0.5), value: currentTipIndex)
             
             // Error display
-            if let error = viewModel.apiError {
+            if case .failed(let error) = viewModel.analysisPhase {
                 VStack(spacing: 12) {
-                    Text(error)
-                        .font(.system(size: 13, design: .rounded))
-                        .foregroundColor(.red.opacity(0.8))
+                    Text(localization.localizedString(errorKey(for: error)))
+                        .font(.system(size: 14, design: .rounded))
+                        .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
                         .padding(.horizontal, 30)
                     
                     Button(localization.localizedString("retry_button")) {
                         Task {
-                            await viewModel.submitToAPI()
+                            await viewModel.submitForAnalysis()
                         }
                     }
                     .font(.system(size: 15, weight: .semibold, design: .rounded))
@@ -137,6 +142,28 @@ struct LoadingView: View {
             withAnimation {
                 currentTipIndex = (currentTipIndex + 1) % tips.count
             }
+        }
+    }
+
+    private var isFailed: Bool {
+        if case .failed = viewModel.analysisPhase { return true }
+        return false
+    }
+
+    private var subtitleKey: String {
+        switch viewModel.analysisPhase {
+        case .modelStarting: return "loading_model_starting"
+        case .failed: return "loading_failed_subtitle"
+        case .idle, .connecting, .analysing: return "loading_subtitle"
+        }
+    }
+
+    private func errorKey(for error: MotivBotAPIError) -> String {
+        switch error {
+        case .serverUnreachable: return "error_server_unreachable"
+        case .modelLoading: return "error_model_loading"
+        case .invalidInput: return "error_invalid_input"
+        case .decoding, .http: return "error_generic"
         }
     }
 }

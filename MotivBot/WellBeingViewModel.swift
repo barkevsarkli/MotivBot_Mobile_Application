@@ -20,17 +20,27 @@ class WellBeingViewModel {
     var answers: [UserAnswer] = []
     var gridAnswers: [Int: Int] = [:]  // questionId -> selectedOptionId for allAtOnce sections
     
-    var isLoading: Bool = false
-    var apiResponse: String = ""
-    var apiError: String? = nil
+    // Analysis state
+    enum AnalysisPhase: Equatable {
+        case idle
+        case connecting
+        case modelStarting
+        case analysing
+        case failed(MotivBotAPIError)
 
-    // Motivation cards (swipeable deck shown on the result screen)
-    var motivationCards: [MotivationCard] = []
-    var currentCardIndex: Int = 0
-    var cardRatings: [Int: Bool] = [:]   // card id -> liked
+        var isInProgress: Bool {
+            switch self {
+            case .connecting, .modelStarting, .analysing: return true
+            case .idle, .failed: return false
+            }
+        }
+    }
+
+    var analysisPhase: AnalysisPhase = .idle
+    var prediction: PredictionResponse? = nil
 
     /// Language the user is currently reading the app in. Kept in sync by ContentView
-    /// so the prompt and the generated cards use the same language as the UI.
+    /// and sent to the server as informational metadata.
     var languageCode: String = "tr"
     
     // Result / Reflection state
@@ -42,7 +52,20 @@ class WellBeingViewModel {
     
     // MARK: - Services
     
-    private let openAIService = OpenAIService()
+    private let service: PredictionServicing
+    private let healthPollInterval: Duration
+    private let maxHealthPolls: Int
+
+    /// Model warm-up is polled every `healthPollInterval` for at most `maxHealthPolls` times.
+    init(
+        service: PredictionServicing? = nil,
+        healthPollInterval: Duration = .seconds(2),
+        maxHealthPolls: Int = 90
+    ) {
+        self.service = service ?? MotivBotAPIService()
+        self.healthPollInterval = healthPollInterval
+        self.maxHealthPolls = maxHealthPolls
+    }
     
     // MARK: - Data
     
@@ -81,19 +104,6 @@ class WellBeingViewModel {
         return Double(answeredQuestions) / Double(totalQuestions)
     }
     
-    var allCardsReviewed: Bool {
-        currentCardIndex >= motivationCards.count
-    }
-
-    var currentCard: MotivationCard? {
-        guard currentCardIndex < motivationCards.count else { return nil }
-        return motivationCards[currentCardIndex]
-    }
-
-    var likedCards: [MotivationCard] {
-        motivationCards.filter { cardRatings[$0.id] == true }
-    }
-
     var isLastQuestion: Bool {
         guard let section = currentSection else { return true }
         let isLastInSection = currentQuestionIndex >= section.questions.count - 1
@@ -120,8 +130,20 @@ class WellBeingViewModel {
         case .scale:
             return true
         case .freeText:
-            return !freeTextAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            return q.isOptional || !freeTextAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        case .integer(let range):
+            return integerAnswer(in: range) != nil
         }
+    }
+
+    /// The typed number for an `.integer` question, or nil if it is not a whole number in `range`.
+    func integerAnswer(in range: ClosedRange<Int>) -> Int? {
+        if range == PredictionRequestBuilder.ageRange {
+            return PredictionRequestBuilder.parseAge(freeTextAnswer)
+        }
+        let trimmed = freeTextAnswer.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let value = Int(trimmed), range.contains(value) else { return nil }
+        return value
     }
     
     
@@ -166,7 +188,7 @@ class WellBeingViewModel {
                     currentQuestionIndex = 0
                 } else {
                     goToScreen(.loading)
-                    Task { await submitToAPI() }
+                    Task { await submitForAnalysis() }
                 }
             }
             return
@@ -183,7 +205,10 @@ class WellBeingViewModel {
         case .scale(_):
             answerVal = .scale(scaleValue)
         case .freeText:
-            answerVal = .text(freeTextAnswer)
+            answerVal = .text(freeTextAnswer.trimmingCharacters(in: .whitespacesAndNewlines))
+        case .integer(let range):
+            guard let value = integerAnswer(in: range) else { return }
+            answerVal = .text(String(value))
         }
         
         // Save the answer
@@ -210,7 +235,7 @@ class WellBeingViewModel {
                 // All questions answered — go to loading / API
                 goToScreen(.loading)
                 Task {
-                    await submitToAPI()
+                    await submitForAnalysis()
                 }
             }
         }
@@ -284,163 +309,84 @@ class WellBeingViewModel {
             }
         }
 
-        if !motivationCards.isEmpty {
-            csvString += "\nCard,Section,Quote,Rating\n"
-            for card in motivationCards {
-                let quote = card.quote
-                    .replacingOccurrences(of: "\n", with: " ")
-                    .replacingOccurrences(of: ",", with: ";")
-                let section = card.sectionTitle.replacingOccurrences(of: ",", with: ";")
-                let rating: String
-                switch cardRatings[card.id] {
-                case true: rating = "Liked"
-                case false: rating = "Disliked"
-                default: rating = "Not rated"
-                }
-                csvString += "\(card.id),\(section),\(quote),\(rating)\n"
+        if let prediction {
+            csvString += "\nModel,\(prediction.modelId)\n"
+            csvString += "Model input,Value\n"
+            csvString += "Age,\(prediction.inputsUsed.age)\n"
+            csvString += "sex,\(prediction.inputsUsed.sex)\n"
+            csvString += "PHQ-9,\(prediction.inputsUsed.phq9)\n"
+            csvString += "Rosenberg.self-esteem,\(prediction.inputsUsed.rosenberg)\n"
+            csvString += "\nDimension,Level\n"
+            for dimension in prediction.dimensions {
+                csvString += "\(dimension.key),\(dimension.level.rawValue)\n"
             }
+            csvString += "elevated_risk,\(prediction.elevatedRisk)\n"
         }
 
         return csvString
     }
     
-    // MARK: - Motivation Card Feedback
+    // MARK: - Analysis
 
-    /// Records the swipe on the top card and advances the deck.
-    /// Left swipe = disliked, right swipe = liked.
-    func rateCurrentCard(_ direction: SwipeDirection) {
-        guard let card = currentCard else { return }
-        cardRatings[card.id] = direction.isLiked
-        withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) {
-            currentCardIndex += 1
+    /// Waits for the model to be ready, sends the answers and shows the result screen.
+    /// On failure the user stays on the loading screen with a retry option.
+    func submitForAnalysis() async {
+        guard !analysisPhase.isInProgress else { return }
+        prediction = nil
+
+        let request: PredictionRequest
+        do {
+            request = try PredictionRequestBuilder.build(
+                emotionText: emotionText,
+                answers: answers,
+                languageCode: languageCode
+            )
+        } catch {
+            analysisPhase = .failed(.invalidInput("\(error)"))
+            return
         }
-    }
-
-    func rating(for card: MotivationCard) -> Bool? {
-        cardRatings[card.id]
-    }
-
-    func submitToAPI() async {
-        isLoading = true
-        apiError = nil
-        motivationCards = []
-        currentCardIndex = 0
-        cardRatings = [:]
-
-        // Generate CSV and save to temp file for sharing
-        let csv = generateCSV()
-        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("SurveyAnswers.csv")
-        try? csv.write(to: tempURL, atomically: true, encoding: .utf8)
-        csvFileURL = tempURL
-
-        // Build prompt from user data
-        let prompt = buildPrompt()
 
         do {
-            let cards = try await openAIService.fetchMotivationCards(
-                prompt: prompt,
-                languageName: languageName
-            )
-            motivationCards = padded(cards)
-            apiResponse = motivationCards.first?.quote ?? ""
+            analysisPhase = .connecting
+            try await waitUntilModelReady()
+            analysisPhase = .analysing
+            let response = try await service.predict(request)
+            prediction = response
+            saveCSV()
+            analysisPhase = .idle
             goToScreen(.result)
+        } catch let error as MotivBotAPIError {
+            analysisPhase = .failed(error)
         } catch {
-            apiError = error.localizedDescription
-            motivationCards = fallbackCards()
-            apiResponse = motivationCards.first?.quote ?? ""
-            goToScreen(.result)
-        }
-
-        isLoading = false
-    }
-
-    /// Guarantees a three-card deck even if the model returns fewer cards.
-    private func padded(_ cards: [MotivationCard]) -> [MotivationCard] {
-        guard cards.count < 3 else { return cards }
-        var result = cards
-        let filler = fallbackCards()
-        for card in filler where result.count < 3 {
-            result.append(MotivationCard(
-                id: result.count + 1,
-                sectionCode: card.sectionCode,
-                sectionTitle: card.sectionTitle,
-                quote: card.quote,
-                author: card.author,
-                message: card.message
-            ))
-        }
-        return result
-    }
-
-    /// Offline deck used when the API call fails, so the user still gets three cards.
-    private func fallbackCards() -> [MotivationCard] {
-        (1...3).map { index in
-            MotivationCard(
-                id: index,
-                sectionCode: "",
-                sectionTitle: localized("fallback_card_\(index)_section"),
-                quote: localized("fallback_card_\(index)_quote"),
-                author: localized("fallback_card_\(index)_author"),
-                message: localized("fallback_card_\(index)_message")
-            )
+            analysisPhase = .failed(.serverUnreachable)
         }
     }
 
-    // MARK: - Localization helpers
-
-    private var languageName: String {
-        switch languageCode {
-        case "fa": return "Persian (Farsi)"
-        case "en": return "English"
-        default: return "Turkish"
-        }
-    }
-
-    /// Looks a key up in the bundle for the language the user selected at runtime,
-    /// instead of the system language NSLocalizedString would use.
-    private func localized(_ key: String) -> String {
-        guard let path = Bundle.main.path(forResource: languageCode, ofType: "lproj"),
-              let bundle = Bundle(path: path) else {
-            return NSLocalizedString(key, comment: "")
-        }
-        return bundle.localizedString(forKey: key, value: nil, table: nil)
-    }
-    
-    private func buildPrompt() -> String {
-        var prompt = "The user expressed their current emotions as follows:\n"
-        prompt += "\"\(emotionText)\"\n\n"
-        prompt += "They also completed a psychological well-being questionnaire. Here are the results:\n\n"
-        
-        for (index, section) in sections.enumerated() {
-            let sectionTitle = localized(section.titleKey)
-            let sectionCode = String(UnicodeScalar(UInt8(65 + index)))
-            prompt += "--- SECTION \(sectionCode): \(sectionTitle) ---\n"
-            
-            for question in section.questions {
-                let questionText = localized(question.textKey)
-                if let answer = answers.first(where: { $0.questionId == question.id }) {
-                    switch answer.answerValue {
-                    case .option(let opt):
-                        let answerText = localized(opt.textKey)
-                        prompt += "Q: \(questionText)\nA: \(answerText) (Score: \(opt.value))\n\n"
-                    case .scale(let val):
-                        prompt += "Q: \(questionText)\nA: \(val) (Scale value)\n\n"
-                    case .text(let txt):
-                        prompt += "Q: \(questionText)\nA: \(txt) (Free text response)\n\n"
-                    }
-                }
+    private func waitUntilModelReady() async throws {
+        for _ in 0..<maxHealthPolls {
+            switch try await service.health() {
+            case .ready:
+                return
+            case .loading:
+                analysisPhase = .modelStarting
+                try await Task.sleep(for: healthPollInterval)
+            case .error:
+                throw MotivBotAPIError.http(503)
             }
         }
-        
-        prompt += """
-        Based on all of the above, produce exactly three motivation cards as JSON. \
-        Each card must be anchored to a different section listed above (use its \
-        section code and title), and must reflect that section's answers.
-        """
-        
-        return prompt
+        throw MotivBotAPIError.modelLoading
     }
-    
+
+    private func saveCSV() {
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("SurveyAnswers.csv")
+        do {
+            try generateCSV().write(to: tempURL, atomically: true, encoding: .utf8)
+            csvFileURL = tempURL
+        } catch {
+            csvFileURL = nil
+        }
+    }
+
     // MARK: - Reflection
     
     func submitReflection() {
@@ -460,12 +406,8 @@ class WellBeingViewModel {
             freeTextAnswer = ""
             answers = []
             gridAnswers = [:]
-            isLoading = false
-            apiResponse = ""
-            apiError = nil
-            motivationCards = []
-            currentCardIndex = 0
-            cardRatings = [:]
+            analysisPhase = .idle
+            prediction = nil
             reflectionText = ""
             selectedFeelingIndex = nil
             isCompleted = false
