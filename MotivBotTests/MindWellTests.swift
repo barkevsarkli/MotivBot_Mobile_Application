@@ -6,7 +6,7 @@
 //
 
 import Testing
-@testable import MindWell
+@testable import MotivBot
 
 struct MindWellTests {
 
