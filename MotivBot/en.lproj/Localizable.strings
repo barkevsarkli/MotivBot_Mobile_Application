@@ -3,6 +3,7 @@
 /* App */
 "app_title" = "MotivBot";
 "theme_toggle" = "Toggle Dark/Light Mode";
+"language_toggle" = "Change language";
 
 /* Screen 1: Emotion Input */
 "emotion_prompt" = "Express your current emotions in 3-4 sentences.";

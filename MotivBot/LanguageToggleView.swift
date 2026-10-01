@@ -35,6 +35,7 @@ struct LanguageToggleView: View {
             }
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(localization.localizedString("theme_toggle"))
+        .accessibilityLabel(localization.localizedString("language_toggle"))
+        .accessibilityValue(localization.currentLanguage.displayLabel)
     }
 }

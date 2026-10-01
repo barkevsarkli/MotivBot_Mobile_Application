@@ -2,6 +2,7 @@
 
 "app_title" = "MotivBot";
 "theme_toggle" = "Karanlık/Aydınlık Modu Değiştir";
+"language_toggle" = "Dili değiştir";
 
 "emotion_prompt" = "Mevcut duygularınızı 3-4 cümleyle ifade edin.";
 "your_thoughts" = "DÜŞÜNCELERİNİZ";
