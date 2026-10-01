@@ -24,25 +24,26 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		CC6E87262F5E959F003EFFC6 /* MindWell.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MindWell.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		CC6E87332F5E95A1003EFFC6 /* MindWellTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MindWellTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		CC6E873D2F5E95A1003EFFC6 /* MindWellUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MindWellUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		CC4DC0163045B15F005A8E4F /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Localizable.strings; path = ../../Localizable.strings; sourceTree = "<group>"; };
+		CC6E87262F5E959F003EFFC6 /* MotivBot.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MotivBot.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CC6E87332F5E95A1003EFFC6 /* MotivBotTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MotivBotTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		CC6E873D2F5E95A1003EFFC6 /* MotivBotUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MotivBotUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		CC6E87282F5E959F003EFFC6 /* MindWell */ = {
+		CC6E87282F5E959F003EFFC6 /* MotivBot */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = MindWell;
+			path = MotivBot;
 			sourceTree = "<group>";
 		};
-		CC6E87362F5E95A1003EFFC6 /* MindWellTests */ = {
+		CC6E87362F5E95A1003EFFC6 /* MotivBotTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = MindWellTests;
+			path = MotivBotTests;
 			sourceTree = "<group>";
 		};
-		CC6E87402F5E95A1003EFFC6 /* MindWellUITests */ = {
+		CC6E87402F5E95A1003EFFC6 /* MotivBotUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = MindWellUITests;
+			path = MotivBotUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -75,9 +76,10 @@
 		CC6E871D2F5E959F003EFFC6 = {
 			isa = PBXGroup;
 			children = (
-				CC6E87282F5E959F003EFFC6 /* MindWell */,
-				CC6E87362F5E95A1003EFFC6 /* MindWellTests */,
-				CC6E87402F5E95A1003EFFC6 /* MindWellUITests */,
+				CC4DC0163045B15F005A8E4F /* Localizable.strings */,
+				CC6E87282F5E959F003EFFC6 /* MotivBot */,
+				CC6E87362F5E95A1003EFFC6 /* MotivBotTests */,
+				CC6E87402F5E95A1003EFFC6 /* MotivBotUITests */,
 				CC6E87272F5E959F003EFFC6 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -85,9 +87,9 @@
 		CC6E87272F5E959F003EFFC6 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				CC6E87262F5E959F003EFFC6 /* MindWell.app */,
-				CC6E87332F5E95A1003EFFC6 /* MindWellTests.xctest */,
-				CC6E873D2F5E95A1003EFFC6 /* MindWellUITests.xctest */,
+				CC6E87262F5E959F003EFFC6 /* MotivBot.app */,
+				CC6E87332F5E95A1003EFFC6 /* MotivBotTests.xctest */,
+				CC6E873D2F5E95A1003EFFC6 /* MotivBotUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -95,9 +97,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		CC6E87252F5E959F003EFFC6 /* MindWell */ = {
+		CC6E87252F5E959F003EFFC6 /* MotivBot */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = CC6E87472F5E95A1003EFFC6 /* Build configuration list for PBXNativeTarget "MindWell" */;
+			buildConfigurationList = CC6E87472F5E95A1003EFFC6 /* Build configuration list for PBXNativeTarget "MotivBot" */;
 			buildPhases = (
 				CC6E87222F5E959F003EFFC6 /* Sources */,
 				CC6E87232F5E959F003EFFC6 /* Frameworks */,
@@ -108,18 +110,18 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				CC6E87282F5E959F003EFFC6 /* MindWell */,
+				CC6E87282F5E959F003EFFC6 /* MotivBot */,
 			);
-			name = MindWell;
+			name = MotivBot;
 			packageProductDependencies = (
 			);
 			productName = MindWell;
-			productReference = CC6E87262F5E959F003EFFC6 /* MindWell.app */;
+			productReference = CC6E87262F5E959F003EFFC6 /* MotivBot.app */;
 			productType = "com.apple.product-type.application";
 		};
-		CC6E87322F5E95A1003EFFC6 /* MindWellTests */ = {
+		CC6E87322F5E95A1003EFFC6 /* MotivBotTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = CC6E874A2F5E95A1003EFFC6 /* Build configuration list for PBXNativeTarget "MindWellTests" */;
+			buildConfigurationList = CC6E874A2F5E95A1003EFFC6 /* Build configuration list for PBXNativeTarget "MotivBotTests" */;
 			buildPhases = (
 				CC6E872F2F5E95A1003EFFC6 /* Sources */,
 				CC6E87302F5E95A1003EFFC6 /* Frameworks */,
@@ -131,18 +133,18 @@
 				CC6E87352F5E95A1003EFFC6 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				CC6E87362F5E95A1003EFFC6 /* MindWellTests */,
+				CC6E87362F5E95A1003EFFC6 /* MotivBotTests */,
 			);
-			name = MindWellTests;
+			name = MotivBotTests;
 			packageProductDependencies = (
 			);
 			productName = MindWellTests;
-			productReference = CC6E87332F5E95A1003EFFC6 /* MindWellTests.xctest */;
+			productReference = CC6E87332F5E95A1003EFFC6 /* MotivBotTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		CC6E873C2F5E95A1003EFFC6 /* MindWellUITests */ = {
+		CC6E873C2F5E95A1003EFFC6 /* MotivBotUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = CC6E874D2F5E95A1003EFFC6 /* Build configuration list for PBXNativeTarget "MindWellUITests" */;
+			buildConfigurationList = CC6E874D2F5E95A1003EFFC6 /* Build configuration list for PBXNativeTarget "MotivBotUITests" */;
 			buildPhases = (
 				CC6E87392F5E95A1003EFFC6 /* Sources */,
 				CC6E873A2F5E95A1003EFFC6 /* Frameworks */,
@@ -154,13 +156,13 @@
 				CC6E873F2F5E95A1003EFFC6 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				CC6E87402F5E95A1003EFFC6 /* MindWellUITests */,
+				CC6E87402F5E95A1003EFFC6 /* MotivBotUITests */,
 			);
-			name = MindWellUITests;
+			name = MotivBotUITests;
 			packageProductDependencies = (
 			);
 			productName = MindWellUITests;
-			productReference = CC6E873D2F5E95A1003EFFC6 /* MindWellUITests.xctest */;
+			productReference = CC6E873D2F5E95A1003EFFC6 /* MotivBotUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
@@ -186,12 +188,14 @@
 					};
 				};
 			};
-			buildConfigurationList = CC6E87212F5E959F003EFFC6 /* Build configuration list for PBXProject "MindWell" */;
+			buildConfigurationList = CC6E87212F5E959F003EFFC6 /* Build configuration list for PBXProject "MotivBot" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
 				Base,
+				fa,
+				tr,
 			);
 			mainGroup = CC6E871D2F5E959F003EFFC6;
 			minimizedProjectReferenceProxies = 1;
@@ -200,9 +204,9 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				CC6E87252F5E959F003EFFC6 /* MindWell */,
-				CC6E87322F5E95A1003EFFC6 /* MindWellTests */,
-				CC6E873C2F5E95A1003EFFC6 /* MindWellUITests */,
+				CC6E87252F5E959F003EFFC6 /* MotivBot */,
+				CC6E87322F5E95A1003EFFC6 /* MotivBotTests */,
+				CC6E873C2F5E95A1003EFFC6 /* MotivBotUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -258,12 +262,12 @@
 /* Begin PBXTargetDependency section */
 		CC6E87352F5E95A1003EFFC6 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = CC6E87252F5E959F003EFFC6 /* MindWell */;
+			target = CC6E87252F5E959F003EFFC6 /* MotivBot */;
 			targetProxy = CC6E87342F5E95A1003EFFC6 /* PBXContainerItemProxy */;
 		};
 		CC6E873F2F5E95A1003EFFC6 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = CC6E87252F5E959F003EFFC6 /* MindWell */;
+			target = CC6E87252F5E959F003EFFC6 /* MotivBot */;
 			targetProxy = CC6E873E2F5E95A1003EFFC6 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -395,6 +399,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4MW2X2L9FQ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -426,6 +431,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4MW2X2L9FQ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -467,7 +473,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MindWell.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MindWell";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MotivBot.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MotivBot";
 			};
 			name = Debug;
 		};
@@ -488,7 +494,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MindWell.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MindWell";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MotivBot.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MotivBot";
 			};
 			name = Release;
 		};
@@ -533,7 +539,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		CC6E87212F5E959F003EFFC6 /* Build configuration list for PBXProject "MindWell" */ = {
+		CC6E87212F5E959F003EFFC6 /* Build configuration list for PBXProject "MotivBot" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				CC6E87452F5E95A1003EFFC6 /* Debug */,
@@ -542,7 +548,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		CC6E87472F5E95A1003EFFC6 /* Build configuration list for PBXNativeTarget "MindWell" */ = {
+		CC6E87472F5E95A1003EFFC6 /* Build configuration list for PBXNativeTarget "MotivBot" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				CC6E87482F5E95A1003EFFC6 /* Debug */,
@@ -551,7 +557,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		CC6E874A2F5E95A1003EFFC6 /* Build configuration list for PBXNativeTarget "MindWellTests" */ = {
+		CC6E874A2F5E95A1003EFFC6 /* Build configuration list for PBXNativeTarget "MotivBotTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				CC6E874B2F5E95A1003EFFC6 /* Debug */,
@@ -560,7 +566,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		CC6E874D2F5E95A1003EFFC6 /* Build configuration list for PBXNativeTarget "MindWellUITests" */ = {
+		CC6E874D2F5E95A1003EFFC6 /* Build configuration list for PBXNativeTarget "MotivBotUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				CC6E874E2F5E95A1003EFFC6 /* Debug */,

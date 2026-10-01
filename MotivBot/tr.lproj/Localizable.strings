@@ -1,0 +1,207 @@
+/* MotivBot - Türkçe */
+
+"app_title" = "MotivBot";
+"theme_toggle" = "Karanlık/Aydınlık Modu Değiştir";
+
+"emotion_prompt" = "Mevcut duygularınızı 3-4 cümleyle ifade edin.";
+"your_thoughts" = "DÜŞÜNCELERİNİZ";
+"emotion_placeholder" = "Şu an nasıl hissediyorsunuz? Zihninizi meşgul eden düşünceler neler? Açıkça paylaşın...";
+"emotion_hint" = "Devam etmek için en az birkaç cümle yazın";
+"next_button" = "İleri";
+"free_text_placeholder" = "Yanıtınızı yazın...";
+
+"progress_label" = "İlerleme";
+"question_label" = "Soru";
+"finish_button" = "Bitir";
+
+"section_a_title" = "Demografik Bilgiler";
+"section_a_description" = "Lütfen aşağıdaki demografik bilgileri doldurunuz.";
+
+"qa_1" = "Yaşınız:";
+"qa_2" = "Cinsiyetiniz:";
+"qa_2_opt1" = "Erkek";
+"qa_2_opt2" = "Kadın";
+"qa_2_opt3" = "Belirtmek istemiyorum";
+"previous_button" = "Önceki";
+
+"qa_3" = "Gelir düzeyiniz nedir?";
+"qa_3_opt1" = "Çok düşük";
+"qa_3_opt2" = "Düşük";
+"qa_3_opt3" = "Orta";
+"qa_3_opt4" = "Yüksek";
+"qa_3_opt5" = "Çok yüksek";
+
+"qa_4" = "Eğitim düzeyiniz nedir?";
+"qa_4_opt1" = "İlköğretim";
+"qa_4_opt2" = "Lise";
+"qa_4_opt3" = "Üniversite";
+"qa_4_opt4" = "Yüksek lisans/ Doktora";
+
+"qa_5" = "Daha önce bir ruh sağlığı çalışanınca konulmuş bir tanınız var mı? (Cevabınız 'evet' ise lütfen tanıyı yazınız)";
+"qa_5_opt1" = "Evet";
+"qa_5_opt2" = "Hayır";
+
+"qa_6" = "Daha önce psikolojik ve/veya psikiyatrik tedavi aldıysanız, ne tür tedavi/tedaviler aldınız? (Daha önce psikolojik ve/veya psikiyatrik tedavi almadıysanız bu soruyu boş bırakınız)";
+"qa_6_opt1" = "Bireysel psikoterapi";
+"qa_6_opt2" = "Grup psikoterapisi";
+"qa_6_opt3" = "İlaç tedavisi";
+"qa_6_opt4" = "Diğer (lütfen belirtiniz)";
+
+// PHQ-1 
+"section_b_title" = "Hasta Sağlığı Anketi";
+"section_b_description" = "Son bir hafta içinde aşağıdaki problemler sizi ne sıklıkta rahatsız etti?";
+
+"section_b_opt1" = "Hiç";
+"section_b_opt2" = "Birkaç gün";
+"section_b_opt3" = "Günlerin yarısından fazla";
+"section_b_opt4" = "Hemen hemen her zaman";
+
+"qb_1" = "Bir şey yapmak konusunda ilgisizlik veya zevk almamak";
+"qb_2" = "Üzgün, depresif veya umutsuz hissetmek";
+"qb_3" = "Uykuya dalmada veya uyumaya devam etmekte zorluk veya çok fazla uyumak";
+"qb_4" = "Yorgun hissetmek veya enerjinizin az olması";
+"qb_5" = "İştahsızlık veya çok fazla yemek";
+"qb_6" = "Kendinizi kötü hissetmeniz veya kendinizi başarısız ya da kendinizi veya ailenizi hayal kırıklığına uğrattığınızı düşünmeniz";
+"qb_7" = "Gazete okumak veya televizyon seyretmek gibi faaliyetlerde dikkatinizi toparlamakta güçlük çekmeniz";
+"qb_8" = "Başkalarının fark edeceği kadar yavaş hareket etmeniz veya konuşmanız. Veya tam aksine- normalden çok daha fazla hareket edecek kadar kıpır kıpır ve huzursuz olmanız";
+"qb_9" = "Ölmüş olsanız daha iyi olacağınız veya bir şekilde kendinize zarar verme düşünceleri";
+"qb_10" = "Lütfen bu soruyu 'Hiç' olarak yanıtlayın";
+
+"section_c_title" = "Yaygın Anksiyete Bozukluğu Ölçeği";
+"section_c_description" = "Son bir hafta içinde aşağıdaki problemler sizi ne sıklıkla rahatsız etti?";
+
+"section_c_opt1" = "Hiç";
+"section_c_opt2" = "Birkaç gün";
+"section_c_opt3" = "Günlerin yarısından fazla";
+"section_c_opt4" = "Hemen hemen her gün";
+
+"qc_1" = "Kendini sinirli, kaygılı veya çok gergin hissetme";
+"qc_2" = "Kaygılarını durduramama veya kontrol edememe";
+"qc_3" = "Farklı şeylerden çok fazla endişelenme";
+"qc_4" = "Gevşemede güçlük çekme";
+"qc_5" = "Sakince oturamayacak kadar kendini huzursuz hissetme";
+"qc_6" = "Kolayca kızma ve asabileşme";
+"qc_7" = "Sanki çok kötü bir şey olacakmış gibi korku duyma";
+
+//RSES
+"section_d_title" = "Benlik Saygısı Ölçeği";
+"section_d_description" = "Aşağıdaki maddeler kendiniz hakkında hissettiklerinizi ölçmek için düzenlenmiştir. Lütfen size uygun şıkkı işaretleyiniz.";
+
+"section_d_opt1" = "Çok doğru";
+"section_d_opt2" = "Doğru";
+"section_d_opt3" = "Yanlış";
+"section_d_opt4" = "Çok yanlış";
+
+"qd_1" = "Kendimi en az diğer insanlar kadar değerli buluyorum.";
+"qd_2" = "Bazı olumlu özelliklerim olduğunu düşünüyorum.";
+"qd_3" = "Genelde kendimi başarısız bir kişi olarak görme eğilimindeyim.";
+"qd_4" = "Ben de diğer insanların birçoğunun yapabildiği kadar bir şeyler yapabilirim";
+"qd_5" = "Kendimde gurur duyacak fazla bir şey bulamıyorum.";
+"qd_6" = "Kendime karşı olumlu bir tutum içindeyim.";
+"qd_7" = "Genel olarak kendimden memnunum.";
+"qd_8" = "Kendime karşı daha fazla saygı duyabilmeyi isterdim.";
+"qd_9" = "Bazen kesinlikle kendimin bir işe yaramadığını düşünüyorum.";
+"qd_10" = "Bazen kendimin hiç de yeterli bir insan olmadığını düşünüyorum.";
+
+"section_e_title" = "Pozitif ve Negatif Duygu Ölçeği";
+"section_e_description" = "Bu ölçek birtakım duyguları tanımlayan kelimelerden oluşuyor. Lütfen kelimeleri dikkatlice okuyun ve bu kelimelere ait duyguları ne oranda hissettiğinizi şu anı baz alarak işaretleyin.";
+
+"section_e_opt1" = "Hiçbir zaman";
+"section_e_opt2" = "Nadiren";
+"section_e_opt3" = "Bazen";
+"section_e_opt4" = "Sıklıkla";
+"section_e_opt5" = "Nerdeyse her zaman";
+
+"qe_1" = "İlgili";
+"qe_2" = "Sıkıntılı";
+"qe_3" = "Heyecanlı";
+"qe_4" = "Mutsuz";
+"qe_5" = "Güçlü";
+"qe_6" = "Suçlu";
+"qe_7" = "Ürkmüş";
+"qe_8" = "Düşmanca";
+"qe_9" = "Hevesli";
+"qe_10" = "Gururlu";
+"qe_11" = "Asabi";
+"qe_12" = "Uyanık";
+"qe_13" = "Utanmış";
+"qe_14" = "İlhamlı";
+"qe_15" = "Sinirli";
+"qe_16" = "Kararlı";
+"qe_17" = "Dikkatli";
+"qe_18" = "Tedirgin";
+"qe_19" = "Aktif";
+"qe_20" = "Korkmuş";
+
+"section_f_title" = "Duygu Değerlendirme Ölçeği";
+"section_f_description" = "Lütfen şu an hissettiğiniz duyguyu değerlendirin.";
+
+"qf_1" = "Lütfen şu an hissettiğiniz duyguyu aşağıdaki görseli de dikkate alarak olumsuzluk-olumluluk açısından puanlayınız. 1 puan olayı zihninizde canlandırdığınız sırada tamamen olumsuz/hoşnutsuz hissettiğinizi ifade etmektedir. 9 puan olayı zihninizde canlandırdığınız sırada tamamen olumlu/hoşnut hissettiğinizi ifade etmektedir.";
+"qf_2" = "Lütfen şu an hissettiğiniz duyguyu aşağıdaki görseli de dikkate alarak sakinlik-uyarılmışlık açısından puanlayınız. 1 puan olayı zihninizde canlandırdığınız sırada tamamen sakin, rahat ve dingin hissettiğinizi ifade etmektedir. 9 puan olayı zihninizde canlandırdığınız sırada tamamen uyarılmış, gergin, heyecanlı ve rahatsız hissettiğinizi ifade etmektedir.";
+
+"section_g_title" = "Durum Benlik Saygısı Ölçeği";
+"section_g_description" = "Bu anket, şu anda kendiniz hakkında nasıl düşündüğünüzü ölçmeyi amaçlamaktadır. Hiçbir ifade için doğru ya da yanlış cevap yoktur. Lütfen şu anda kendiniz için doğru olduğunu düşündüğünüz seçeneği işaretleyiniz ve tüm maddeleri yanıtladığınızdan emin olun. Tekrar hatırlatmak gerekirse, bu soruları sizin için ŞU ANDA ne hissettiğinizi yansıtacak şekilde cevaplayınız.";
+
+"section_g_opt1" = "1 - Hiç katılmıyorum";
+"section_g_opt2" = "2";
+"section_g_opt3" = "3";
+"section_g_opt4" = "4 - Ne katılıyorum ne katılmıyorum";
+"section_g_opt5" = "5";
+"section_g_opt6" = "6";
+"section_g_opt7" = "7 - Tamamen katılıyorum";
+
+"qg_1" = "Şu anda bedenimin görünüşünden memnunum";
+"qg_2" = "Performansımla ilgili hayal kırıklığına uğramış veya sarsılmış hissediyorum";
+"qg_3" = "Diğer insanların benimle ilgili ne düşündüğü konusunda endişeliyim.";
+"qg_4" = "Kendimi çekici hissetmiyorum.";
+"qg_5" = "İşlerimde başarılı olmadığımı hissediyorum";
+"qg_6" = "Aptal gibi göründüğümden endişeliyim.";
+"qg_7" = "Bu soruyu lütfen 'ne katılıyorum ne katılmıyorum' şeklince yanıtlayınız.";
+
+"loading_title" = "Yanıtlarınız Analiz Ediliyor";
+"loading_subtitle" = "Sizin için kişiselleştirilmiş bir mesaj hazırlıyoruz...";
+"loading_tip_1" = "💡 Derin bir nefes almak sinir sisteminizi sıfırlayabilir";
+"loading_tip_2" = "🌱 Öz farkındalığa yönelik her küçük adım önemlidir";
+"loading_tip_3" = "✨ Kendinizi dürüstçe ifade ederek cesaret gösterdiniz";
+"retry_button" = "Tekrar Dene";
+"api_error_fallback" = "\"Her an yeni bir başlangıçtır.\" — T.S. Eliot\n\nEngellerle karşılaştığımızda bile, duygularınız üzerine düşünme isteğiniz inanılmaz bir güç gösterir.";
+
+"result_title" = "Kişiselleştirilmiş Mesajınız";
+"reflection_title" = "Son Düşünce";
+"reflection_question" = "Bu mesaj sizi nasıl hissettirdi? Kendinizi daha iyi hissediyor musunuz?";
+"reflection_optional" = "Düşüncelerinizi paylaşın (isteğe bağlı)";
+"reflection_placeholder" = "Düşüncelerinizi buraya yazın...";
+"submit_reflection" = "Oturumu Tamamla";
+
+"feeling_worse" = "Daha kötü";
+"feeling_same" = "Aynı";
+"feeling_slightly_better" = "Biraz iyi";
+"feeling_better" = "Daha iyi";
+"feeling_much_better" = "Çok iyi";
+
+"completion_title" = "Oturum Tamamlandı";
+"completion_message" = "Ruhsal sağlığınız üzerine düşünmeye zaman ayırdığınız için teşekkürler. Unutmayın, öz farkındalığa doğru attığınız her adım, büyümeye doğru atılmış bir adımdır.";
+"restart_button" = "Tekrar Başla";
+
+/* Ekran 4: Motivasyon kartları */
+"cards_subtitle" = "Üç mesaj, profilinizin üç farklı yönü. Size iyi geldiyse sağa, gelmediyse sola kaydırın.";
+"cards_done_subtitle" = "Üç mesajın tümü için geri bildiriminiz alındı, teşekkürler.";
+"card_liked" = "BEĞENDİM";
+"card_disliked" = "BANA GÖRE DEĞİL";
+"card_swipe_left_hint" = "Sola kaydır";
+"card_swipe_right_hint" = "Sağa kaydır";
+"card_section_generic" = "Size özel";
+
+/* Çevrimdışı yedek kartlar */
+"fallback_card_1_section" = "Duygusal Farkındalık";
+"fallback_card_1_quote" = "Her an yeni bir başlangıçtır.";
+"fallback_card_1_author" = "T.S. Eliot";
+"fallback_card_1_message" = "Ne hissettiğinizi adlandırmak bile başlı başına bir adım. Bugün gösterdiğiniz istek, yarın da dayanabileceğiniz bir güç.";
+"fallback_card_2_section" = "Öz Saygı";
+"fallback_card_2_quote" = "Değerli olmak için kusursuz olmanız gerekmiyor.";
+"fallback_card_2_author" = "";
+"fallback_card_2_message" = "Kendinize sert davranmak, gelişmekle aynı şey değil. Yakın bir arkadaşınıza göstereceğiniz sabrı kendinize de gösterin.";
+"fallback_card_3_section" = "Ruh Hali ve Enerji";
+"fallback_card_3_quote" = "Dinlenmek işin ödülü değil, işin bir parçasıdır.";
+"fallback_card_3_author" = "";
+"fallback_card_3_message" = "Düşük enerji bir başarısızlık değil, bir bilgi. Bugün kendinize yapacağınız küçük bir iyilik yeterli.";
