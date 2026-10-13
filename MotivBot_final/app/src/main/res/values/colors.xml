@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Sampled from the MotivBot artwork (icon-source.png). -->
+    <color name="motivbot_green">#2DA367</color>
+    <color name="ic_launcher_background">#2DA367</color>
+</resources>

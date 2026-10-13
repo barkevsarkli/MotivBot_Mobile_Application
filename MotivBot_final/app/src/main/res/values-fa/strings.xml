@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generated from MotivBot/fa.lproj/Localizable.strings -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <!-- MotivBot - بومی‌سازی فارسی -->
+
+    <!-- اپلیکیشن -->
+    <string name="app_title">موتیوبات</string>
+    <string name="theme_toggle">تغییر حالت تاریک/روشن</string>
+
+    <!-- صفحه ۱: ورود احساسات -->
+    <string name="emotion_prompt">احساسات فعلی خود را در ۳ تا ۴ جمله بیان کنید.</string>
+    <string name="your_thoughts">افکار شما</string>
+    <string name="emotion_placeholder">الان چه احساسی دارید؟ چه افکاری ذهن شما را مشغول کرده است؟ آزادانه به اشتراک بگذارید...</string>
+    <string name="emotion_hint">برای ادامه حداقل چند جمله بنویسید</string>
+    <string name="next_button">بعدی</string>
+    <string name="free_text_placeholder">پاسخ خود را بنویسید...</string>
+
+    <!-- صفحه ۲: پرسشنامه -->
+    <string name="progress_label">پیشرفت</string>
+    <string name="question_label">سؤال</string>
+    <string name="finish_button">پایان</string>
+
+    <!-- ═══ بخش A: اطلاعات جمعیت‌شناختی (a.pdf) ═══ -->
+    <string name="section_a_title">اطلاعات جمعیت‌شناختی</string>
+    <string name="section_a_description">لطفاً اطلاعات جمعیت‌شناختی زیر را تکمیل کنید.</string>
+
+    <string name="qa_1">سن شما:</string>
+    <string name="qa_2">جنسیت شما:</string>
+    <string name="qa_2_opt1">مرد</string>
+    <string name="qa_2_opt2">زن</string>
+    <string name="qa_2_opt3">نمی‌خواهم بگویم</string>
+    <string name="previous_button">قبلی</string>
+
+    <string name="qa_3">سطح درآمد شما چقدر است؟</string>
+    <string name="qa_3_opt1">بسیار پایین</string>
+    <string name="qa_3_opt2">پایین</string>
+    <string name="qa_3_opt3">متوسط</string>
+    <string name="qa_3_opt4">بالا</string>
+    <string name="qa_3_opt5">بسیار بالا</string>
+
+    <string name="qa_4">سطح تحصیلات شما چیست؟</string>
+    <string name="qa_4_opt1">ابتدایی</string>
+    <string name="qa_4_opt2">دبیرستان</string>
+    <string name="qa_4_opt3">دانشگاه</string>
+    <string name="qa_4_opt4">کارشناسی ارشد / دکتری</string>
+
+    <string name="qa_5">آیا تاکنون توسط یک متخصص بهداشت روان تشخیصی برای شما داده شده است؟ (اگر پاسخ شما «بله» است، لطفاً تشخیص را بنویسید)</string>
+    <string name="qa_5_opt1">بله</string>
+    <string name="qa_5_opt2">خیر</string>
+
+    <string name="qa_6">اگر قبلاً درمان روان‌شناختی و/یا روان‌پزشکی دریافت کرده‌اید، چه نوع درمان/درمان‌هایی دریافت کرده‌اید؟ (اگر قبلاً درمان روان‌شناختی و/یا روان‌پزشکی دریافت نکرده‌اید، این سؤال را خالی بگذارید)</string>
+    <string name="qa_6_opt1">روان‌درمانی فردی</string>
+    <string name="qa_6_opt2">روان‌درمانی گروهی</string>
+    <string name="qa_6_opt3">دارودرمانی</string>
+    <string name="qa_6_opt4">سایر (لطفاً مشخص کنید)</string>
+
+    <!-- ═══ بخش B: پرسشنامه سلامت بیمار (b.pdf) ═══ -->
+    <string name="section_b_title">پرسشنامه سلامت بیمار</string>
+    <string name="section_b_description">در یک هفته گذشته، مشکلات زیر چقدر شما را آزار داده است؟</string>
+
+    <string name="section_b_opt1">اصلاً</string>
+    <string name="section_b_opt2">چند روز</string>
+    <string name="section_b_opt3">بیش از نصف روزها</string>
+    <string name="section_b_opt4">تقریباً همیشه</string>
+
+    <string name="qb_1">بی‌علاقگی یا عدم لذت بردن از انجام کارها</string>
+    <string name="qb_2">احساس غم، افسردگی یا ناامیدی</string>
+    <string name="qb_3">مشکل در به خواب رفتن یا ادامه خواب، یا خواب بیش از حد</string>
+    <string name="qb_4">احساس خستگی یا کمبود انرژی</string>
+    <string name="qb_5">بی‌اشتهایی یا پرخوری</string>
+    <string name="qb_6">احساس بد درباره خود، یا احساس شکست یا اینکه خود یا خانواده‌تان را ناامید کرده‌اید</string>
+    <string name="qb_7">مشکل در تمرکز بر فعالیت‌هایی مانند خواندن روزنامه یا تماشای تلویزیون</string>
+    <string name="qb_8">حرکت یا صحبت کردن به‌قدری آهسته که دیگران متوجه شوند. یا برعکس — بیش از حد بی‌قرار و ناآرام بودن به‌طوری‌که بیشتر از حد معمول حرکت می‌کنید</string>
+    <string name="qb_9">افکاری مبنی بر اینکه بهتر بود مرده بودید یا به‌نحوی به خود آسیب برسانید</string>
+    <string name="qb_10">لطفاً این سؤال را «اصلاً» پاسخ دهید</string>
+
+    <!-- ═══ بخش C: مقیاس اختلال اضطراب فراگیر (c.pdf) ═══ -->
+    <string name="section_c_title">مقیاس اختلال اضطراب فراگیر</string>
+    <string name="section_c_description">در یک هفته گذشته، مشکلات زیر چقدر شما را آزار داده است؟</string>
+
+    <string name="section_c_opt1">اصلاً</string>
+    <string name="section_c_opt2">چند روز</string>
+    <string name="section_c_opt3">بیش از نصف روزها</string>
+    <string name="section_c_opt4">تقریباً هر روز</string>
+
+    <string name="qc_1">احساس عصبانیت، اضطراب یا تنش شدید</string>
+    <string name="qc_2">ناتوانی در متوقف کردن یا کنترل نگرانی‌ها</string>
+    <string name="qc_3">نگرانی بیش از حد درباره چیزهای مختلف</string>
+    <string name="qc_4">مشکل در آرام شدن</string>
+    <string name="qc_5">آنقدر بی‌قرار بودن که نمی‌توان آرام نشست</string>
+    <string name="qc_6">زود عصبانی شدن و تندخویی</string>
+    <string name="qc_7">احساس ترس، گویی اتفاق بدی در شرف وقوع است</string>
+
+    <!-- ═══ بخش D: مقیاس عزت نفس (d.pdf) ═══ -->
+    <string name="section_d_title">مقیاس عزت نفس</string>
+    <string name="section_d_description">موارد زیر برای سنجش احساس شما درباره خودتان طراحی شده‌اند. لطفاً گزینه‌ای که به شما مربوط می‌شود را انتخاب کنید.</string>
+
+    <string name="section_d_opt1">کاملاً درست</string>
+    <string name="section_d_opt2">درست</string>
+    <string name="section_d_opt3">نادرست</string>
+    <string name="section_d_opt4">کاملاً نادرست</string>
+
+    <string name="qd_1">احساس می‌کنم حداقل به اندازه دیگران ارزشمند هستم.</string>
+    <string name="qd_2">فکر می‌کنم ویژگی‌های مثبتی دارم.</string>
+    <string name="qd_3">به طور کلی تمایل دارم خود را فردی ناموفق ببینم.</string>
+    <string name="qd_4">من هم مانند بیشتر مردم می‌توانم کارها را انجام دهم.</string>
+    <string name="qd_5">چیز زیادی برای افتخار کردن در خودم پیدا نمی‌کنم.</string>
+    <string name="qd_6">نگرش مثبتی نسبت به خودم دارم.</string>
+    <string name="qd_7">به طور کلی از خودم رضایت دارم.</string>
+    <string name="qd_8">کاش می‌توانستم به خودم احترام بیشتری بگذارم.</string>
+    <string name="qd_9">گاهی اوقات قطعاً احساس بی‌فایدگی می‌کنم.</string>
+    <string name="qd_10">گاهی فکر می‌کنم اصلاً آدم کافی و مناسبی نیستم.</string>
+
+    <!-- ═══ بخش E: مقیاس عاطفه مثبت و منفی (e.pdf) ═══ -->
+    <string name="section_e_title">مقیاس عاطفه مثبت و منفی</string>
+    <string name="section_e_description">این مقیاس شامل کلماتی است که احساسات مختلف را توصیف می‌کنند. لطفاً هر کلمه را با دقت بخوانید و میزان احساس آن را در حال حاضر مشخص کنید.</string>
+
+    <string name="section_e_opt1">هرگز</string>
+    <string name="section_e_opt2">به ندرت</string>
+    <string name="section_e_opt3">گاهی</string>
+    <string name="section_e_opt4">اغلب</string>
+    <string name="section_e_opt5">تقریباً همیشه</string>
+
+    <string name="qe_1">علاقه‌مند</string>
+    <string name="qe_2">پریشان</string>
+    <string name="qe_3">هیجان‌زده</string>
+    <string name="qe_4">ناراحت</string>
+    <string name="qe_5">قوی</string>
+    <string name="qe_6">احساس گناه</string>
+    <string name="qe_7">وحشت‌زده</string>
+    <string name="qe_8">خصمانه</string>
+    <string name="qe_9">مشتاق</string>
+    <string name="qe_10">مفتخر</string>
+    <string name="qe_11">تندخو</string>
+    <string name="qe_12">هوشیار</string>
+    <string name="qe_13">شرمنده</string>
+    <string name="qe_14">الهام‌گرفته</string>
+    <string name="qe_15">عصبی</string>
+    <string name="qe_16">مصمم</string>
+    <string name="qe_17">بادقت</string>
+    <string name="qe_18">دلواپس</string>
+    <string name="qe_19">فعال</string>
+    <string name="qe_20">ترسیده</string>
+
+    <!-- ═══ بخش F: مانکین خودارزیابی (f.pdf) ═══ -->
+    <string name="section_f_title">مانکین خودارزیابی</string>
+    <string name="section_f_description">لطفاً وضعیت عاطفی فعلی خود را ارزیابی کنید.</string>
+
+    <string name="qf_1">لطفاً احساس فعلی خود را از نظر منفی‌بودن-مثبت‌بودن، با توجه به تصویر زیر، امتیاز دهید. ۱ امتیاز به این معناست که هنگام تصور رویداد در ذهن، کاملاً منفی/ناخوشایند احساس می‌کنید. ۹ امتیاز به این معناست که هنگام تصور رویداد در ذهن، کاملاً مثبت/خوشایند احساس می‌کنید.</string>
+    <string name="qf_2">لطفاً احساس فعلی خود را از نظر آرامش-برانگیختگی، با توجه به تصویر زیر، امتیاز دهید. ۱ امتیاز به این معناست که هنگام تصور رویداد در ذهن، کاملاً آرام، راحت و ساکن احساس می‌کنید. ۹ امتیاز به این معناست که هنگام تصور رویداد در ذهن، کاملاً برانگیخته، متشنج، هیجان‌زده و ناآرام احساس می‌کنید.</string>
+
+    <!-- ═══ بخش G: مقیاس عزت نفس حالتی (g.pdf) ═══ -->
+    <string name="section_g_title">مقیاس عزت نفس حالتی</string>
+    <string name="section_g_description">این پرسشنامه با هدف سنجش نحوه تفکر فعلی شما درباره خودتان طراحی شده است. هیچ پاسخ درست یا غلطی وجود ندارد. لطفاً گزینه‌ای را که فکر می‌کنید الان برای شما صحیح است انتخاب کنید و مطمئن شوید که به تمام سؤالات پاسخ داده‌اید. یادآوری: این سؤالات را بر اساس آنچه الان احساس می‌کنید پاسخ دهید.</string>
+
+    <string name="section_g_opt1">۱ - کاملاً مخالفم</string>
+    <string name="section_g_opt2">۲</string>
+    <string name="section_g_opt3">۳</string>
+    <string name="section_g_opt4">۴ - نه موافقم نه مخالف</string>
+    <string name="section_g_opt5">۵</string>
+    <string name="section_g_opt6">۶</string>
+    <string name="section_g_opt7">۷ - کاملاً موافقم</string>
+
+    <string name="qg_1">در حال حاضر از ظاهر بدنم رضایت دارم</string>
+    <string name="qg_2">درباره عملکردم احساس ناامیدی یا تکان‌خوردگی دارم</string>
+    <string name="qg_3">نگران آنچه دیگران درباره من فکر می‌کنند هستم.</string>
+    <string name="qg_4">احساس جذابیت نمی‌کنم.</string>
+    <string name="qg_5">احساس می‌کنم در کارهایم موفق نیستم</string>
+    <string name="qg_6">نگرانم که احمقانه به نظر برسم.</string>
+    <string name="qg_7">لطفاً این سؤال را «نه موافقم نه مخالف» پاسخ دهید.</string>
+
+    <!-- صفحه ۳: بارگذاری -->
+    <string name="loading_title">تحلیل پاسخ‌های شما</string>
+    <string name="loading_subtitle">داریم یک پیام شخصی‌سازی شده برای شما آماده می‌کنیم...</string>
+    <string name="loading_tip_1">💡 نفس عمیق کشیدن می‌تواند سیستم عصبی شما را بازنشانی کند</string>
+    <string name="loading_tip_2">🌱 هر قدم کوچک به سمت خودآگاهی مهم است</string>
+    <string name="loading_tip_3">✨ با بیان صادقانه خود، شجاعت نشان دادید</string>
+    <string name="retry_button">تلاش مجدد</string>
+    <string name="api_error_fallback">«هر لحظه آغازی تازه است.» — تی.اس. الیوت\n\nحتی وقتی با موانع روبرو می‌شویم، تمایل شما به تأمل درباره احساساتتان قدرت باورنکردنی‌ای نشان می‌دهد.</string>
+
+    <!-- صفحه ۴: نتیجه -->
+    <string name="result_title">پیام شخصی شما</string>
+    <string name="reflection_title">تأمل نهایی</string>
+    <string name="reflection_question">این پیام چه حسی به شما داد؟ آیا احساس بهتری دارید؟</string>
+    <string name="reflection_optional">نظرات خود را به اشتراک بگذارید (اختیاری)</string>
+    <string name="reflection_placeholder">تأملات خود را اینجا بنویسید...</string>
+    <string name="submit_reflection">تکمیل جلسه</string>
+
+    <!-- احساسات -->
+    <string name="feeling_worse">بدتر</string>
+    <string name="feeling_same">همان</string>
+    <string name="feeling_slightly_better">کمی بهتر</string>
+    <string name="feeling_better">بهتر</string>
+    <string name="feeling_much_better">خیلی بهتر</string>
+
+    <!-- تکمیل -->
+    <string name="completion_title">جلسه تکمیل شد</string>
+    <string name="completion_message">از اینکه وقت گذاشتید و درباره سلامت روان خود تأمل کردید متشکریم. به یاد داشته باشید، هر قدمی که به سمت خودآگاهی برمی‌دارید، قدمی به سمت رشد است.</string>
+    <string name="restart_button">شروع مجدد</string>
+
+    <!-- Android-specific additions (no .strings counterpart) -->
+    <string name="share_csv_title">پاسخ‌های خود را به اشتراک بگذارید</string>
+    <string name="language_toggle">تغییر زبان</string>
+    <string name="error_network">اتصال به سرور ممکن نشد. اتصال خود را بررسی کرده و دوباره تلاش کنید.</string>
+    <string name="error_api">خطای API (%1$d): %2$s</string>
+    <string name="error_no_content">پاسخ API فاقد محتوا است.</string>
+    <string name="error_unknown">مشکلی پیش آمد. لطفاً دوباره تلاش کنید.</string>
+    <string name="previous_button_desc">سؤال قبلی</string>
+    <string name="next_button_desc">سؤال بعدی</string>
+
+    <!-- Age question (bounded numeric input) -->
+    <string name="age_placeholder">مثلاً ۲۸</string>
+    <string name="age_hint">یک عدد صحیح بین %1$d و %2$d وارد کنید</string>
+    <string name="age_error">لطفاً سنی معتبر بین %1$d و %2$d وارد کنید</string>
+</resources>

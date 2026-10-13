@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generated from MotivBot/tr.lproj/Localizable.strings -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <!-- MotivBot - Türkçe Yerelleştirme -->
+
+    <!-- Uygulama -->
+    <string name="app_title">MotivBot</string>
+    <string name="theme_toggle">Karanlık/Aydınlık Modu Değiştir</string>
+
+    <!-- Ekran 1: Duygu Girişi -->
+    <string name="emotion_prompt">Mevcut duygularınızı 3-4 cümleyle ifade edin.</string>
+    <string name="your_thoughts">DÜŞÜNCELERİNİZ</string>
+    <string name="emotion_placeholder">Şu an nasıl hissediyorsunuz? Zihninizi meşgul eden düşünceler neler? Açıkça paylaşın...</string>
+    <string name="emotion_hint">Devam etmek için en az birkaç cümle yazın</string>
+    <string name="next_button">İleri</string>
+    <string name="free_text_placeholder">Yanıtınızı yazın...</string>
+
+    <!-- Ekran 2: Anket -->
+    <string name="progress_label">İlerleme</string>
+    <string name="question_label">Soru</string>
+    <string name="finish_button">Bitir</string>
+
+    <!-- ═══ BÖLÜM A: Demografik Bilgiler (a.pdf) ═══ -->
+    <string name="section_a_title">Demografik Bilgiler</string>
+    <string name="section_a_description">Lütfen aşağıdaki demografik bilgileri doldurunuz.</string>
+
+    <string name="qa_1">Yaşınız:</string>
+    <string name="qa_2">Cinsiyetiniz:</string>
+    <string name="qa_2_opt1">Erkek</string>
+    <string name="qa_2_opt2">Kadın</string>
+    <string name="qa_2_opt3">Belirtmek istemiyorum</string>
+    <string name="previous_button">Önceki</string>
+
+    <string name="qa_3">Gelir düzeyiniz nedir?</string>
+    <string name="qa_3_opt1">Çok düşük</string>
+    <string name="qa_3_opt2">Düşük</string>
+    <string name="qa_3_opt3">Orta</string>
+    <string name="qa_3_opt4">Yüksek</string>
+    <string name="qa_3_opt5">Çok yüksek</string>
+
+    <string name="qa_4">Eğitim düzeyiniz nedir?</string>
+    <string name="qa_4_opt1">İlköğretim</string>
+    <string name="qa_4_opt2">Lise</string>
+    <string name="qa_4_opt3">Üniversite</string>
+    <string name="qa_4_opt4">Yüksek lisans/ Doktora</string>
+
+    <string name="qa_5">Daha önce bir ruh sağlığı çalışanınca konulmuş bir tanınız var mı? (Cevabınız \'evet\' ise lütfen tanıyı yazınız)</string>
+    <string name="qa_5_opt1">Evet</string>
+    <string name="qa_5_opt2">Hayır</string>
+
+    <string name="qa_6">Daha önce psikolojik ve/veya psikiyatrik tedavi aldıysanız, ne tür tedavi/tedaviler aldınız? (Daha önce psikolojik ve/veya psikiyatrik tedavi almadıysanız bu soruyu boş bırakınız)</string>
+    <string name="qa_6_opt1">Bireysel psikoterapi</string>
+    <string name="qa_6_opt2">Grup psikoterapisi</string>
+    <string name="qa_6_opt3">İlaç tedavisi</string>
+    <string name="qa_6_opt4">Diğer (lütfen belirtiniz)</string>
+
+    <!-- ═══ BÖLÜM B: Hasta Sağlığı Anketi (b.pdf) ═══ -->
+    <string name="section_b_title">Hasta Sağlığı Anketi</string>
+    <string name="section_b_description">Son bir hafta içinde aşağıdaki problemler sizi ne sıklıkta rahatsız etti?</string>
+
+    <string name="section_b_opt1">Hiç</string>
+    <string name="section_b_opt2">Birkaç gün</string>
+    <string name="section_b_opt3">Günlerin yarısından fazla</string>
+    <string name="section_b_opt4">Hemen hemen her zaman</string>
+
+    <string name="qb_1">Bir şey yapmak konusunda ilgisizlik veya zevk almamak</string>
+    <string name="qb_2">Üzgün, depresif veya umutsuz hissetmek</string>
+    <string name="qb_3">Uykuya dalmada veya uyumaya devam etmekte zorluk veya çok fazla uyumak</string>
+    <string name="qb_4">Yorgun hissetmek veya enerjinizin az olması</string>
+    <string name="qb_5">İştahsızlık veya çok fazla yemek</string>
+    <string name="qb_6">Kendinizi kötü hissetmeniz veya kendinizi başarısız ya da kendinizi veya ailenizi hayal kırıklığına uğrattığınızı düşünmeniz</string>
+    <string name="qb_7">Gazete okumak veya televizyon seyretmek gibi faaliyetlerde dikkatinizi toparlamakta güçlük çekmeniz</string>
+    <string name="qb_8">Başkalarının fark edeceği kadar yavaş hareket etmeniz veya konuşmanız. Veya tam aksine- normalden çok daha fazla hareket edecek kadar kıpır kıpır ve huzursuz olmanız</string>
+    <string name="qb_9">Ölmüş olsanız daha iyi olacağınız veya bir şekilde kendinize zarar verme düşünceleri</string>
+    <string name="qb_10">Lütfen bu soruyu \'Hiç\' olarak yanıtlayın</string>
+
+    <!-- ═══ BÖLÜM C: Yaygın Anksiyete Bozukluğu Ölçeği (c.pdf) ═══ -->
+    <string name="section_c_title">Yaygın Anksiyete Bozukluğu Ölçeği</string>
+    <string name="section_c_description">Son bir hafta içinde aşağıdaki problemler sizi ne sıklıkla rahatsız etti?</string>
+
+    <string name="section_c_opt1">Hiç</string>
+    <string name="section_c_opt2">Birkaç gün</string>
+    <string name="section_c_opt3">Günlerin yarısından fazla</string>
+    <string name="section_c_opt4">Hemen hemen her gün</string>
+
+    <string name="qc_1">Kendini sinirli, kaygılı veya çok gergin hissetme</string>
+    <string name="qc_2">Kaygılarını durduramama veya kontrol edememe</string>
+    <string name="qc_3">Farklı şeylerden çok fazla endişelenme</string>
+    <string name="qc_4">Gevşemede güçlük çekme</string>
+    <string name="qc_5">Sakince oturamayacak kadar kendini huzursuz hissetme</string>
+    <string name="qc_6">Kolayca kızma ve asabileşme</string>
+    <string name="qc_7">Sanki çok kötü bir şey olacakmış gibi korku duyma</string>
+
+    <!-- ═══ BÖLÜM D: Benlik Saygısı Ölçeği (d.pdf) ═══ -->
+    <string name="section_d_title">Benlik Saygısı Ölçeği</string>
+    <string name="section_d_description">Aşağıdaki maddeler kendiniz hakkında hissettiklerinizi ölçmek için düzenlenmiştir. Lütfen size uygun şıkkı işaretleyiniz.</string>
+
+    <string name="section_d_opt1">Çok doğru</string>
+    <string name="section_d_opt2">Doğru</string>
+    <string name="section_d_opt3">Yanlış</string>
+    <string name="section_d_opt4">Çok yanlış</string>
+
+    <string name="qd_1">Kendimi en az diğer insanlar kadar değerli buluyorum.</string>
+    <string name="qd_2">Bazı olumlu özelliklerim olduğunu düşünüyorum.</string>
+    <string name="qd_3">Genelde kendimi başarısız bir kişi olarak görme eğilimindeyim.</string>
+    <string name="qd_4">Ben de diğer insanların birçoğunun yapabildiği kadar bir şeyler yapabilirim</string>
+    <string name="qd_5">Kendimde gurur duyacak fazla bir şey bulamıyorum.</string>
+    <string name="qd_6">Kendime karşı olumlu bir tutum içindeyim.</string>
+    <string name="qd_7">Genel olarak kendimden memnunum.</string>
+    <string name="qd_8">Kendime karşı daha fazla saygı duyabilmeyi isterdim.</string>
+    <string name="qd_9">Bazen kesinlikle kendimin bir işe yaramadığını düşünüyorum.</string>
+    <string name="qd_10">Bazen kendimin hiç de yeterli bir insan olmadığını düşünüyorum.</string>
+
+    <!-- ═══ BÖLÜM E: Pozitif ve Negatif Duygu Ölçeği (e.pdf) ═══ -->
+    <string name="section_e_title">Pozitif ve Negatif Duygu Ölçeği</string>
+    <string name="section_e_description">Bu ölçek birtakım duyguları tanımlayan kelimelerden oluşuyor. Lütfen kelimeleri dikkatlice okuyun ve bu kelimelere ait duyguları ne oranda hissettiğinizi şu anı baz alarak işaretleyin.</string>
+
+    <string name="section_e_opt1">Hiçbir zaman</string>
+    <string name="section_e_opt2">Nadiren</string>
+    <string name="section_e_opt3">Bazen</string>
+    <string name="section_e_opt4">Sıklıkla</string>
+    <string name="section_e_opt5">Nerdeyse her zaman</string>
+
+    <string name="qe_1">İlgili</string>
+    <string name="qe_2">Sıkıntılı</string>
+    <string name="qe_3">Heyecanlı</string>
+    <string name="qe_4">Mutsuz</string>
+    <string name="qe_5">Güçlü</string>
+    <string name="qe_6">Suçlu</string>
+    <string name="qe_7">Ürkmüş</string>
+    <string name="qe_8">Düşmanca</string>
+    <string name="qe_9">Hevesli</string>
+    <string name="qe_10">Gururlu</string>
+    <string name="qe_11">Asabi</string>
+    <string name="qe_12">Uyanık</string>
+    <string name="qe_13">Utanmış</string>
+    <string name="qe_14">İlhamlı</string>
+    <string name="qe_15">Sinirli</string>
+    <string name="qe_16">Kararlı</string>
+    <string name="qe_17">Dikkatli</string>
+    <string name="qe_18">Tedirgin</string>
+    <string name="qe_19">Aktif</string>
+    <string name="qe_20">Korkmuş</string>
+
+    <!-- ═══ BÖLÜM F: Duygu Değerlendirme Ölçeği (f.pdf) ═══ -->
+    <string name="section_f_title">Duygu Değerlendirme Ölçeği</string>
+    <string name="section_f_description">Lütfen şu an hissettiğiniz duyguyu değerlendirin.</string>
+
+    <string name="qf_1">Lütfen şu an hissettiğiniz duyguyu aşağıdaki görseli de dikkate alarak olumsuzluk-olumluluk açısından puanlayınız. 1 puan olayı zihninizde canlandırdığınız sırada tamamen olumsuz/hoşnutsuz hissettiğinizi ifade etmektedir. 9 puan olayı zihninizde canlandırdığınız sırada tamamen olumlu/hoşnut hissettiğinizi ifade etmektedir.</string>
+    <string name="qf_2">Lütfen şu an hissettiğiniz duyguyu aşağıdaki görseli de dikkate alarak sakinlik-uyarılmışlık açısından puanlayınız. 1 puan olayı zihninizde canlandırdığınız sırada tamamen sakin, rahat ve dingin hissettiğinizi ifade etmektedir. 9 puan olayı zihninizde canlandırdığınız sırada tamamen uyarılmış, gergin, heyecanlı ve rahatsız hissettiğinizi ifade etmektedir.</string>
+
+    <!-- ═══ BÖLÜM G: Durum Benlik Saygısı Ölçeği (g.pdf) ═══ -->
+    <string name="section_g_title">Durum Benlik Saygısı Ölçeği</string>
+    <string name="section_g_description">Bu anket, şu anda kendiniz hakkında nasıl düşündüğünüzü ölçmeyi amaçlamaktadır. Hiçbir ifade için doğru ya da yanlış cevap yoktur. Lütfen şu anda kendiniz için doğru olduğunu düşündüğünüz seçeneği işaretleyiniz ve tüm maddeleri yanıtladığınızdan emin olun. Tekrar hatırlatmak gerekirse, bu soruları sizin için ŞU ANDA ne hissettiğinizi yansıtacak şekilde cevaplayınız.</string>
+
+    <string name="section_g_opt1">1 - Hiç katılmıyorum</string>
+    <string name="section_g_opt2">2</string>
+    <string name="section_g_opt3">3</string>
+    <string name="section_g_opt4">4 - Ne katılıyorum ne katılmıyorum</string>
+    <string name="section_g_opt5">5</string>
+    <string name="section_g_opt6">6</string>
+    <string name="section_g_opt7">7 - Tamamen katılıyorum</string>
+
+    <string name="qg_1">Şu anda bedenimin görünüşünden memnunum</string>
+    <string name="qg_2">Performansımla ilgili hayal kırıklığına uğramış veya sarsılmış hissediyorum</string>
+    <string name="qg_3">Diğer insanların benimle ilgili ne düşündüğü konusunda endişeliyim.</string>
+    <string name="qg_4">Kendimi çekici hissetmiyorum.</string>
+    <string name="qg_5">İşlerimde başarılı olmadığımı hissediyorum</string>
+    <string name="qg_6">Aptal gibi göründüğümden endişeliyim.</string>
+    <string name="qg_7">Bu soruyu lütfen \'ne katılıyorum ne katılmıyorum\' şeklince yanıtlayınız.</string>
+
+    <!-- Ekran 3: Yükleniyor -->
+    <string name="loading_title">Yanıtlarınız Analiz Ediliyor</string>
+    <string name="loading_subtitle">Sizin için kişiselleştirilmiş bir mesaj hazırlıyoruz...</string>
+    <string name="loading_tip_1">💡 Derin bir nefes almak sinir sisteminizi sıfırlayabilir</string>
+    <string name="loading_tip_2">🌱 Öz farkındalığa yönelik her küçük adım önemlidir</string>
+    <string name="loading_tip_3">✨ Kendinizi dürüstçe ifade ederek cesaret gösterdiniz</string>
+    <string name="retry_button">Tekrar Dene</string>
+    <string name="api_error_fallback">\"Her an yeni bir başlangıçtır.\" — T.S. Eliot\n\nEngellerle karşılaştığımızda bile, duygularınız üzerine düşünme isteğiniz inanılmaz bir güç gösterir.</string>
+
+    <!-- Ekran 4: Sonuç -->
+    <string name="result_title">Kişiselleştirilmiş Mesajınız</string>
+    <string name="reflection_title">Son Düşünce</string>
+    <string name="reflection_question">Bu mesaj sizi nasıl hissettirdi? Kendinizi daha iyi hissediyor musunuz?</string>
+    <string name="reflection_optional">Düşüncelerinizi paylaşın (isteğe bağlı)</string>
+    <string name="reflection_placeholder">Düşüncelerinizi buraya yazın...</string>
+    <string name="submit_reflection">Oturumu Tamamla</string>
+
+    <!-- Duygular -->
+    <string name="feeling_worse">Daha kötü</string>
+    <string name="feeling_same">Aynı</string>
+    <string name="feeling_slightly_better">Biraz iyi</string>
+    <string name="feeling_better">Daha iyi</string>
+    <string name="feeling_much_better">Çok iyi</string>
+
+    <!-- Tamamlanma -->
+    <string name="completion_title">Oturum Tamamlandı</string>
+    <string name="completion_message">Ruhsal sağlığınız üzerine düşünmeye zaman ayırdığınız için teşekkürler. Unutmayın, öz farkındalığa doğru attığınız her adım, büyümeye doğru atılmış bir adımdır.</string>
+    <string name="restart_button">Tekrar Başla</string>
+
+    <!-- Android-specific additions (no .strings counterpart) -->
+    <string name="share_csv_title">Yanıtlarınızı paylaşın</string>
+    <string name="language_toggle">Dili değiştir</string>
+    <string name="error_network">Sunucuya ulaşılamadı. Bağlantınızı kontrol edip tekrar deneyin.</string>
+    <string name="error_api">API Hatası (%1$d): %2$s</string>
+    <string name="error_no_content">API yanıtında içerik yok.</string>
+    <string name="error_unknown">Bir şeyler ters gitti. Lütfen tekrar deneyin.</string>
+    <string name="previous_button_desc">Önceki soru</string>
+    <string name="next_button_desc">Sonraki soru</string>
+
+    <!-- Age question (bounded numeric input) -->
+    <string name="age_placeholder">örn. 28</string>
+    <string name="age_hint">%1$d ile %2$d arasında bir tam sayı girin</string>
+    <string name="age_error">Lütfen %1$d ile %2$d arasında geçerli bir yaş girin</string>
+</resources>

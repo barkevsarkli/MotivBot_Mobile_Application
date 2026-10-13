@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generated from MotivBot/en.lproj/Localizable.strings -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <!-- MotivBot - English Localization -->
+
+    <!-- App -->
+    <string name="app_title">MotivBot</string>
+    <string name="theme_toggle">Toggle Dark/Light Mode</string>
+
+    <!-- Screen 1: Emotion Input -->
+    <string name="emotion_prompt">Express your current emotions in 3-4 sentences.</string>
+    <string name="your_thoughts">YOUR THOUGHTS</string>
+    <string name="emotion_placeholder">How are you feeling right now? What thoughts occupy your mind? Share freely...</string>
+    <string name="emotion_hint">Write at least a few sentences to continue</string>
+    <string name="next_button">Next</string>
+    <string name="free_text_placeholder">Type your response...</string>
+
+    <!-- Screen 2: Questionnaire -->
+    <string name="progress_label">Progress</string>
+    <string name="question_label">Question</string>
+    <string name="finish_button">Finish</string>
+
+    <!-- ═══ SECTION A: Demographic Information (a.pdf) ═══ -->
+    <string name="section_a_title">Demographic Information</string>
+    <string name="section_a_description">Please fill in the demographic information below.</string>
+
+    <string name="qa_1">Your age:</string>
+    <string name="qa_2">Your gender:</string>
+    <string name="qa_2_opt1">Man</string>
+    <string name="qa_2_opt2">Woman</string>
+    <string name="qa_2_opt3">I don\'t want to say it</string>
+    <string name="previous_button">Previous</string>
+
+    <string name="qa_3">What is your income level?</string>
+    <string name="qa_3_opt1">Very low</string>
+    <string name="qa_3_opt2">Low</string>
+    <string name="qa_3_opt3">Average</string>
+    <string name="qa_3_opt4">High</string>
+    <string name="qa_3_opt5">Very high</string>
+
+    <string name="qa_4">What is your education level?</string>
+    <string name="qa_4_opt1">Primary School</string>
+    <string name="qa_4_opt2">High School</string>
+    <string name="qa_4_opt3">University</string>
+    <string name="qa_4_opt4">Master\'s / PhD</string>
+
+    <string name="qa_5">Have you ever been diagnosed by a mental health professional? (If \'yes\', please write your diagnosis below)</string>
+    <string name="qa_5_opt1">Yes</string>
+    <string name="qa_5_opt2">No</string>
+
+    <string name="qa_6">If you have received psychological and/or psychiatric treatment before, what type of treatment(s) did you receive? (Leave blank if none)</string>
+    <string name="qa_6_opt1">Individual psychotherapy</string>
+    <string name="qa_6_opt2">Group psychotherapy</string>
+    <string name="qa_6_opt3">Medication</string>
+    <string name="qa_6_opt4">Other (please specify)</string>
+
+    <!-- ═══ SECTION B: PHQ-9 ═══ -->
+    <string name="section_b_title">Patient Health Questionnaire</string>
+    <string name="section_b_description">Over the last week, how often have you been bothered by any of the following problems?</string>
+
+    <string name="section_b_opt1">Not at all</string>
+    <string name="section_b_opt2">Several days</string>
+    <string name="section_b_opt3">More than half the days</string>
+    <string name="section_b_opt4">Nearly every day</string>
+
+    <string name="qb_1">Little interest or pleasure in doing things</string>
+    <string name="qb_2">Feeling down, depressed, or hopeless</string>
+    <string name="qb_3">Trouble falling or staying asleep, or sleeping too much</string>
+    <string name="qb_4">Feeling tired or having little energy</string>
+    <string name="qb_5">Poor appetite or overeating</string>
+    <string name="qb_6">Feeling bad about yourself — or that you are a failure or have let yourself or your family down</string>
+    <string name="qb_7">Trouble concentrating on things, such as reading the newspaper or watching television</string>
+    <string name="qb_8">Moving or speaking so slowly that other people could have noticed. Or the opposite — being so fidgety or restless that you have been moving around a lot more than usual</string>
+    <string name="qb_9">Thoughts that you would be better off dead, or of hurting yourself in some way</string>
+    <string name="qb_10">Please answer \'Not at all\' to this question.</string>
+
+    <!-- ═══ SECTION C: GAD-7 ═══ -->
+    <string name="section_c_title">Generalized Anxiety Disorder Scale</string>
+    <string name="section_c_description">Over the last week, how often have you been bothered by the following problems?</string>
+
+    <string name="section_c_opt1">Not at all</string>
+    <string name="section_c_opt2">Several days</string>
+    <string name="section_c_opt3">More than half the days</string>
+    <string name="section_c_opt4">Nearly every day</string>
+
+    <string name="qc_1">Feeling nervous, anxious or on edge</string>
+    <string name="qc_2">Not being able to stop or control worrying</string>
+    <string name="qc_3">Worrying too much about different things</string>
+    <string name="qc_4">Trouble relaxing</string>
+    <string name="qc_5">Being so restless that it is hard to sit still</string>
+    <string name="qc_6">Becoming easily annoyed or irritable</string>
+    <string name="qc_7">Feeling afraid as if something awful might happen</string>
+
+    <!-- ═══ SECTION D: Rosenberg Self-Esteem ═══ -->
+    <string name="section_d_title">Self-Esteem Scale</string>
+    <string name="section_d_description">Below is a list of statements dealing with your general feelings about yourself. Please choose the option that best describes you.</string>
+
+    <string name="section_d_opt1">Strongly agree</string>
+    <string name="section_d_opt2">Agree</string>
+    <string name="section_d_opt3">Disagree</string>
+    <string name="section_d_opt4">Strongly disagree</string>
+
+    <string name="qd_1">I feel that I\'m a person of worth, at least on an equal plane with others.</string>
+    <string name="qd_2">I feel that I have a number of good qualities.</string>
+    <string name="qd_3">All in all, I am inclined to feel that I am a failure.</string>
+    <string name="qd_4">I am able to do things as well as most other people.</string>
+    <string name="qd_5">I feel I do not have much to be proud of.</string>
+    <string name="qd_6">I take a positive attitude toward myself.</string>
+    <string name="qd_7">On the whole, I am satisfied with myself.</string>
+    <string name="qd_8">I wish I could have more respect for myself.</string>
+    <string name="qd_9">I certainly feel useless at times.</string>
+    <string name="qd_10">At times I think I am no good at all.</string>
+
+    <!-- ═══ SECTION E: PANAS ═══ -->
+    <string name="section_e_title">Positive and Negative Affect Schedule</string>
+    <string name="section_e_description">This scale consists of a number of words that describe different feelings and emotions. Indicate to what extent you have felt this way RIGHT NOW.</string>
+
+    <string name="section_e_opt1">Very slightly or not at all</string>
+    <string name="section_e_opt2">A little</string>
+    <string name="section_e_opt3">Moderately</string>
+    <string name="section_e_opt4">Quite a bit</string>
+    <string name="section_e_opt5">Extremely</string>
+
+    <string name="qe_1">Interested</string>
+    <string name="qe_2">Distressed</string>
+    <string name="qe_3">Excited</string>
+    <string name="qe_4">Upset</string>
+    <string name="qe_5">Strong</string>
+    <string name="qe_6">Guilty</string>
+    <string name="qe_7">Scared</string>
+    <string name="qe_8">Hostile</string>
+    <string name="qe_9">Enthusiastic</string>
+    <string name="qe_10">Proud</string>
+    <string name="qe_11">Irritable</string>
+    <string name="qe_12">Alert</string>
+    <string name="qe_13">Ashamed</string>
+    <string name="qe_14">Inspired</string>
+    <string name="qe_15">Nervous</string>
+    <string name="qe_16">Determined</string>
+    <string name="qe_17">Attentive</string>
+    <string name="qe_18">Jittery</string>
+    <string name="qe_19">Active</string>
+    <string name="qe_20">Afraid</string>
+
+    <!-- ═══ SECTION F: Self-Assessment Manikin (SAM) ═══ -->
+    <string name="section_f_title">Self Assessment Manikin</string>
+    <string name="section_f_description">Please rate your current emotion.</string>
+
+    <string name="qf_1">Please rate your current emotion in terms of negativity-positivity. 1 represents feeling completely unhappy/negative, while 9 represents feeling completely happy/positive.</string>
+    <string name="qf_2">Please rate your current emotion in terms of calmness-arousal. 1 represents feeling completely calm, relaxed, or sluggish, while 9 represents feeling completely aroused, excited, or jittery.</string>
+
+    <!-- ═══ SECTION G: State Self-Esteem Scale ═══ -->
+    <string name="section_g_title">State Self-Esteem Scale</string>
+    <string name="section_g_description">This questionnaire is designed to measure how you feel about yourself at this moment. There are no right or wrong answers.</string>
+
+    <string name="section_g_opt1">1 - Strongly Disagree</string>
+    <string name="section_g_opt2">2</string>
+    <string name="section_g_opt3">3</string>
+    <string name="section_g_opt4">4 - Neither Agree nor Disagree</string>
+    <string name="section_g_opt5">5</string>
+    <string name="section_g_opt6">6</string>
+    <string name="section_g_opt7">7 - Strongly Agree</string>
+
+    <string name="qg_1">I feel satisfied with the way my body looks right now.</string>
+    <string name="qg_2">I feel frustrated or rattled about my performance.</string>
+    <string name="qg_3">I am worried about what other people think of me.</string>
+    <string name="qg_4">I feel unattractive.</string>
+    <string name="qg_5">I feel that I am not doing well at things.</string>
+    <string name="qg_6">I am worried about looking foolish.</string>
+    <string name="qg_7">Please select \'Neither Agree nor Disagree\' for this question.</string>
+
+    <!-- Screen 3: Loading -->
+    <string name="loading_title">Analyzing Your Responses</string>
+    <string name="loading_subtitle">We are preparing a personalized message for you...</string>
+    <string name="loading_tip_1">💡 Taking a deep breath can reset your nervous system</string>
+    <string name="loading_tip_2">🌱 Every small step toward self-awareness matters</string>
+    <string name="loading_tip_3">✨ Expressing yourself honestly is a sign of courage</string>
+    <string name="retry_button">Retry</string>
+    <string name="api_error_fallback">\"Every moment is a fresh beginning.\" — T.S. Eliot\n\nEven when facing barriers, your willingness to reflect shows incredible strength.</string>
+
+    <!-- Screen 4: Result -->
+    <string name="result_title">Your Personalized Message</string>
+    <string name="reflection_title">Final Reflection</string>
+    <string name="reflection_question">How did this message make you feel? Do you feel any better?</string>
+    <string name="reflection_optional">Share your thoughts (optional)</string>
+    <string name="reflection_placeholder">Type your reflections here...</string>
+    <string name="submit_reflection">Complete Session</string>
+
+    <!-- Emotions -->
+    <string name="feeling_worse">Worse</string>
+    <string name="feeling_same">Same</string>
+    <string name="feeling_slightly_better">Slightly Better</string>
+    <string name="feeling_better">Better</string>
+    <string name="feeling_much_better">Much Better</string>
+
+    <!-- Completion -->
+    <string name="completion_title">Session Completed</string>
+    <string name="completion_message">Thank you for taking the time to reflect on your well-being. Remember, every step toward self-awareness is a step toward growth.</string>
+    <string name="restart_button">Restart</string>
+
+    <!-- Android-specific additions (no .strings counterpart) -->
+    <string name="share_csv_title">Share your answers</string>
+    <string name="language_toggle">Change language</string>
+    <string name="error_network">Could not reach the server. Check your connection and try again.</string>
+    <string name="error_api">API Error (%1$d): %2$s</string>
+    <string name="error_no_content">No content in API response.</string>
+    <string name="error_unknown">Something went wrong. Please try again.</string>
+    <string name="previous_button_desc">Previous question</string>
+    <string name="next_button_desc">Next question</string>
+
+    <!-- Age question (bounded numeric input) -->
+    <string name="age_placeholder">e.g. 28</string>
+    <string name="age_hint">Enter a whole number between %1$d and %2$d</string>
+    <string name="age_error">Please enter a valid age between %1$d and %2$d</string>
+</resources>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--
+      Foreground holds only the robot mark, sized into the 66dp safe zone. The "MotivBot" wordmark
+      from the source artwork is deliberately excluded: launchers mask adaptive icons to circles,
+      squircles and rounded squares, all of which would clip the text.
+    -->
+    <background android:drawable="@color/ic_launcher_background" />
+    <foreground android:drawable="@mipmap/ic_launcher_foreground" />
+    <monochrome android:drawable="@mipmap/ic_launcher_foreground" />
+</adaptive-icon>
