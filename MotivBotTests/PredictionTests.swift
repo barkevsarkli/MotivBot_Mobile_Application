@@ -40,28 +40,24 @@ private enum Fixture {
         for (index, value) in rses.enumerated() {
             result.append(UserAnswer(sectionId: 4, questionId: 24 + index, answerValue: .option(option(24 + index, value: value))))
         }
-        result.append(UserAnswer(sectionId: 6, questionId: 54, answerValue: .scale(4)))
-        result.append(UserAnswer(sectionId: 6, questionId: 55, answerValue: .scale(6)))
         return result
     }
 
-    static let responseJSON = """
-    {
-      "model_id": "amirbhat/motivbot-multilingual-XLMR-10062026v3",
-      "inputs_used": {"Age": 25, "sex": 0.0, "PHQ-9": 10, "Rosenberg.self-esteem": 21},
-      "dimensions": [
-        {"key": "Anxiety_Fear_Worry", "level": "High", "probabilities": {"No": 0.05, "Low": 0.07, "High": 0.88}},
-        {"key": "Depression_Hopelessness_Sadness", "level": "No", "probabilities": {"No": 0.84, "Low": 0.05, "High": 0.11}},
-        {"key": "Self_Esteem_Issue", "level": "No", "probabilities": {"No": 0.94, "Low": 0.05, "High": 0.01}},
-        {"key": "Positive_Affect", "level": "Low", "probabilities": {"No": 0.40, "Low": 0.45, "High": 0.15}},
-        {"key": "Negative_Affect", "level": "High", "probabilities": {"No": 0.25, "Low": 0.36, "High": 0.39}}
-      ],
-      "elevated_risk": true
-    }
+    /// The structured JSON of `data[1]`, as returned by the pipeline.
+    static let structuredJSON = """
+    {"emotions": {"Anxiety_Fear_Worry": 0.88, "Depression_Hopelessness_Sadness": 0.62, "Self_Esteem_Issue": 0.19, "Positive_Affect": 0.03, "Negative_Affect": 0.97}, "messages": [{"category": "Emotional Validation", "score": 2.381, "text": "Hi\\u00e7bir \\u015fey sonsuza kadar s\\u00fcrmez."}, {"category": "Cognitive Reframing", "score": 2.501, "text": "Kayg\\u0131 sen de\\u011filsin."}, {"category": "Action-Oriented Encouragement", "score": 2.501, "text": "Korkunun \\u00fcstesinden gelebilirsin."}]}
     """
 
     static func response() throws -> PredictionResponse {
-        try JSONDecoder().decode(PredictionResponse.self, from: Data(responseJSON.utf8))
+        try JSONDecoder().decode(PredictionResponse.self, from: Data(structuredJSON.utf8))
+    }
+
+    static func response(depression: Double) -> PredictionResponse {
+        PredictionResponse(
+            emotions: ["Anxiety_Fear_Worry": 0.1, "Depression_Hopelessness_Sadness": depression,
+                       "Self_Esteem_Issue": 0.1, "Positive_Affect": 0.6, "Negative_Affect": 0.2],
+            messages: []
+        )
     }
 }
 
@@ -70,20 +66,15 @@ private enum Fixture {
 @MainActor
 struct PredictionRequestBuilderTests {
 
-    @Test func mapsFullQuestionnaireToExactJSON() throws {
+    @Test func encodesPipelineDataArrayInOrder() throws {
         let request = try PredictionRequestBuilder.build(
             emotionText: "  Herkes beni sinirlendiriyor, artık tahammülüm kalmadı \n",
-            answers: Fixture.answers(),
-            languageCode: "tr"
+            answers: Fixture.answers()
         )
         let json = try JSONSerialization.jsonObject(with: JSONEncoder().encode(request)) as! NSDictionary
+        // PHQ-9 = 10; RSES = 24 on the 0-30 scale.
         let expected: NSDictionary = [
-            "text": "Herkes beni sinirlendiriyor, artık tahammülüm kalmadı",
-            "age": 25,
-            "gender": "male",
-            "phq9_items": [1, 2, 1, 0, 2, 1, 1, 2, 0],
-            "rses_items": [3, 2, 1, 2, 0, 3, 2, 1, 1, 0],
-            "language": "tr",
+            "data": ["Herkes beni sinirlendiriyor, artık tahammülüm kalmadı", 25, "Erkek", 10, 24],
         ]
         #expect(json == expected)
     }
@@ -91,52 +82,61 @@ struct PredictionRequestBuilderTests {
     @Test func excludesAttentionCheck() throws {
         let request = try PredictionRequestBuilder.build(
             emotionText: "text",
-            answers: Fixture.answers(phq9: Array(repeating: 0, count: 9), attentionCheck: 3),
-            languageCode: nil
+            answers: Fixture.answers(phq9: Array(repeating: 0, count: 9), attentionCheck: 3)
         )
         #expect(request.phq9Items == Array(repeating: 0, count: 9))
+        #expect(request.phq9Score == 0)
     }
 
-    @Test func sendsRawRosenbergValues() throws {
-        // Reverse scoring happens on the server only.
-        let raw = [3, 3, 3, 3, 3, 0, 0, 0, 0, 0]
-        let request = try PredictionRequestBuilder.build(emotionText: "text", answers: Fixture.answers(rses: raw), languageCode: nil)
-        #expect(request.rsesItems == raw)
+    @Test func phq9ScoreIsSumOfItems() throws {
+        let request = try PredictionRequestBuilder.build(emotionText: "text", answers: Fixture.answers(phq9: Array(repeating: 3, count: 9)))
+        #expect(request.phq9Score == 27)
     }
 
     @Test(arguments: [
-        (1, PredictionRequest.Gender.male),
-        (2, PredictionRequest.Gender.female),
-        (3, PredictionRequest.Gender.unspecified),
+        // Agreeing with every positive statement and disagreeing with every negative one is the maximum.
+        ([3, 3, 0, 3, 0, 3, 3, 0, 0, 0], 30),
+        ([0, 0, 3, 0, 3, 0, 0, 3, 3, 3], 0),
+        ([3, 3, 3, 3, 3, 3, 3, 3, 3, 3], 15),
+        ([3, 2, 1, 2, 0, 3, 2, 1, 1, 0], 24),
     ])
-    func mapsGender(optionValue: Int, expected: PredictionRequest.Gender) throws {
-        let request = try PredictionRequestBuilder.build(
-            emotionText: "text",
-            answers: Fixture.answers(genderValue: optionValue),
-            languageCode: nil
-        )
+    func rsesScoreAppliesReverseItems(items: [Int], expected: Int) throws {
+        let request = try PredictionRequestBuilder.build(emotionText: "text", answers: Fixture.answers(rses: items))
+        #expect(request.rsesItems == items)
+        #expect(request.rsesScore == expected)
+    }
+
+    @Test(arguments: [
+        (1, PredictionRequest.Gender.male, "Erkek", 0.0),
+        (2, PredictionRequest.Gender.female, "Kadın", 1.0),
+        (3, PredictionRequest.Gender.unspecified, "Non-binary", 0.5),
+    ])
+    func mapsGender(optionValue: Int, expected: PredictionRequest.Gender, wire: String, numeric: Double) throws {
+        let request = try PredictionRequestBuilder.build(emotionText: "text", answers: Fixture.answers(genderValue: optionValue))
         #expect(request.gender == expected)
+        #expect(request.gender.rawValue == wire)
+        #expect(request.gender.numericValue == numeric)
     }
 
     @Test func rejectsMissingAnswers() {
         let answers = Fixture.answers().filter { $0.questionId != 30 }
         #expect(throws: PredictionRequestBuilder.BuildError.missingAnswer(questionId: 30)) {
-            try PredictionRequestBuilder.build(emotionText: "text", answers: answers, languageCode: nil)
+            try PredictionRequestBuilder.build(emotionText: "text", answers: answers)
         }
     }
 
     @Test func rejectsEmptyText() {
         #expect(throws: PredictionRequestBuilder.BuildError.emptyText) {
-            try PredictionRequestBuilder.build(emotionText: "  \n", answers: Fixture.answers(), languageCode: nil)
+            try PredictionRequestBuilder.build(emotionText: "  \n", answers: Fixture.answers())
         }
     }
 
-    @Test(arguments: [("25", 25), (" 42 ", 42), ("10", 10), ("100", 100), ("۲۵", 25), ("٣٠", 30)])
+    @Test(arguments: [("25", 25), (" 42 ", 42), ("18", 18), ("100", 100), ("۲۵", 25), ("٣٠", 30)])
     func parsesValidAge(input: String, expected: Int) {
         #expect(PredictionRequestBuilder.parseAge(input) == expected)
     }
 
-    @Test(arguments: ["", "abc", "9", "101", "2.5", "-20", "25a", "1000"])
+    @Test(arguments: ["", "abc", "9", "17", "101", "2.5", "-20", "25a", "1000"])
     func rejectsInvalidAge(input: String) {
         #expect(PredictionRequestBuilder.parseAge(input) == nil)
     }
@@ -147,15 +147,43 @@ struct PredictionRequestBuilderTests {
 @MainActor
 struct PredictionResponseTests {
 
-    @Test func decodesSampleJSON() throws {
+    @Test func decodesStructuredJSON() throws {
         let response = try Fixture.response()
-        #expect(response.modelId == "amirbhat/motivbot-multilingual-XLMR-10062026v3")
-        #expect(response.inputsUsed == .init(age: 25, sex: 0.0, phq9: 10, rosenberg: 21))
-        #expect(response.dimensions.map(\.key) == WellBeingDimension.allCases.map(\.rawValue))
-        #expect(response.dimensions[0].level == .high)
-        #expect(response.dimensions[0].probabilities.high == 0.88)
-        #expect(response.dimensions[3].level == .low)
-        #expect(response.elevatedRisk)
+        #expect(response.probability(for: .anxiety) == 0.88)
+        #expect(response.level(for: .anxiety) == .high)
+        #expect(response.level(for: .selfEsteem) == .no)
+        #expect(response.messages.count == 3)
+        #expect(response.messages[0].category == "Emotional Validation")
+        #expect(response.messages[0].text == "Hiçbir şey sonsuza kadar sürmez.")
+    }
+
+    @Test(arguments: [(0.0, PredictionResponse.Level.no), (0.24, .no), (0.25, .low), (0.49, .low), (0.5, .high), (1.0, .high)])
+    func levelThresholds(probability: Double, expected: PredictionResponse.Level) {
+        let response = PredictionResponse(emotions: ["Anxiety_Fear_Worry": probability], messages: [])
+        #expect(response.level(for: .anxiety) == expected)
+        #expect(response.level(for: .depression) == nil)
+    }
+
+    @Test func parsesCompleteEventWithObjectPayload() throws {
+        let stream = "event: complete\ndata: [\"### Summary\", \(Fixture.structuredJSON.trimmingCharacters(in: .whitespacesAndNewlines))]\n\n"
+        let response = try MotivBotAPIService.parseEventStream(Data(stream.utf8))
+        #expect(response == (try Fixture.response()))
+    }
+
+    @Test func parsesCompleteEventWithEscapedStringPayload() throws {
+        let inner = Fixture.structuredJSON.trimmingCharacters(in: .whitespacesAndNewlines)
+        let escaped = String(data: try JSONSerialization.data(withJSONObject: [inner], options: .fragmentsAllowed), encoding: .utf8)!
+            .dropFirst().dropLast()
+        let stream = "event: generating\ndata: null\n\nevent: complete\ndata: [\"### Summary\", \(escaped)]\n\n"
+        let response = try MotivBotAPIService.parseEventStream(Data(stream.utf8))
+        #expect(response == (try Fixture.response()))
+    }
+
+    @Test func errorEventBecomesInvalidInput() {
+        let stream = "event: error\ndata: {\"error\": \"Value 15 is less than minimum value 18.\"}\n\n"
+        #expect(throws: MotivBotAPIError.invalidInput("Value 15 is less than minimum value 18.")) {
+            try MotivBotAPIService.parseEventStream(Data(stream.utf8))
+        }
     }
 
     @Test func positiveAffectToneIsInverted() {
@@ -170,21 +198,17 @@ struct PredictionResponseTests {
 
 @MainActor
 private final class StubService: PredictionServicing {
-    var healthStatuses: [HealthStatus] = [.ready]
-    var result: Result<PredictionResponse, MotivBotAPIError>
+    /// Results returned in order; the last one repeats.
+    var results: [Result<PredictionResponse, MotivBotAPIError>]
     private(set) var sentRequests: [PredictionRequest] = []
 
-    init(result: Result<PredictionResponse, MotivBotAPIError>) {
-        self.result = result
-    }
-
-    func health() async throws -> HealthStatus {
-        if case .failure(.serverUnreachable) = result { throw MotivBotAPIError.serverUnreachable }
-        return healthStatuses.count > 1 ? healthStatuses.removeFirst() : healthStatuses[0]
+    init(_ results: Result<PredictionResponse, MotivBotAPIError>...) {
+        self.results = results
     }
 
     func predict(_ request: PredictionRequest) async throws -> PredictionResponse {
         sentRequests.append(request)
+        let result = results.count > 1 ? results.removeFirst() : results[0]
         return try result.get()
     }
 }
@@ -192,31 +216,49 @@ private final class StubService: PredictionServicing {
 @MainActor
 struct WellBeingViewModelPredictionTests {
 
-    private func makeViewModel(_ service: StubService) -> WellBeingViewModel {
-        let viewModel = WellBeingViewModel(service: service, healthPollInterval: .milliseconds(1), maxHealthPolls: 5)
+    private func makeViewModel(_ service: StubService, phq9: [Int] = Fixture.phq9) -> WellBeingViewModel {
+        let viewModel = WellBeingViewModel(service: service, retryInterval: .milliseconds(1), maxAttempts: 5)
         viewModel.emotionText = "Herkes beni sinirlendiriyor, artık tahammülüm kalmadı"
-        viewModel.answers = Fixture.answers()
-        viewModel.languageCode = "fa"
+        viewModel.answers = Fixture.answers(phq9: phq9)
         return viewModel
     }
 
-    @Test func elevatedRiskReachesState() async throws {
-        let service = StubService(result: .success(try Fixture.response()))
-        service.healthStatuses = [.loading, .loading, .ready]
+    @Test func retriesWhileSpaceWakesUpThenShowsResult() async throws {
+        let service = StubService(.failure(.modelLoading), .failure(.modelLoading), .success(try Fixture.response()))
         let viewModel = makeViewModel(service)
 
         await viewModel.submitForAnalysis()
 
-        #expect(viewModel.prediction?.elevatedRisk == true)
+        #expect(service.sentRequests.count == 3)
         #expect(viewModel.currentScreen == .result)
         #expect(viewModel.analysisPhase == .idle)
-        #expect(service.sentRequests.first?.language == "fa")
-        #expect(viewModel.generateCSV().contains("elevated_risk,true"))
-        #expect(viewModel.generateCSV().contains("Anxiety_Fear_Worry,High"))
+        #expect(viewModel.prediction?.messages.count == 3)
+        // Depression probability 0.62 is above the presence threshold.
+        #expect(viewModel.elevatedRisk)
+        let csv = viewModel.generateCSV()
+        #expect(csv.contains("PHQ-9 (0-27),10"))
+        #expect(csv.contains("RSES (0-30),24"))
+        #expect(csv.contains("(0 = male; 0.5 = not specified; 1 = female),0.0"))
+        #expect(csv.contains("Anxiety_Fear_Worry,0.880,High"))
+        #expect(csv.contains("elevated_risk,true"))
+    }
+
+    @Test func selfHarmItemRaisesRiskEvenWithLowDepression() async {
+        var phq9 = Array(repeating: 0, count: 9)
+        phq9[8] = 1
+        let viewModel = makeViewModel(StubService(.success(Fixture.response(depression: 0.1))), phq9: phq9)
+        await viewModel.submitForAnalysis()
+        #expect(viewModel.elevatedRisk)
+    }
+
+    @Test func noRiskWithoutSignals() async {
+        let viewModel = makeViewModel(StubService(.success(Fixture.response(depression: 0.1))), phq9: Array(repeating: 0, count: 9))
+        await viewModel.submitForAnalysis()
+        #expect(!viewModel.elevatedRisk)
     }
 
     @Test func unreachableServerKeepsUserOnLoadingWithError() async {
-        let viewModel = makeViewModel(StubService(result: .failure(.serverUnreachable)))
+        let viewModel = makeViewModel(StubService(.failure(.serverUnreachable)))
         viewModel.currentScreen = .loading
 
         await viewModel.submitForAnalysis()
@@ -226,23 +268,22 @@ struct WellBeingViewModelPredictionTests {
         #expect(viewModel.currentScreen == .loading)
     }
 
-    @Test func modelThatNeverFinishesLoadingFailsWithModelLoading() async throws {
-        let service = StubService(result: .success(try Fixture.response()))
-        service.healthStatuses = [.loading]
+    @Test func spaceThatNeverWakesFailsWithModelLoading() async {
+        let service = StubService(.failure(.modelLoading))
         let viewModel = makeViewModel(service)
 
         await viewModel.submitForAnalysis()
 
         #expect(viewModel.analysisPhase == .failed(.modelLoading))
-        #expect(service.sentRequests.isEmpty)
+        #expect(service.sentRequests.count == 5)
     }
 
     @Test func ageMustBeValidToProceed() {
-        let viewModel = WellBeingViewModel(service: StubService(result: .failure(.decoding)))
+        let viewModel = WellBeingViewModel(service: StubService(.failure(.decoding)))
         #expect(viewModel.currentQuestion?.id == 1)
         viewModel.freeTextAnswer = "abc"
         #expect(!viewModel.canProceedQuestion)
-        viewModel.freeTextAnswer = "7"
+        viewModel.freeTextAnswer = "17"
         #expect(!viewModel.canProceedQuestion)
         viewModel.freeTextAnswer = "۲۵"
         #expect(viewModel.canProceedQuestion)
@@ -254,7 +295,7 @@ struct WellBeingViewModelPredictionTests {
     }
 
     @Test func treatmentQuestionIsOptional() {
-        let viewModel = WellBeingViewModel(service: StubService(result: .failure(.decoding)))
+        let viewModel = WellBeingViewModel(service: StubService(.failure(.decoding)))
         viewModel.currentQuestionIndex = 5
         #expect(viewModel.currentQuestion?.id == 6)
         viewModel.freeTextAnswer = ""

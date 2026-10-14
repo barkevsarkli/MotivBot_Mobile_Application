@@ -2,14 +2,29 @@ import Foundation
 
 // MARK: - API Contract
 //
-// Mirrors the platform-neutral contract of motivbot-inference (POST /predict, GET /health).
-// The app sends raw answers; the server computes all scores.
+// The MotivBot unified pipeline on Hugging Face Spaces (Gradio):
+//   1. POST {base}/gradio_api/call/run_pipeline   body {"data": [text, age, gender, phq9, rses]}
+//      -> {"event_id": "..."}
+//   2. GET  {base}/gradio_api/call/run_pipeline/{event_id}
+//      -> server-sent events; "event: complete" carries data = [markdown summary, structured JSON]
+// Scoring follows how_to_score.docx; the scores are computed in the app.
 
-struct PredictionRequest: Codable, Equatable {
-    enum Gender: String, Codable {
-        case male
-        case female
-        case unspecified
+struct PredictionRequest: Equatable {
+    /// Raw values are the pipeline's gender choices.
+    enum Gender: String {
+        case male = "Erkek"
+        case female = "Kadın"
+        /// "Belirtmek istemiyorum". The pipeline has no such choice; it is sent as Non-binary.
+        case unspecified = "Non-binary"
+
+        /// Numeric encoding: male = 0, prefer not to say = 0.5, female = 1.
+        var numericValue: Double {
+            switch self {
+            case .male: return 0
+            case .unspecified: return 0.5
+            case .female: return 1
+            }
+        }
     }
 
     let text: String
@@ -19,28 +34,46 @@ struct PredictionRequest: Codable, Equatable {
     let phq9Items: [Int]
     /// Rosenberg items 1-10 as raw app values (Strongly agree = 3 ... Strongly disagree = 0).
     let rsesItems: [Int]
-    let language: String?
 
-    enum CodingKeys: String, CodingKey {
-        case text, age, gender, language
-        case phq9Items = "phq9_items"
-        case rsesItems = "rses_items"
+    /// PHQ-9 total, 0-27: the sum of the nine items.
+    var phq9Score: Int { phq9Items.reduce(0, +) }
+
+    /// RSES total, 0-30 (how_to_score.docx): normal items score the raw value, reverse items score 3 - value.
+    var rsesScore: Int {
+        rsesItems.enumerated().reduce(0) { total, item in
+            let isReverse = PredictionRequest.rsesReverseItems.contains(item.offset + 1)
+            return total + (isReverse ? 3 - item.element : item.element)
+        }
+    }
+
+    /// PHQ-9 item 9 asks about thoughts of self-harm.
+    var selfHarmItem: Int { phq9Items.count == 9 ? phq9Items[8] : 0 }
+
+    /// 1-based item numbers of the reverse-scored Rosenberg statements, in the order of qd_1 ... qd_10.
+    static let rsesReverseItems: Set<Int> = [3, 5, 8, 9, 10]
+}
+
+extension PredictionRequest: Encodable {
+    private enum CodingKeys: String, CodingKey { case data }
+
+    /// `{"data": [text, age, gender, phq9, rses]}`. The order matters.
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        var data = container.nestedUnkeyedContainer(forKey: .data)
+        try data.encode(text)
+        try data.encode(age)
+        try data.encode(gender.rawValue)
+        try data.encode(phq9Score)
+        try data.encode(rsesScore)
     }
 }
 
+/// The structured JSON in `data[1]` of the pipeline result.
 struct PredictionResponse: Codable, Equatable {
-    struct InputsUsed: Codable, Equatable {
-        let age: Int
-        let sex: Double
-        let phq9: Int
-        let rosenberg: Int
-
-        enum CodingKeys: String, CodingKey {
-            case age = "Age"
-            case sex
-            case phq9 = "PHQ-9"
-            case rosenberg = "Rosenberg.self-esteem"
-        }
+    struct Message: Codable, Equatable, Hashable {
+        let text: String
+        let category: String
+        let score: Double
     }
 
     enum Level: String, Codable, CaseIterable {
@@ -49,49 +82,31 @@ struct PredictionResponse: Codable, Equatable {
         case high = "High"
     }
 
-    struct Probabilities: Codable, Equatable {
-        let no: Double
-        let low: Double
-        let high: Double
+    /// Independent probabilities (0-1) keyed by `WellBeingDimension.rawValue`.
+    let emotions: [String: Double]
+    let messages: [Message]
 
-        enum CodingKeys: String, CodingKey {
-            case no = "No"
-            case low = "Low"
-            case high = "High"
-        }
+    func probability(for dimension: WellBeingDimension) -> Double? {
+        emotions[dimension.rawValue]
     }
 
-    struct Dimension: Codable, Equatable, Identifiable {
-        let key: String
-        let level: Level
-        let probabilities: Probabilities
+    /// Scores above 0.5 mean the emotion is likely present (per the API documentation).
+    static let presentThreshold = 0.5
+    static let lowThreshold = 0.25
 
-        var id: String { key }
+    func level(for dimension: WellBeingDimension) -> Level? {
+        guard let probability = probability(for: dimension) else { return nil }
+        if probability >= Self.presentThreshold { return .high }
+        if probability >= Self.lowThreshold { return .low }
+        return .no
     }
-
-    let modelId: String
-    let inputsUsed: InputsUsed
-    let dimensions: [Dimension]
-    let elevatedRisk: Bool
-
-    enum CodingKeys: String, CodingKey {
-        case modelId = "model_id"
-        case inputsUsed = "inputs_used"
-        case dimensions
-        case elevatedRisk = "elevated_risk"
-    }
-}
-
-enum HealthStatus: String, Decodable {
-    case loading
-    case ready
-    case error
 }
 
 // MARK: - Errors
 
 enum MotivBotAPIError: Error, Equatable {
     case serverUnreachable
+    /// The Space is asleep or rate limited (503 / 429). Retry after a pause.
     case modelLoading
     case invalidInput(String)
     case decoding
@@ -101,13 +116,13 @@ enum MotivBotAPIError: Error, Equatable {
 // MARK: - Service
 
 protocol PredictionServicing {
-    func health() async throws -> HealthStatus
     func predict(_ request: PredictionRequest) async throws -> PredictionResponse
 }
 
 final class MotivBotAPIService: PredictionServicing {
 
-    static let defaultBaseURL = URL(string: "http://localhost:8000")!
+    static let defaultBaseURL = URL(string: "https://flightmaestro-motivbot-pipeline.hf.space")!
+    static let endpointPath = "gradio_api/call/run_pipeline"
 
     /// Reads `MotivBotAPIBaseURL` from Info.plist (set via the `MOTIVBOT_API_BASE_URL` build setting).
     static var configuredBaseURL: URL {
@@ -127,36 +142,78 @@ final class MotivBotAPIService: PredictionServicing {
         if let session {
             self.session = session
         } else {
-            // The first request after the model loads can be slow on CPU.
+            // A cold start of the Space can take up to a minute.
             let configuration = URLSessionConfiguration.default
             configuration.timeoutIntervalForRequest = 120
-            configuration.timeoutIntervalForResource = 120
+            configuration.timeoutIntervalForResource = 180
             configuration.waitsForConnectivity = false
             self.session = URLSession(configuration: configuration)
         }
     }
 
-    func health() async throws -> HealthStatus {
-        var request = URLRequest(url: baseURL.appendingPathComponent("health"))
-        request.timeoutInterval = 10
-        let data = try await send(request)
-        struct Body: Decodable { let status: HealthStatus }
-        do {
-            return try JSONDecoder().decode(Body.self, from: data).status
-        } catch {
+    func predict(_ body: PredictionRequest) async throws -> PredictionResponse {
+        let endpoint = baseURL.appendingPathComponent(Self.endpointPath)
+
+        var submit = URLRequest(url: endpoint)
+        submit.httpMethod = "POST"
+        submit.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        submit.timeoutInterval = 90
+        submit.httpBody = try JSONEncoder().encode(body)
+        let submitData = try await send(submit)
+
+        struct EventID: Decodable { let event_id: String }
+        guard let eventID = try? JSONDecoder().decode(EventID.self, from: submitData).event_id else {
             throw MotivBotAPIError.decoding
         }
+
+        var result = URLRequest(url: endpoint.appendingPathComponent(eventID))
+        result.setValue("text/event-stream", forHTTPHeaderField: "Accept")
+        result.timeoutInterval = 120
+        let stream = try await send(result)
+        return try Self.parseEventStream(stream)
     }
 
-    func predict(_ body: PredictionRequest) async throws -> PredictionResponse {
-        var request = URLRequest(url: baseURL.appendingPathComponent("predict"))
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.timeoutInterval = 120
-        request.httpBody = try JSONEncoder().encode(body)
-        let data = try await send(request)
+    /// Reads the Gradio server-sent events and decodes the structured JSON of the `complete` event.
+    static func parseEventStream(_ data: Data) throws -> PredictionResponse {
+        guard let text = String(data: data, encoding: .utf8) else { throw MotivBotAPIError.decoding }
+
+        var event = ""
+        for line in text.components(separatedBy: .newlines) {
+            if line.hasPrefix("event:") {
+                event = line.dropFirst("event:".count).trimmingCharacters(in: .whitespaces)
+            } else if line.hasPrefix("data:") {
+                let payload = Data(line.dropFirst("data:".count).trimmingCharacters(in: .whitespaces).utf8)
+                switch event {
+                case "complete":
+                    return try decodeResult(payload)
+                case "error":
+                    struct ErrorBody: Decodable { let error: String? }
+                    let message = (try? JSONDecoder().decode(ErrorBody.self, from: payload))?.error
+                    throw MotivBotAPIError.invalidInput(message ?? "")
+                default:
+                    continue
+                }
+            }
+        }
+        throw MotivBotAPIError.decoding
+    }
+
+    /// `data` is `[markdown, structured]`. The structured part may arrive as an object or as an escaped JSON string.
+    private static func decodeResult(_ payload: Data) throws -> PredictionResponse {
+        guard let array = try? JSONSerialization.jsonObject(with: payload) as? [Any], array.count >= 2 else {
+            throw MotivBotAPIError.decoding
+        }
+        let structured: Data
+        if let string = array[1] as? String {
+            structured = Data(string.utf8)
+        } else if JSONSerialization.isValidJSONObject(array[1]),
+                  let object = try? JSONSerialization.data(withJSONObject: array[1]) {
+            structured = object
+        } else {
+            throw MotivBotAPIError.decoding
+        }
         do {
-            return try JSONDecoder().decode(PredictionResponse.self, from: data)
+            return try JSONDecoder().decode(PredictionResponse.self, from: structured)
         } catch {
             throw MotivBotAPIError.decoding
         }
@@ -176,12 +233,10 @@ final class MotivBotAPIService: PredictionServicing {
         switch http.statusCode {
         case 200..<300:
             return data
-        case 503:
+        case 429, 503:
             throw MotivBotAPIError.modelLoading
-        case 422:
-            struct ErrorBody: Decodable { let detail: String }
-            let detail = (try? JSONDecoder().decode(ErrorBody.self, from: data))?.detail ?? ""
-            throw MotivBotAPIError.invalidInput(detail)
+        case 400, 422:
+            throw MotivBotAPIError.invalidInput(String(data: data, encoding: .utf8) ?? "")
         default:
             throw MotivBotAPIError.http(http.statusCode)
         }

@@ -15,12 +15,13 @@ enum PredictionRequestBuilder {
     /// qb_1 ... qb_9. qb_10 (id 16) is an attention check and is never sent.
     static let phq9QuestionIds = Array(7...15)
     static let attentionCheckQuestionId = 16
-    /// qd_1 ... qd_10, sent as raw option values. The server applies the reverse scoring.
+    /// qd_1 ... qd_10, kept as raw option values. `PredictionRequest.rsesScore` applies the reverse scoring.
     static let rsesQuestionIds = Array(24...33)
 
-    static let ageRange = 10...100
+    /// The pipeline rejects ages outside 18-100.
+    static let ageRange = 18...100
 
-    static func build(emotionText: String, answers: [UserAnswer], languageCode: String?) throws -> PredictionRequest {
+    static func build(emotionText: String, answers: [UserAnswer]) throws -> PredictionRequest {
         let text = emotionText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { throw BuildError.emptyText }
 
@@ -34,8 +35,7 @@ enum PredictionRequestBuilder {
             age: age,
             gender: try gender(from: answers),
             phq9Items: try optionValues(phq9QuestionIds, in: answers),
-            rsesItems: try optionValues(rsesQuestionIds, in: answers),
-            language: languageCode
+            rsesItems: try optionValues(rsesQuestionIds, in: answers)
         )
     }
 

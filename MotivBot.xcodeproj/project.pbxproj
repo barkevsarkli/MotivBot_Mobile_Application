@@ -426,7 +426,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				MOTIVBOT_API_BASE_URL = "http://localhost:8000";
+				MOTIVBOT_API_BASE_URL = "https://flightmaestro-motivbot-pipeline.hf.space";
 				PRODUCT_BUNDLE_IDENTIFIER = com.barkevsarkli.MotivBot;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -460,7 +460,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				MOTIVBOT_API_BASE_URL = "http://localhost:8000";
+				MOTIVBOT_API_BASE_URL = "https://flightmaestro-motivbot-pipeline.hf.space";
 				PRODUCT_BUNDLE_IDENTIFIER = com.barkevsarkli.MotivBot;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;

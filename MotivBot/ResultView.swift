@@ -23,8 +23,11 @@ struct ResultView: View {
 
                     if let prediction = viewModel.prediction {
                         // Support card first, so it is the first thing a user at risk sees.
-                        if prediction.elevatedRisk {
+                        if viewModel.elevatedRisk {
                             supportCard
+                        }
+                        if !prediction.messages.isEmpty {
+                            messagesCard(prediction.messages)
                         }
                         dimensionsCard(prediction)
                         disclaimer
@@ -132,11 +135,72 @@ struct ResultView: View {
         .offset(y: showContent ? 0 : 20)
     }
 
+    // MARK: - Motivational Messages
+
+    private func messagesCard(_ messages: [PredictionResponse.Message]) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(spacing: 10) {
+                Image(systemName: "quote.bubble.fill")
+                    .font(.system(size: 20))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [brandPurple, brandBlue],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                Text(localization.localizedString("messages_title"))
+                    .font(.system(size: 17, weight: .bold, design: .rounded))
+                    .foregroundColor(.primary)
+            }
+
+            ForEach(Array(messages.enumerated()), id: \.offset) { index, message in
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(localization.localizedString(categoryKey(message.category)))
+                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        .foregroundColor(brandPurple)
+                        .textCase(.uppercase)
+                    Text(message.text)
+                        .font(.system(size: 15, design: .rounded))
+                        .foregroundColor(.primary.opacity(0.9))
+                        .lineSpacing(3)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .accessibilityElement(children: .combine)
+                if index < messages.count - 1 {
+                    Divider()
+                        .background(Color.gray.opacity(0.15))
+                }
+            }
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 22)
+                .fill(.ultraThinMaterial)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 22)
+                .stroke(brandPurple.opacity(0.25), lineWidth: 1)
+        )
+        .opacity(showContent ? 1 : 0)
+        .offset(y: showContent ? 0 : 25)
+    }
+
+    private func categoryKey(_ category: String) -> String {
+        switch category {
+        case "Emotional Validation": return "message_category_validation"
+        case "Cognitive Reframing": return "message_category_reframing"
+        case "Action-Oriented Encouragement": return "message_category_action"
+        default: return "message_category_other"
+        }
+    }
+
     // MARK: - Dimensions
 
     private func dimensionsCard(_ prediction: PredictionResponse) -> some View {
-        let rows: [(WellBeingDimension, PredictionResponse.Level)] = prediction.dimensions.compactMap { result in
-            WellBeingDimension(rawValue: result.key).map { ($0, result.level) }
+        let rows: [(WellBeingDimension, PredictionResponse.Level)] = WellBeingDimension.allCases.compactMap { dimension in
+            prediction.level(for: dimension).map { (dimension, $0) }
         }
 
         return VStack(alignment: .leading, spacing: 0) {

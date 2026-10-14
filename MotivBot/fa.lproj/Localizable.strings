@@ -197,10 +197,10 @@
 
 /* صفحه ۴: نتیجه (نتایج مدل) */
 /* Wording is gentle and non-diagnostic. Never add percentages or diagnostic labels here. */
-"loading_model_starting" = "مدل در حال راه‌اندازی است، این ممکن است یک دقیقه طول بکشد.";
+"loading_model_starting" = "سرویس تحلیل در حال آماده شدن است، این ممکن است یک دقیقه طول بکشد.";
 "loading_failed_subtitle" = "هنوز نتوانستیم تحلیل را کامل کنیم.";
-"error_server_unreachable" = "دسترسی به سرویس تحلیل ممکن نشد. لطفاً مطمئن شوید که سرویس در حال اجراست و دوباره تلاش کنید.";
-"error_model_loading" = "مدل هنوز در حال راه‌اندازی است. لطفاً کمی بعد دوباره تلاش کنید.";
+"error_server_unreachable" = "دسترسی به سرویس تحلیل ممکن نشد. لطفاً اتصال اینترنت خود را بررسی کنید و دوباره تلاش کنید.";
+"error_model_loading" = "سرویس تحلیل هنوز در حال آماده شدن است. لطفاً کمی بعد دوباره تلاش کنید.";
 "error_invalid_input" = "برخی از پاسخ‌های شما قابل پردازش نبود. لطفاً دوباره تلاش کنید.";
 "error_generic" = "هنگام آماده‌سازی نتایج شما مشکلی پیش آمد. لطفاً دوباره تلاش کنید.";
 "integer_invalid_hint" = "لطفاً یک عدد صحیح بین %1$d و %2$d وارد کنید.";
@@ -234,3 +234,10 @@
 "dim_tension_no" = "به نظر می‌رسد احساسات دشوار در حال حاضر چندان بر شما سنگینی نمی‌کنند.";
 "dim_tension_low" = "به نظر می‌رسد برخی احساسات دشوار وجود دارد؛ این اشکالی ندارد.";
 "dim_tension_high" = "به نظر می‌رسد این روزها خشم یا تنش بسیار شدید بوده است. این احساسات قابل درک‌اند و دادن کمی فضا به آن‌ها می‌تواند کمک کند.";
+
+/* Motivational messages from the pipeline */
+"messages_title" = "چند کلمه برای شما";
+"message_category_validation" = "احساسات شما معتبر است";
+"message_category_reframing" = "نگاهی دیگر";
+"message_category_action" = "یک قدم کوچک";
+"message_category_other" = "برای شما";

@@ -38,10 +38,16 @@ class WellBeingViewModel {
 
     var analysisPhase: AnalysisPhase = .idle
     var prediction: PredictionResponse? = nil
+    /// The request that produced `prediction`.
+    var submittedRequest: PredictionRequest? = nil
 
-    /// Language the user is currently reading the app in. Kept in sync by ContentView
-    /// and sent to the server as informational metadata.
-    var languageCode: String = "tr"
+    /// Shows the support card: any answer above "not at all" on PHQ-9 item 9 (self-harm),
+    /// or a likely presence of depression/hopelessness in the text.
+    var elevatedRisk: Bool {
+        guard let prediction, let submittedRequest else { return false }
+        let depression = prediction.probability(for: .depression) ?? 0
+        return submittedRequest.selfHarmItem >= 1 || depression >= PredictionResponse.presentThreshold
+    }
     
     // Result / Reflection state
     var reflectionText: String = ""
@@ -53,18 +59,19 @@ class WellBeingViewModel {
     // MARK: - Services
     
     private let service: PredictionServicing
-    private let healthPollInterval: Duration
-    private let maxHealthPolls: Int
+    private let retryInterval: Duration
+    private let maxAttempts: Int
 
-    /// Model warm-up is polled every `healthPollInterval` for at most `maxHealthPolls` times.
+    /// While the Space wakes up (503) or is rate limited (429), the request is retried
+    /// every `retryInterval`, at most `maxAttempts` times in total.
     init(
         service: PredictionServicing? = nil,
-        healthPollInterval: Duration = .seconds(2),
-        maxHealthPolls: Int = 90
+        retryInterval: Duration = .seconds(5),
+        maxAttempts: Int = 18
     ) {
         self.service = service ?? MotivBotAPIService()
-        self.healthPollInterval = healthPollInterval
-        self.maxHealthPolls = maxHealthPolls
+        self.retryInterval = retryInterval
+        self.maxAttempts = maxAttempts
     }
     
     // MARK: - Data
@@ -309,18 +316,25 @@ class WellBeingViewModel {
             }
         }
 
-        if let prediction {
-            csvString += "\nModel,\(prediction.modelId)\n"
-            csvString += "Model input,Value\n"
-            csvString += "Age,\(prediction.inputsUsed.age)\n"
-            csvString += "sex,\(prediction.inputsUsed.sex)\n"
-            csvString += "PHQ-9,\(prediction.inputsUsed.phq9)\n"
-            csvString += "Rosenberg.self-esteem,\(prediction.inputsUsed.rosenberg)\n"
-            csvString += "\nDimension,Level\n"
-            for dimension in prediction.dimensions {
-                csvString += "\(dimension.key),\(dimension.level.rawValue)\n"
+        if let prediction, let request = submittedRequest {
+            csvString += "\nModel input,Value\n"
+            csvString += "Age,\(request.age)\n"
+            csvString += "Gender,\(request.gender.rawValue)\n"
+            csvString += "Gender (0 = male; 0.5 = not specified; 1 = female),\(request.gender.numericValue)\n"
+            csvString += "PHQ-9 (0-27),\(request.phq9Score)\n"
+            csvString += "RSES (0-30),\(request.rsesScore)\n"
+            csvString += "\nDimension,Score,Level\n"
+            for dimension in WellBeingDimension.allCases {
+                guard let probability = prediction.probability(for: dimension),
+                      let level = prediction.level(for: dimension) else { continue }
+                csvString += "\(dimension.rawValue),\(String(format: "%.3f", probability)),\(level.rawValue)\n"
             }
-            csvString += "elevated_risk,\(prediction.elevatedRisk)\n"
+            csvString += "elevated_risk,\(elevatedRisk)\n"
+            csvString += "\nMessage category,Relevance,Message\n"
+            for message in prediction.messages {
+                let text = message.text.replacingOccurrences(of: "\n", with: " ").replacingOccurrences(of: ",", with: ";")
+                csvString += "\(message.category),\(message.score),\(text)\n"
+            }
         }
 
         return csvString
@@ -328,19 +342,16 @@ class WellBeingViewModel {
     
     // MARK: - Analysis
 
-    /// Waits for the model to be ready, sends the answers and shows the result screen.
+    /// Sends the answers to the pipeline and shows the result screen, retrying while the Space wakes up.
     /// On failure the user stays on the loading screen with a retry option.
     func submitForAnalysis() async {
         guard !analysisPhase.isInProgress else { return }
         prediction = nil
+        submittedRequest = nil
 
         let request: PredictionRequest
         do {
-            request = try PredictionRequestBuilder.build(
-                emotionText: emotionText,
-                answers: answers,
-                languageCode: languageCode
-            )
+            request = try PredictionRequestBuilder.build(emotionText: emotionText, answers: answers)
         } catch {
             analysisPhase = .failed(.invalidInput("\(error)"))
             return
@@ -348,9 +359,8 @@ class WellBeingViewModel {
 
         do {
             analysisPhase = .connecting
-            try await waitUntilModelReady()
-            analysisPhase = .analysing
-            let response = try await service.predict(request)
+            let response = try await predictWithRetry(request)
+            submittedRequest = request
             prediction = response
             saveCSV()
             analysisPhase = .idle
@@ -362,16 +372,13 @@ class WellBeingViewModel {
         }
     }
 
-    private func waitUntilModelReady() async throws {
-        for _ in 0..<maxHealthPolls {
-            switch try await service.health() {
-            case .ready:
-                return
-            case .loading:
+    private func predictWithRetry(_ request: PredictionRequest) async throws -> PredictionResponse {
+        for attempt in 1...max(maxAttempts, 1) {
+            do {
+                return try await service.predict(request)
+            } catch MotivBotAPIError.modelLoading where attempt < maxAttempts {
                 analysisPhase = .modelStarting
-                try await Task.sleep(for: healthPollInterval)
-            case .error:
-                throw MotivBotAPIError.http(503)
+                try await Task.sleep(for: retryInterval)
             }
         }
         throw MotivBotAPIError.modelLoading
@@ -408,6 +415,7 @@ class WellBeingViewModel {
             gridAnswers = [:]
             analysisPhase = .idle
             prediction = nil
+            submittedRequest = nil
             reflectionText = ""
             selectedFeelingIndex = nil
             isCompleted = false

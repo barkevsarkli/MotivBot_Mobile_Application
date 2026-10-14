@@ -3,7 +3,6 @@ import SwiftUI
 struct ContentView: View {
     
     @Environment(WellBeingViewModel.self) var viewModel
-    @Environment(LocalizationManager.self) var localization
     
     var body: some View {
         @Bindable var viewModel = viewModel
@@ -52,12 +51,6 @@ struct ContentView: View {
                 .padding(.top, 8)
                 Spacer()
             }
-        }
-        .onAppear {
-            viewModel.languageCode = localization.currentLanguage.rawValue
-        }
-        .onChange(of: localization.currentLanguage) { _, newLanguage in
-            viewModel.languageCode = newLanguage.rawValue
         }
     }
     

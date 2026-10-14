@@ -194,8 +194,8 @@ struct TestData {
                     ]
                 )
             }
-        ),
-        
+        )
+
         // SECTION E
         /*TestSection(
             id: 5,
@@ -217,17 +217,7 @@ struct TestData {
             },
             displayMode: .allAtOnce
         ),*/
-        
-        // SECTION F
-        TestSection(
-            id: 6,
-            titleKey: "section_f_title",
-            descriptionKey: "section_f_description",
-            questions: [
-                Question(id: 54, textKey: "qf_1", type: .scale(range: 1...9), imageName: "image1"),
-                Question(id: 55, textKey: "qf_2", type: .scale(range: 1...9), imageName: "image2")
-            ]
-        )/*,
+        /*,
         
         // SECTION G
         TestSection(

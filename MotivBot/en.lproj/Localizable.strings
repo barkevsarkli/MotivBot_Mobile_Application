@@ -197,10 +197,10 @@
 
 /* Screen 4: Result (model results) */
 /* Wording is gentle and non-diagnostic. Never add percentages or diagnostic labels here. */
-"loading_model_starting" = "Model is starting up, this can take a minute.";
+"loading_model_starting" = "The analysis service is waking up, this can take a minute.";
 "loading_failed_subtitle" = "We couldn't finish the analysis just yet.";
-"error_server_unreachable" = "We couldn't reach the analysis service. Please make sure it is running, then try again.";
-"error_model_loading" = "The model is still starting up. Please try again in a moment.";
+"error_server_unreachable" = "We couldn't reach the analysis service. Please check your internet connection and try again.";
+"error_model_loading" = "The analysis service is still waking up. Please try again in a moment.";
 "error_invalid_input" = "Some of your answers couldn't be processed. Please try again.";
 "error_generic" = "Something went wrong while preparing your results. Please try again.";
 "integer_invalid_hint" = "Please enter a whole number between %1$d and %2$d.";
@@ -234,3 +234,10 @@
 "dim_tension_no" = "Difficult feelings don't seem to weigh on you much right now.";
 "dim_tension_low" = "Some difficult feelings seem to be present. That's okay.";
 "dim_tension_high" = "It sounds like frustration or tension has been strong lately. These feelings make sense, and it can help to give them some room.";
+
+/* Motivational messages from the pipeline */
+"messages_title" = "A few words for you";
+"message_category_validation" = "Your feelings are valid";
+"message_category_reframing" = "Another way to see it";
+"message_category_action" = "A small step forward";
+"message_category_other" = "For you";

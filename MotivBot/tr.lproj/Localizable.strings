@@ -185,10 +185,10 @@
 
 /* Ekran 4: Sonuç (model sonuçları) */
 /* Wording is gentle and non-diagnostic. Never add percentages or diagnostic labels here. */
-"loading_model_starting" = "Model başlatılıyor, bu bir dakika kadar sürebilir.";
+"loading_model_starting" = "Analiz servisi uyanıyor, bu bir dakika kadar sürebilir.";
 "loading_failed_subtitle" = "Analizi henüz tamamlayamadık.";
-"error_server_unreachable" = "Analiz servisine ulaşılamadı. Lütfen servisin çalıştığından emin olup tekrar deneyin.";
-"error_model_loading" = "Model hâlâ başlatılıyor. Lütfen birazdan tekrar deneyin.";
+"error_server_unreachable" = "Analiz servisine ulaşılamadı. Lütfen internet bağlantınızı kontrol edip tekrar deneyin.";
+"error_model_loading" = "Analiz servisi hâlâ uyanıyor. Lütfen birazdan tekrar deneyin.";
 "error_invalid_input" = "Yanıtlarınızın bir kısmı işlenemedi. Lütfen tekrar deneyin.";
 "error_generic" = "Sonuçlarınız hazırlanırken bir sorun oluştu. Lütfen tekrar deneyin.";
 "integer_invalid_hint" = "Lütfen %1$d ile %2$d arasında bir tam sayı girin.";
@@ -222,3 +222,10 @@
 "dim_tension_no" = "Zor duygular şu an üzerinizde pek ağırlık yapmıyor gibi görünüyor.";
 "dim_tension_low" = "Bazı zor duygular var gibi görünüyor; bu gayet normal.";
 "dim_tension_high" = "Son zamanlarda öfke ya da gerginlik epey yoğun görünüyor. Bu duygular anlaşılır ve onlara biraz alan tanımak iyi gelebilir.";
+
+/* Motivational messages from the pipeline */
+"messages_title" = "Sizin için birkaç söz";
+"message_category_validation" = "Duygularınız geçerli";
+"message_category_reframing" = "Başka bir bakış açısı";
+"message_category_action" = "Küçük bir adım";
+"message_category_other" = "Sizin için";
