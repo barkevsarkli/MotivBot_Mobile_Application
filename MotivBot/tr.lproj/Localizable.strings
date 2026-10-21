@@ -229,3 +229,12 @@
 "message_category_reframing" = "Başka bir bakış açısı";
 "message_category_action" = "Küçük bir adım";
 "message_category_other" = "Sizin için";
+
+/* MARK: integration */
+"error_service_busy" = "Analiz servisi şu anda çok yoğun. Lütfen birkaç dakika sonra tekrar deneyin.";
+"emotion_wrong_language" = "Lütfen Türkçe yazın. Türkçe karakterler (ç, ğ, ı, ö, ş, ü) kullanmak metninizin doğru anlaşılmasına yardımcı olur.";
+"emotion_too_long" = "Metniniz çok uzun. Lütfen en fazla %d karakter yazın.";
+"resume_title" = "Kaldığınız yerden devam edin";
+"resume_body" = "Tamamlanmamış bir değerlendirmeniz var.";
+"resume_continue" = "Devam et";
+"resume_start_over" = "Baştan başla";

@@ -202,10 +202,9 @@
 				};
 			};
 			buildConfigurationList = CC6E87212F5E959F003EFFC6 /* Build configuration list for PBXProject "MotivBot" */;
-			developmentRegion = en;
+			developmentRegion = tr;
 			hasScannedForEncodings = 0;
 			knownRegions = (
-				en,
 				Base,
 				fa,
 				tr,

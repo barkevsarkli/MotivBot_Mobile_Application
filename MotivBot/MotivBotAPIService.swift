@@ -2,12 +2,14 @@ import Foundation
 
 // MARK: - API Contract
 //
-// The MotivBot unified pipeline on Hugging Face Spaces (Gradio):
-//   1. POST {base}/gradio_api/call/run_pipeline   body {"data": [text, age, gender, phq9, rses]}
-//      -> {"event_id": "..."}
+// The MotivBot unified pipeline on Hugging Face Spaces (Gradio), named-parameter API:
+//   1. POST {base}/gradio_api/call/v2/run_pipeline
+//      body {"text": ..., "age": ..., "gender": ..., "phq9": ..., "rses": ...} -> {"event_id": "..."}
 //   2. GET  {base}/gradio_api/call/run_pipeline/{event_id}
 //      -> server-sent events; "event: complete" carries data = [markdown summary, structured JSON]
-// Scoring follows how_to_score.docx; the scores are computed in the app.
+// Scoring follows how_to_score.docx; the scores are computed in the app. The pipeline expects RSES on 10-40,
+// so the 0-30 total is sent with +10 (`pipelineRSESScore`).
+// The Space detects the language of the text and answers in it (see `PipelineLanguage`).
 
 struct PredictionRequest: Equatable {
     /// Raw values are the pipeline's gender choices.
@@ -46,6 +48,10 @@ struct PredictionRequest: Equatable {
         }
     }
 
+    /// The RSES total on the pipeline's 10-40 scale: `rsesScore` + 10, i.e. each item scored 1-4 instead of 0-3.
+    var pipelineRSESScore: Int { rsesScore + Self.pipelineRSESOffset }
+    static let pipelineRSESOffset = 10
+
     /// PHQ-9 item 9 asks about thoughts of self-harm.
     var selfHarmItem: Int { phq9Items.count == 9 ? phq9Items[8] : 0 }
 
@@ -53,18 +59,42 @@ struct PredictionRequest: Equatable {
     static let rsesReverseItems: Set<Int> = [3, 5, 8, 9, 10]
 }
 
-extension PredictionRequest: Encodable {
-    private enum CodingKeys: String, CodingKey { case data }
+// MARK: - Validation
 
-    /// `{"data": [text, age, gender, phq9, rses]}`. The order matters.
+extension PredictionRequest {
+    /// Allowed length of the trimmed emotion text, in characters.
+    static let textLengthRange = 10...2000
+    static let itemRange = 0...3
+
+    /// Checks the inputs before anything is sent. Throws `MotivBotAPIError.invalidInput`.
+    func validate() throws {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard Self.textLengthRange.contains(trimmed.count) else {
+            throw MotivBotAPIError.invalidInput("text length")
+        }
+        guard PredictionRequestBuilder.ageRange.contains(age) else {
+            throw MotivBotAPIError.invalidInput("age")
+        }
+        guard phq9Items.count == 9, phq9Items.allSatisfy(Self.itemRange.contains) else {
+            throw MotivBotAPIError.invalidInput("phq9 items")
+        }
+        guard rsesItems.count == 10, rsesItems.allSatisfy(Self.itemRange.contains) else {
+            throw MotivBotAPIError.invalidInput("rses items")
+        }
+    }
+}
+
+extension PredictionRequest: Encodable {
+    private enum CodingKeys: String, CodingKey { case text, age, gender, phq9, rses }
+
+    /// `{"text": ..., "age": ..., "gender": ..., "phq9": ..., "rses": ...}` for the v2 endpoint. `rses` is on 10-40.
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        var data = container.nestedUnkeyedContainer(forKey: .data)
-        try data.encode(text)
-        try data.encode(age)
-        try data.encode(gender.rawValue)
-        try data.encode(phq9Score)
-        try data.encode(rsesScore)
+        try container.encode(text, forKey: .text)
+        try container.encode(age, forKey: .age)
+        try container.encode(gender.rawValue, forKey: .gender)
+        try container.encode(phq9Score, forKey: .phq9)
+        try container.encode(pipelineRSESScore, forKey: .rses)
     }
 }
 
@@ -74,6 +104,8 @@ struct PredictionResponse: Codable, Equatable {
         let text: String
         let category: String
         let score: Double
+        /// The quote's author, when the pipeline knows it.
+        let author: String?
     }
 
     enum Level: String, Codable, CaseIterable {
@@ -104,25 +136,89 @@ struct PredictionResponse: Codable, Equatable {
 
 // MARK: - Errors
 
+/// What the user is told when an analysis fails. Each case has one localized message.
+enum AnalysisError: Error, Equatable {
+    case offline
+    case serviceWakingUp
+    case serviceBusy
+    case unexpected
+
+    var messageKey: String {
+        switch self {
+        case .offline: return "error_server_unreachable"
+        case .serviceWakingUp: return "error_model_loading"
+        case .serviceBusy: return "error_service_busy"
+        case .unexpected: return "error_generic"
+        }
+    }
+}
+
+/// Raw failures of the pipeline client. Only `analysisError` is shown to the user.
 enum MotivBotAPIError: Error, Equatable {
-    case serverUnreachable
-    /// The Space is asleep or rate limited (503 / 429). Retry after a pause.
-    case modelLoading
+    /// The device has no network connection.
+    case offline
+    /// A network failure such as a timeout or a dropped connection.
+    case network(URLError.Code)
+    /// 502 / 503 / 504: the Space is asleep or restarting.
+    case spaceStarting
+    /// 429: too many requests.
+    case rateLimited
+    /// The Space's ZeroGPU quota is used up. Retrying soon does not help.
+    case quotaExceeded
+    /// The inputs were rejected, by `PredictionRequest.validate()` or by the pipeline.
     case invalidInput(String)
+    /// The event stream closed without a result.
+    case streamEnded
     case decoding
     case http(Int)
+    /// The prediction took longer than `RetryPolicy.deadline`.
+    case deadlineExceeded
+
+    static let transientNetworkCodes: Set<URLError.Code> = [
+        .timedOut, .networkConnectionLost, .cannotConnectToHost, .cannotFindHost, .dnsLookupFailed,
+    ]
+
+    var isRetryable: Bool {
+        switch self {
+        case .network(let code): return Self.transientNetworkCodes.contains(code)
+        case .spaceStarting, .rateLimited, .streamEnded: return true
+        case .offline, .quotaExceeded, .invalidInput, .decoding, .http, .deadlineExceeded: return false
+        }
+    }
+
+    var analysisError: AnalysisError {
+        switch self {
+        case .offline, .network: return .offline
+        case .spaceStarting, .deadlineExceeded: return .serviceWakingUp
+        case .rateLimited, .quotaExceeded: return .serviceBusy
+        case .invalidInput, .streamEnded, .decoding, .http: return .unexpected
+        }
+    }
 }
 
 // MARK: - Service
 
+enum PredictionProgress: Equatable {
+    case connecting
+    /// The Space answered 503 and is starting; the request is retried.
+    case wakingUp
+    /// The job is queued or running.
+    case analysing
+}
+
 protocol PredictionServicing {
-    func predict(_ request: PredictionRequest) async throws -> PredictionResponse
+    /// Runs the pipeline, retrying while the Space wakes up. Throws `MotivBotAPIError` or `CancellationError`.
+    func predict(_ request: PredictionRequest, progress: @escaping (PredictionProgress) -> Void) async throws -> PredictionResponse
+    /// Pings the Space so it is awake by the time the user submits. Never throws; at most one ping runs at a time.
+    func prewarm() async
 }
 
 final class MotivBotAPIService: PredictionServicing {
 
     static let defaultBaseURL = URL(string: "https://flightmaestro-motivbot-pipeline.hf.space")!
-    static let endpointPath = "gradio_api/call/run_pipeline"
+    static let submitPath = "gradio_api/call/v2/run_pipeline"
+    static let resultPath = "gradio_api/call/run_pipeline"
+    static let infoPath = "gradio_api/info"
 
     /// Reads `MotivBotAPIBaseURL` from Info.plist (set via the `MOTIVBOT_API_BASE_URL` build setting).
     static var configuredBaseURL: URL {
@@ -134,111 +230,189 @@ final class MotivBotAPIService: PredictionServicing {
         return url
     }
 
+    struct RetryPolicy {
+        var initialDelay: Duration = .seconds(1)
+        var maxDelay: Duration = .seconds(16)
+        /// No retry starts once this much time has passed since the first attempt.
+        var budget: Duration = .seconds(90)
+        /// Hard limit for one prediction, retries and streaming included.
+        var deadline: Duration = .seconds(150)
+        /// Per-request timeout. The event stream sends a heartbeat well within it.
+        var requestTimeout: TimeInterval = 30
+        /// A cold Space can take about a minute to answer the warm-up ping.
+        var prewarmTimeout: TimeInterval = 90
+
+        /// Exponential backoff (1 s, 2 s, 4 s ... capped at `maxDelay`) scaled by 0.75-1.25 for jitter.
+        /// `attempt` is 1-based; `random` is in 0..<1.
+        func delay(afterAttempt attempt: Int, random: Double) -> Duration {
+            let exponential = initialDelay * (1 << min(attempt - 1, 16))
+            let base = min(exponential, maxDelay)
+            return base * (0.75 + 0.5 * random)
+        }
+    }
+
+    /// The time source for retries, replaceable in tests.
+    struct Timing {
+        var now: () -> ContinuousClock.Instant
+        var sleep: (Duration) async throws -> Void
+        /// Uniform in 0..<1.
+        var random: () -> Double
+
+        static let live = Timing(
+            now: { ContinuousClock.now },
+            sleep: { try await Task.sleep(for: $0) },
+            random: { Double.random(in: 0..<1) }
+        )
+    }
+
     private let baseURL: URL
-    private let session: URLSession
+    private let transport: HTTPTransport
+    private let policy: RetryPolicy
+    private let timing: Timing
+    private var prewarmTask: Task<Void, Never>?
 
-    init(baseURL: URL = MotivBotAPIService.configuredBaseURL, session: URLSession? = nil) {
+    init(
+        baseURL: URL = MotivBotAPIService.configuredBaseURL,
+        transport: HTTPTransport? = nil,
+        policy: RetryPolicy = RetryPolicy(),
+        timing: Timing = .live
+    ) {
         self.baseURL = baseURL
-        if let session {
-            self.session = session
+        self.policy = policy
+        self.timing = timing
+        if let transport {
+            self.transport = transport
         } else {
-            // A cold start of the Space can take up to a minute.
             let configuration = URLSessionConfiguration.default
-            configuration.timeoutIntervalForRequest = 120
-            configuration.timeoutIntervalForResource = 180
+            configuration.timeoutIntervalForRequest = policy.requestTimeout
+            configuration.timeoutIntervalForResource = policy.deadline.timeInterval
             configuration.waitsForConnectivity = false
-            self.session = URLSession(configuration: configuration)
+            // Results are sensitive; keep them out of the on-disk cache.
+            configuration.urlCache = nil
+            configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
+            self.transport = URLSessionTransport(session: URLSession(configuration: configuration))
         }
     }
 
-    func predict(_ body: PredictionRequest) async throws -> PredictionResponse {
-        let endpoint = baseURL.appendingPathComponent(Self.endpointPath)
-
-        var submit = URLRequest(url: endpoint)
-        submit.httpMethod = "POST"
-        submit.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        submit.timeoutInterval = 90
-        submit.httpBody = try JSONEncoder().encode(body)
-        let submitData = try await send(submit)
-
-        struct EventID: Decodable { let event_id: String }
-        guard let eventID = try? JSONDecoder().decode(EventID.self, from: submitData).event_id else {
-            throw MotivBotAPIError.decoding
+    func prewarm() async {
+        if let prewarmTask {
+            return await prewarmTask.value
         }
-
-        var result = URLRequest(url: endpoint.appendingPathComponent(eventID))
-        result.setValue("text/event-stream", forHTTPHeaderField: "Accept")
-        result.timeoutInterval = 120
-        let stream = try await send(result)
-        return try Self.parseEventStream(stream)
+        var request = URLRequest(url: baseURL.appendingPathComponent(Self.infoPath))
+        request.timeoutInterval = policy.prewarmTimeout
+        let transport = self.transport
+        let task = Task { _ = try? await transport.data(for: request) }
+        prewarmTask = task
+        await task.value
+        prewarmTask = nil
     }
 
-    /// Reads the Gradio server-sent events and decodes the structured JSON of the `complete` event.
-    static func parseEventStream(_ data: Data) throws -> PredictionResponse {
-        guard let text = String(data: data, encoding: .utf8) else { throw MotivBotAPIError.decoding }
+    func predict(_ request: PredictionRequest, progress: @escaping (PredictionProgress) -> Void) async throws -> PredictionResponse {
+        try request.validate()
+        let start = timing.now()
+        progress(.connecting)
 
-        var event = ""
-        for line in text.components(separatedBy: .newlines) {
-            if line.hasPrefix("event:") {
-                event = line.dropFirst("event:".count).trimmingCharacters(in: .whitespaces)
-            } else if line.hasPrefix("data:") {
-                let payload = Data(line.dropFirst("data:".count).trimmingCharacters(in: .whitespaces).utf8)
-                switch event {
-                case "complete":
-                    return try decodeResult(payload)
-                case "error":
-                    struct ErrorBody: Decodable { let error: String? }
-                    let message = (try? JSONDecoder().decode(ErrorBody.self, from: payload))?.error
-                    throw MotivBotAPIError.invalidInput(message ?? "")
-                default:
-                    continue
-                }
+        var attempt = 0
+        while true {
+            attempt += 1
+            try Task.checkCancellation()
+            do {
+                return try await runOnce(request, start: start, progress: progress)
+            } catch let error as MotivBotAPIError where error.isRetryable {
+                let delay = policy.delay(afterAttempt: attempt, random: timing.random())
+                guard timing.now() - start + delay <= policy.budget else { throw error }
+                if error == .spaceStarting { progress(.wakingUp) }
+                try await timing.sleep(delay)
             }
         }
-        throw MotivBotAPIError.decoding
     }
 
-    /// `data` is `[markdown, structured]`. The structured part may arrive as an object or as an escaped JSON string.
-    private static func decodeResult(_ payload: Data) throws -> PredictionResponse {
-        guard let array = try? JSONSerialization.jsonObject(with: payload) as? [Any], array.count >= 2 else {
-            throw MotivBotAPIError.decoding
-        }
-        let structured: Data
-        if let string = array[1] as? String {
-            structured = Data(string.utf8)
-        } else if JSONSerialization.isValidJSONObject(array[1]),
-                  let object = try? JSONSerialization.data(withJSONObject: array[1]) {
-            structured = object
-        } else {
-            throw MotivBotAPIError.decoding
-        }
+    /// One submit + stream round trip.
+    private func runOnce(
+        _ body: PredictionRequest,
+        start: ContinuousClock.Instant,
+        progress: (PredictionProgress) -> Void
+    ) async throws -> PredictionResponse {
         do {
-            return try JSONDecoder().decode(PredictionResponse.self, from: structured)
+            var submit = URLRequest(url: baseURL.appendingPathComponent(Self.submitPath))
+            submit.httpMethod = "POST"
+            submit.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            submit.timeoutInterval = policy.requestTimeout
+            submit.httpBody = try JSONEncoder().encode(body)
+            let (submitData, submitResponse) = try await transport.data(for: submit)
+            try Self.check(submitResponse, body: submitData)
+
+            struct EventID: Decodable { let event_id: String }
+            guard let eventID = try? JSONDecoder().decode(EventID.self, from: submitData).event_id else {
+                throw MotivBotAPIError.decoding
+            }
+            progress(.analysing)
+
+            var result = URLRequest(url: baseURL.appendingPathComponent(Self.resultPath).appendingPathComponent(eventID))
+            result.setValue("text/event-stream", forHTTPHeaderField: "Accept")
+            result.timeoutInterval = policy.requestTimeout
+            let (streamResponse, stream) = try await transport.lines(for: result)
+            try Self.check(streamResponse, body: nil)
+            var lines = stream
+
+            var reader = GradioResultReader()
+            while let line = try await lines.next() {
+                if timing.now() - start > policy.deadline { throw MotivBotAPIError.deadlineExceeded }
+                if let response = try reader.consume(line) { return response }
+            }
+            return try reader.finish()
         } catch {
-            throw MotivBotAPIError.decoding
+            throw Self.mapTransportError(error)
         }
     }
 
-    private func send(_ request: URLRequest) async throws -> Data {
-        let data: Data
-        let response: URLResponse
-        do {
-            (data, response) = try await session.data(for: request)
-        } catch {
-            throw MotivBotAPIError.serverUnreachable
-        }
-        guard let http = response as? HTTPURLResponse else {
-            throw MotivBotAPIError.serverUnreachable
-        }
-        switch http.statusCode {
+    static func check(_ response: HTTPURLResponse, body: Data?) throws {
+        switch response.statusCode {
         case 200..<300:
-            return data
-        case 429, 503:
-            throw MotivBotAPIError.modelLoading
-        case 400, 422:
-            throw MotivBotAPIError.invalidInput(String(data: data, encoding: .utf8) ?? "")
+            return
+        case 429:
+            throw MotivBotAPIError.rateLimited
+        case 502, 503, 504:
+            throw MotivBotAPIError.spaceStarting
+        case 400..<500:
+            throw MotivBotAPIError.invalidInput(body.flatMap { String(data: $0, encoding: .utf8) } ?? "")
         default:
-            throw MotivBotAPIError.http(http.statusCode)
+            throw MotivBotAPIError.http(response.statusCode)
         }
+    }
+
+    /// Passes `MotivBotAPIError` and cancellation through and maps everything else.
+    static func mapTransportError(_ error: Error) -> Error {
+        if error is MotivBotAPIError || error is CancellationError { return error }
+        if let urlError = error as? URLError {
+            switch urlError.code {
+            case .cancelled: return CancellationError()
+            case .notConnectedToInternet, .dataNotAllowed, .internationalRoamingOff: return MotivBotAPIError.offline
+            default: return MotivBotAPIError.network(urlError.code)
+            }
+        }
+        return MotivBotAPIError.network(.unknown)
+    }
+
+    /// Reads a whole recorded event stream. Used for fixtures; the live path reads line by line.
+    static func parseEventStream(_ text: String) throws -> PredictionResponse {
+        var reader = GradioResultReader()
+        var splitter = LineSplitter()
+        for byte in text.utf8 {
+            if let line = splitter.append(byte), let response = try reader.consume(line) {
+                return response
+            }
+        }
+        if let line = splitter.finish(), let response = try reader.consume(line) {
+            return response
+        }
+        return try reader.finish()
+    }
+}
+
+private extension Duration {
+    var timeInterval: TimeInterval {
+        let (seconds, attoseconds) = components
+        return TimeInterval(seconds) + TimeInterval(attoseconds) / 1e18
     }
 }
