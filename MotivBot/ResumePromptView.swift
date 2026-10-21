@@ -41,6 +41,12 @@ struct ResumePromptView: View {
             }
             .dsAppear(delay: 0.15)
         }
+        .onAppear {
+            // Speak the saved session's language; Continue then locks it.
+            if let language = viewModel.resumableSession?.language {
+                localization.setLanguage(language)
+            }
+        }
         .confirmationDialog(
             localization.localizedString("resume_confirm_title"),
             isPresented: $isConfirmingStartOver,
