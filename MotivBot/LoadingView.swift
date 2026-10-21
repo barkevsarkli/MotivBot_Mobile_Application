@@ -23,6 +23,7 @@ struct LoadingView: View {
                     Text(localization.localizedString(isFailed ? "loading_failed_title" : "loading_title"))
                         .font(DSFont.title)
                         .foregroundStyle(Color.dsTextPrimary)
+                        .dsTitleText()
                         .multilineTextAlignment(.center)
                         .accessibilityAddTraits(.isHeader)
 

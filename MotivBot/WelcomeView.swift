@@ -46,6 +46,7 @@ struct WelcomeView: View {
             Text(localization.localizedString("app_title"))
                 .font(DSFont.display)
                 .foregroundStyle(Color.dsTextPrimary)
+                .dsTitleText()
                 .accessibilityAddTraits(.isHeader)
 
             Text(localization.localizedString("welcome_tagline"))
@@ -60,6 +61,7 @@ struct WelcomeView: View {
             Text(localization.localizedString("welcome_expect_title"))
                 .font(DSFont.heading)
                 .foregroundStyle(Color.dsTextPrimary)
+                .dsTitleText()
                 .accessibilityAddTraits(.isHeader)
 
             expectationRow("clock", key: "welcome_expect_time")

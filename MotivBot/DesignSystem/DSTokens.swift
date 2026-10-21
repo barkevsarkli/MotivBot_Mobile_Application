@@ -83,4 +83,13 @@ extension View {
     func dsBodyText() -> some View {
         modifier(DSBodyTextModifier())
     }
+
+    /// Large titles. Growth stops at accessibility size 2, and long Turkish words shrink
+    /// instead of breaking in the middle.
+    func dsTitleText() -> some View {
+        self
+            .dynamicTypeSize(...DynamicTypeSize.accessibility2)
+            .lineLimit(4)
+            .minimumScaleFactor(0.5)
+    }
 }

@@ -116,7 +116,7 @@ struct QuestionnaireView: View {
             Text(localization.localizedString(section.titleKey))
                 .font(isFirstQuestion ? DSFont.title : DSFont.label)
                 .foregroundStyle(isFirstQuestion ? Color.dsTextPrimary : Color.dsTextSecondary)
-                .fixedSize(horizontal: false, vertical: true)
+                .dsTitleText()
                 .accessibilityAddTraits(.isHeader)
 
             if isFirstQuestion {
@@ -339,7 +339,7 @@ struct QuestionnaireView: View {
                     Text(localization.localizedString(question.textKey))
                         .font(DSFont.heading)
                         .foregroundStyle(Color.dsTextPrimary)
-                        .fixedSize(horizontal: false, vertical: true)
+                        .dsTitleText()
                     ChipGroup {
                         ForEach(question.options ?? []) { option in
                             SelectableChip(

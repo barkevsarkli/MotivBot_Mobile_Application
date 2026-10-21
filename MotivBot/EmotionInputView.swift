@@ -57,7 +57,7 @@ struct EmotionInputView: View {
             Text(localization.localizedString("emotion_title"))
                 .font(DSFont.display)
                 .foregroundStyle(Color.dsTextPrimary)
-                .fixedSize(horizontal: false, vertical: true)
+                .dsTitleText()
                 .accessibilityAddTraits(.isHeader)
             Text(localization.localizedString("emotion_prompt"))
                 .font(DSFont.body)

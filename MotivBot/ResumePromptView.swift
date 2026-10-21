@@ -80,7 +80,7 @@ struct ResumePromptView: View {
                     Text(localization.localizedString("resume_title"))
                         .font(DSFont.title)
                         .foregroundStyle(Color.dsTextPrimary)
-                        .fixedSize(horizontal: false, vertical: true)
+                        .dsTitleText()
                         .accessibilityAddTraits(.isHeader)
                     Text(localization.localizedString("resume_body"))
                         .font(DSFont.callout)

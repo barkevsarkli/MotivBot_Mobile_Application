@@ -161,6 +161,7 @@ struct DimensionRow: View {
         Text(title)
             .font(DSFont.heading)
             .foregroundStyle(Color.dsTextPrimary)
+            .dsTitleText()
     }
 
     private var sentence: some View {
@@ -185,6 +186,7 @@ struct MessageCard: View {
             Label {
                 Text(categoryTitle)
                     .font(DSFont.label)
+                    .dsTitleText()
             } icon: {
                 Image(systemName: style.systemImage)
                     .accessibilityHidden(true)
@@ -214,9 +216,14 @@ struct MessageCard: View {
 struct SupportCard: View {
     let title: String
     let message: String
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
-        HStack(alignment: .top, spacing: DSSpacing.s) {
+        // At accessibility sizes the icon goes above the text so the message keeps the full width.
+        let layout = dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: DSSpacing.s))
+            : AnyLayout(HStackLayout(alignment: .top, spacing: DSSpacing.s))
+        layout {
             Image(systemName: "heart.circle.fill")
                 .font(.system(.title2))
                 .foregroundStyle(Color.dsCare)
@@ -225,7 +232,7 @@ struct SupportCard: View {
                 Text(title)
                     .font(DSFont.heading)
                     .foregroundStyle(Color.dsTextPrimary)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .dsTitleText()
                 Text(message)
                     .font(DSFont.body)
                     .foregroundStyle(Color.dsTextPrimary)

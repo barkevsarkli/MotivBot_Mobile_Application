@@ -114,6 +114,7 @@ struct GlassIconButton: View {
         Button(action: action) {
             Image(systemName: systemImage)
                 .font(.system(.body, weight: .semibold))
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                 .foregroundStyle(Color.dsTextPrimary)
                 .frame(width: DSSize.minTap, height: DSSize.minTap)
                 .dsGlass(in: Circle(), interactive: true)
@@ -121,6 +122,10 @@ struct GlassIconButton: View {
         }
         .buttonStyle(.dsPressable)
         .accessibilityLabel(accessibilityLabel)
+        // The icon stops growing at large text sizes; a long press shows it enlarged instead.
+        .accessibilityShowsLargeContentViewer {
+            Label(accessibilityLabel, systemImage: systemImage)
+        }
     }
 }
 

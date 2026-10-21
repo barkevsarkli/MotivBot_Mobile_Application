@@ -20,6 +20,7 @@ struct ThemeMenu: View {
         } label: {
             Image(systemName: preference.systemImage)
                 .font(.system(.body, weight: .semibold))
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                 .foregroundStyle(Color.dsTextPrimary)
                 .frame(width: DSSize.minTap, height: DSSize.minTap)
                 .dsGlass(in: Circle(), interactive: true)
@@ -27,6 +28,9 @@ struct ThemeMenu: View {
         }
         .accessibilityLabel(localization.localizedString("theme_menu"))
         .accessibilityValue(localization.localizedString(preference.titleKey))
+        .accessibilityShowsLargeContentViewer {
+            Label(localization.localizedString("theme_menu"), systemImage: preference.systemImage)
+        }
         .sensoryFeedback(.selection, trigger: preference)
     }
 }
