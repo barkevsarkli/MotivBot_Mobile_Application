@@ -1,8 +1,6 @@
 /* MotivBot - Türkçe */
 
 "app_title" = "MotivBot";
-"theme_toggle" = "Karanlık/Aydınlık Modu Değiştir";
-"language_toggle" = "Dili değiştir";
 
 "emotion_prompt" = "Mevcut duygularınızı 3-4 cümleyle ifade edin.";
 "your_thoughts" = "DÜŞÜNCELERİNİZ";
@@ -161,9 +159,9 @@
 
 "loading_title" = "Analiz ediliyor…";
 "loading_subtitle" = "Paylaştıklarınıza bakıyoruz. Bu genellikle birkaç saniye sürer.";
-"loading_tip_1" = "💡 Derin bir nefes almak sinir sisteminizi sıfırlayabilir";
-"loading_tip_2" = "🌱 Öz farkındalığa yönelik her küçük adım önemlidir";
-"loading_tip_3" = "✨ Kendinizi dürüstçe ifade ederek cesaret gösterdiniz";
+"loading_tip_1" = "Derin bir nefes almak sinir sisteminizi sıfırlayabilir";
+"loading_tip_2" = "Öz farkındalığa yönelik her küçük adım önemlidir";
+"loading_tip_3" = "Kendinizi dürüstçe ifade ederek cesaret gösterdiniz";
 "retry_button" = "Tekrar Dene";
 
 "result_title" = "Bugün paylaştıklarınız";
@@ -238,3 +236,47 @@
 "resume_body" = "Tamamlanmamış bir değerlendirmeniz var.";
 "resume_continue" = "Devam et";
 "resume_start_over" = "Baştan başla";
+
+/* MARK: design */
+"welcome_tagline" = "Duygularınıza nazikçe bakmanız için kısa bir değerlendirme.";
+"welcome_expect_title" = "Sizi neler bekliyor";
+"welcome_expect_time" = "Yaklaşık 10 dakika sürer.";
+"welcome_expect_steps" = "Önce birkaç cümle yazacak, ardından kısa sorulara yanıt vereceksiniz.";
+"welcome_expect_once" = "Tek seferlik bir değerlendirmedir.";
+"welcome_not_diagnosis" = "Bu bir tanı değildir; o anki hislerinize nazik bir bakıştır.";
+"welcome_language_label" = "Dil";
+"welcome_language_hint" = "Değerlendirme başladıktan sonra dil değiştirilemez.";
+"welcome_start" = "Başla";
+"language_name_tr" = "Türkçe";
+"language_name_fa" = "فارسی";
+"theme_menu" = "Görünüm";
+"theme_system" = "Sistem";
+"theme_light" = "Açık";
+"theme_dark" = "Koyu";
+"back_button" = "Geri";
+"cancel_button" = "Vazgeç";
+"ok_button" = "Tamam";
+"resume_progress" = "%2$@ sorudan %1$@ tanesini yanıtladınız";
+"resume_started" = "Başlangıç: %@";
+"resume_confirm_title" = "Baştan başlamak istiyor musunuz?";
+"resume_confirm_message" = "Şimdiye kadar verdiğiniz yanıtlar silinecek.";
+"resume_confirm_action" = "Yanıtları sil ve baştan başla";
+"emotion_title" = "Şu an nasılsınız?";
+"emotion_ready" = "Devam etmeye hazırsınız";
+"section_progress" = "Bölüm %1$@ / %2$@";
+"question_progress" = "Soru %1$@ / %2$@";
+"overall_progress_value" = "%2$@ sorudan %1$@ tanesi yanıtlandı";
+"progress_saved" = "İlerlemeniz kaydedildi";
+"question_optional" = "İsteğe bağlı";
+"age_under_18_warning" = "Bu değerlendirme 18 yaş ve üzeri yetişkinler için hazırlanmıştır.";
+"loading_failed_title" = "Biraz ara verelim";
+"loading_waking_banner" = "Servis bir süredir kullanılmadığı için uyanıyor. Bu bir dakika kadar sürebilir.";
+"dimensions_title" = "Bugünkü görünüm";
+"export_title" = "Özetinizi kaydedin";
+"export_body" = "Seviyeleri, mesajları ve bilgilendirme notunu içeren tek sayfalık bir özet.";
+"export_pdf" = "PDF";
+"export_image" = "Görsel";
+"export_failed" = "Özet hazırlanamadı. Lütfen tekrar deneyin.";
+"export_page_title" = "Değerlendirme özeti";
+"export_dimensions_title" = "Bugünkü görünüm";
+"export_footer" = "MotivBot ile oluşturuldu";

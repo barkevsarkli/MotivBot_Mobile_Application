@@ -1,499 +1,492 @@
 import SwiftUI
 
 struct QuestionnaireView: View {
-    
+
     @Environment(WellBeingViewModel.self) var viewModel
     @Environment(LocalizationManager.self) var localization
-    @State private var showContent = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.layoutDirection) private var layoutDirection
     @FocusState private var isInputFocused: Bool
-    
+
+    /// Moves on after a single-choice answer; cancelled when the user acts first.
+    @State private var advanceTask: Task<Void, Never>?
+    /// Sets which way the question card slides.
+    @State private var isNavigatingBack = false
+    @State private var showsSaved = false
+    @State private var savedTask: Task<Void, Never>?
+
     var body: some View {
-        VStack(spacing: 0) {
-            Spacer().frame(height: 70)
-            
-            // Progress bar
-            progressSection
-            
-            ScrollView {
-                VStack(spacing: 24) {
-                    // Section header
-                    sectionHeader
-                    
-                    if let section = viewModel.currentSection {
+        ScrollView {
+            ScreenColumn(spacing: DSSpacing.l) {
+                if let section = viewModel.currentSection {
+                    sectionIntro(section)
+
+                    Group {
                         if section.displayMode == .allAtOnce {
-                            // Grid mode: show all questions on one page
                             gridSection(section)
-                        } else {
-                            // Sequential mode: one question at a time
-                            if let question = viewModel.currentQuestion {
-                                questionCard(question)
-                                    .id("\(viewModel.currentSectionIndex)-\(viewModel.currentQuestionIndex)")
-                                    .transition(.asymmetric(
-                                        insertion: .move(edge: .trailing).combined(with: .opacity),
-                                        removal: .move(edge: .leading).combined(with: .opacity)
-                                    ))
-                            }
+                        } else if let question = viewModel.currentQuestion {
+                            questionBlock(question)
                         }
                     }
-                    
-                    // Navigation
-                    navigationButtons
-                    
-                    Spacer().frame(height: 40)
+                    .id(questionKey)
+                    .transition(questionTransition)
                 }
-                .padding(.horizontal, 20)
             }
+            .padding(.top, DSSpacing.xs)
+            .padding(.bottom, DSSpacing.l)
         }
-        .animation(.easeInOut(duration: 0.35), value: viewModel.currentQuestionIndex)
-        .animation(.easeInOut(duration: 0.35), value: viewModel.currentSectionIndex)
-        .onAppear {
-            withAnimation(.easeOut(duration: 0.6)) {
-                showContent = true
-            }
+        .scrollDismissesKeyboard(.interactively)
+        .simultaneousGesture(swipeBack)
+        .safeAreaInset(edge: .top) { header }
+        .safeAreaInset(edge: .bottom) { actionBar }
+        .sensoryFeedback(.selection, trigger: viewModel.selectedOptionId) { _, newValue in newValue != nil }
+        .sensoryFeedback(.impact(weight: .light), trigger: viewModel.currentSectionIndex)
+        .onChange(of: viewModel.answers.count) { oldCount, newCount in
+            if newCount > oldCount { flashSaved() }
+        }
+        .onDisappear {
+            advanceTask?.cancel()
+            savedTask?.cancel()
         }
     }
-    
-    // MARK: - Progress Section
-    
-    private var progressSection: some View {
-        VStack(spacing: 8) {
-            HStack {
-                Text(localization.localizedString("progress_label"))
-                    .font(.system(size: 13, weight: .medium, design: .rounded))
-                    .foregroundColor(.secondary)
-                Spacer()
-                Text("\(viewModel.answeredQuestions)/\(viewModel.totalQuestions)")
-                    .font(.system(size: 13, weight: .bold, design: .rounded))
-                    .foregroundColor(.primary)
-            }
-            
-            GeometryReader { geometry in
-                ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(Color.gray.opacity(0.15))
-                        .frame(height: 8)
-                    
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(
-                            LinearGradient(
-                                colors: [Color(red: 0.55, green: 0.48, blue: 0.85), Color(red: 0.42, green: 0.68, blue: 0.84)],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .frame(width: geometry.size.width * viewModel.overallProgress, height: 8)
-                        .animation(.spring(response: 0.5, dampingFraction: 0.7), value: viewModel.overallProgress)
+
+    // MARK: - Header
+
+    private var header: some View {
+        VStack(spacing: 0) {
+            TopBar {
+                if canGoBack {
+                    GlassIconButton(systemImage: "chevron.backward", accessibilityLabel: localization.localizedString("previous_button")) {
+                        goBack()
+                    }
+                    .transition(.opacity)
                 }
             }
-            .frame(height: 8)
-        }
-        .padding(.horizontal, 20)
-        .padding(.bottom, 16)
-        .opacity(showContent ? 1 : 0)
-    }
-    
-    // MARK: - Section Header
-    
-    private var sectionHeader: some View {
-        VStack(spacing: 6) {
-            if let section = viewModel.currentSection {
-                HStack {
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(
-                            LinearGradient(
-                                colors: [Color(red: 0.55, green: 0.48, blue: 0.85), Color(red: 0.42, green: 0.68, blue: 0.84)],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
-                        .frame(width: 4, height: 28)
-                    
-                    Text(localization.localizedString(section.titleKey))
-                        .font(.system(size: 20, weight: .bold, design: .rounded))
-                        .foregroundColor(.primary)
-                    
-                    Spacer()
-                }
-                
-                HStack {
-                    Text(localization.localizedString(section.descriptionKey))
-                        .font(.system(size: 14, design: .rounded))
-                        .foregroundColor(.secondary)
-                    Spacer()
-                }
-            }
-        }
-        .opacity(showContent ? 1 : 0)
-    }
-    
-    // MARK: - Grid Section (allAtOnce)
-    
-    private func gridSection(_ section: TestSection) -> some View {
-        VStack(spacing: 12) {
-            // Column headers
-            if let firstQ = section.questions.first, let opts = firstQ.options {
-                HStack(spacing: 0) {
-                    Text("")
-                        .frame(width: 100, alignment: .leading)
-                    ForEach(opts) { opt in
-                        Text(localization.localizedString(opt.textKey))
-                            .font(.system(size: 9, weight: .medium, design: .rounded))
-                            .foregroundColor(.secondary)
-                            .frame(maxWidth: .infinity)
-                            .multilineTextAlignment(.center)
-                            .lineLimit(2)
-                            .minimumScaleFactor(0.7)
+            .animation(DSMotion.standard, value: canGoBack)
+
+            ScreenColumn(spacing: DSSpacing.xs) {
+                HStack(alignment: .firstTextBaseline) {
+                    Text(localization.localizedString(
+                        "section_progress",
+                        localization.number(viewModel.currentSectionIndex + 1),
+                        localization.number(viewModel.sections.count)
+                    ))
+                    .font(DSFont.label)
+                    .foregroundStyle(Color.dsBrand)
+
+                    Spacer(minLength: DSSpacing.xs)
+
+                    if showsSaved {
+                        Label(localization.localizedString("progress_saved"), systemImage: "checkmark.circle")
+                            .font(DSFont.caption)
+                            .foregroundStyle(Color.dsTextSecondary)
+                            .transition(.opacity)
                     }
                 }
-                .padding(.horizontal, 12)
-            }
-            
-            // Question rows
-            ForEach(section.questions) { question in
-                gridRow(question)
-            }
-        }
-        .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(.ultraThinMaterial)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 20)
-                .stroke(Color.gray.opacity(0.1), lineWidth: 1)
-        )
-    }
-    
-    private func gridRow(_ question: Question) -> some View {
-        HStack(spacing: 0) {
-            Text(localization.localizedString(question.textKey))
-                .font(.system(size: 13, weight: .medium, design: .rounded))
-                .foregroundColor(.primary)
-                .frame(width: 100, alignment: .leading)
-                .lineLimit(2)
-                .minimumScaleFactor(0.7)
-            
-            if let opts = question.options {
-                ForEach(opts) { opt in
-                    Button(action: {
-                        viewModel.selectGridOption(questionId: question.id, optionId: opt.id)
-                    }) {
-                        ZStack {
-                            Circle()
-                                .stroke(
-                                    viewModel.gridAnswers[question.id] == opt.id
-                                        ? Color(red: 0.55, green: 0.48, blue: 0.85)
-                                        : Color.gray.opacity(0.3),
-                                    lineWidth: 2
-                                )
-                                .frame(width: 22, height: 22)
-                            
-                            if viewModel.gridAnswers[question.id] == opt.id {
-                                Circle()
-                                    .fill(
-                                        LinearGradient(
-                                            colors: [Color(red: 0.55, green: 0.48, blue: 0.85), Color(red: 0.42, green: 0.68, blue: 0.84)],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
-                                    )
-                                    .frame(width: 12, height: 12)
-                            }
-                        }
-                        .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-        }
-        .padding(.vertical, 6)
-        .padding(.horizontal, 12)
-        .background(
-            RoundedRectangle(cornerRadius: 10)
-                .fill(
-                    viewModel.gridAnswers[question.id] != nil
-                        ? Color(red: 0.55, green: 0.48, blue: 0.85).opacity(0.04)
-                        : Color.clear
-                )
-        )
-    }
-    
-    // MARK: - Question Card (sequential)
-    
-    private func questionCard(_ question: Question) -> some View {
-        VStack(alignment: .leading, spacing: 16) {
-            // Question number badge
-            HStack {
-                Text("\(localization.localizedString("question_label")) \(viewModel.currentQuestionIndex + 1)")
-                    .font(.system(size: 12, weight: .bold, design: .rounded))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 5)
-                    .background(
-                        Capsule()
-                            .fill(
-                                LinearGradient(
-                                    colors: [Color(red: 0.55, green: 0.48, blue: 0.85), Color(red: 0.42, green: 0.68, blue: 0.84)],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
+
+                SegmentedProgressBar(
+                    weights: viewModel.sections.map(\.questions.count),
+                    fractions: sectionFractions,
+                    accessibilityLabel: localization.localizedString("progress_label"),
+                    accessibilityValue: localization.localizedString(
+                        "overall_progress_value",
+                        localization.number(viewModel.answeredQuestions),
+                        localization.number(viewModel.totalQuestions)
                     )
-                Spacer()
+                )
             }
-            
-            // Question text
-            Text(localization.localizedString(question.textKey))
-                .font(.system(size: 17, weight: .medium, design: .rounded))
-                .foregroundColor(.primary)
+            .padding(.bottom, DSSpacing.s)
+        }
+    }
+
+    private var sectionFractions: [Double] {
+        viewModel.sections.map { section in
+            let answered = viewModel.answers.filter { $0.sectionId == section.id }.count
+            return Double(answered) / Double(max(section.questions.count, 1))
+        }
+    }
+
+    // MARK: - Section intro
+
+    /// The full title and description on the first question of a section, the title alone afterwards.
+    @ViewBuilder
+    private func sectionIntro(_ section: TestSection) -> some View {
+        let isFirstQuestion = viewModel.currentQuestionIndex == 0 || section.displayMode == .allAtOnce
+        VStack(alignment: .leading, spacing: DSSpacing.xs) {
+            Text(localization.localizedString(section.titleKey))
+                .font(isFirstQuestion ? DSFont.title : DSFont.label)
+                .foregroundStyle(isFirstQuestion ? Color.dsTextPrimary : Color.dsTextSecondary)
                 .fixedSize(horizontal: false, vertical: true)
-            
-            // SAM image if present
-            if let imgName = question.imageName {
-                Image(imgName)
+                .accessibilityAddTraits(.isHeader)
+
+            if isFirstQuestion {
+                Text(localization.localizedString(section.descriptionKey))
+                    .font(DSFont.callout)
+                    .foregroundStyle(Color.dsTextSecondary)
+                    .dsBodyText()
+                    .transition(.opacity)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .animation(motion, value: isFirstQuestion)
+    }
+
+    // MARK: - Question
+
+    private func questionBlock(_ question: Question) -> some View {
+        VStack(alignment: .leading, spacing: DSSpacing.m) {
+            VStack(alignment: .leading, spacing: DSSpacing.xs) {
+                Text(localization.localizedString(
+                    "question_progress",
+                    localization.number(viewModel.currentQuestionIndex + 1),
+                    localization.number(viewModel.currentSection?.questions.count ?? 0)
+                ))
+                .font(DSFont.caption)
+                .foregroundStyle(Color.dsTextSecondary)
+
+                Text(localization.localizedString(question.textKey))
+                    .font(DSFont.question)
+                    .foregroundStyle(Color.dsTextPrimary)
+                    .dsBodyText()
+                    .accessibilityAddTraits(.isHeader)
+            }
+
+            if let imageName = question.imageName {
+                Image(imageName)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(maxWidth: .infinity)
-                    .cornerRadius(12)
-                    .padding(.vertical, 4)
+                    .clipShape(RoundedRectangle(cornerRadius: DSRadius.small, style: .continuous))
+                    .accessibilityHidden(true)
             }
-            
-            // Options
+
             switch question.type {
             case .singleChoice:
-                if let options = question.options {
-                    VStack(spacing: 10) {
-                        ForEach(options) { option in
-                            optionRow(option)
+                VStack(spacing: DSSpacing.xs) {
+                    ForEach(question.options ?? []) { option in
+                        AnswerOptionRow(
+                            title: localization.localizedString(option.textKey),
+                            isSelected: viewModel.selectedOptionId == option.id
+                        ) {
+                            choose(option)
                         }
                     }
                 }
             case .scale(let range):
                 scaleInput(range: range)
             case .freeText:
-                freeTextInput
+                freeTextInput(isOptional: question.isOptional)
             case .integer(let range):
                 integerInput(range: range)
             }
         }
-        .padding(20)
-        .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(.ultraThinMaterial)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 20)
-                .stroke(Color.gray.opacity(0.1), lineWidth: 1)
-        )
     }
-    
-    // MARK: - Inputs
-    
-    private func scaleInput(range: ClosedRange<Int>) -> some View {
-        VStack(spacing: 20) {
-            Text("\(Int(viewModel.scaleValue))")
-                .font(.system(size: 32, weight: .bold, design: .rounded))
-                .foregroundColor(Color(red: 0.55, green: 0.48, blue: 0.85))
-            
-            Slider(value: Binding(
-                get: { Double(viewModel.scaleValue) },
-                set: { viewModel.scaleValue = Int($0) }
-            ), in: Double(range.lowerBound)...Double(range.upperBound), step: 1)
-            .accentColor(Color(red: 0.55, green: 0.48, blue: 0.85))
-            
-            HStack {
-                Text("\(range.lowerBound)")
-                Spacer()
-                Text("\(range.upperBound)")
-            }
-            .font(.caption)
-            .foregroundColor(.secondary)
-        }
-        .padding()
-    }
-    
-    private var freeTextInput: some View {
-        TextEditor(text: Binding(
-            get: { viewModel.freeTextAnswer },
-            set: { viewModel.freeTextAnswer = $0 }
-        ))
-        .focused($isInputFocused)
-        .font(.system(size: 16, design: .rounded))
-        .frame(minHeight: 120)
-        .padding(12)
-        .background(Color.gray.opacity(0.05))
-        .cornerRadius(12)
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-        )
-    }
-    
-    private func integerInput(range: ClosedRange<Int>) -> some View {
-        let text = viewModel.freeTextAnswer.trimmingCharacters(in: .whitespacesAndNewlines)
-        let showsHint = !text.isEmpty && viewModel.integerAnswer(in: range) == nil
 
-        return VStack(alignment: .leading, spacing: 8) {
-            TextField("", text: Binding(
-                get: { viewModel.freeTextAnswer },
-                set: { viewModel.freeTextAnswer = String($0.prefix(3)) }
-            ))
+    // MARK: - Inputs
+
+    private func scaleInput(range: ClosedRange<Int>) -> some View {
+        @Bindable var viewModel = viewModel
+        return VStack(spacing: DSSpacing.m) {
+            Text(localization.number(viewModel.scaleValue))
+                .font(DSFont.display)
+                .foregroundStyle(Color.dsBrand)
+                .contentTransition(.numericText())
+                .animation(DSMotion.quick, value: viewModel.scaleValue)
+                .accessibilityHidden(true)
+
+            HStack(spacing: DSSpacing.s) {
+                stepButton("minus", enabled: viewModel.scaleValue > range.lowerBound) {
+                    viewModel.scaleValue -= 1
+                }
+                Slider(
+                    value: Binding(
+                        get: { Double(viewModel.scaleValue) },
+                        set: { viewModel.scaleValue = Int($0.rounded()) }
+                    ),
+                    in: Double(range.lowerBound)...Double(range.upperBound),
+                    step: 1
+                ) {
+                    Text(localization.localizedString("question_label"))
+                } minimumValueLabel: {
+                    Text(localization.number(range.lowerBound))
+                } maximumValueLabel: {
+                    Text(localization.number(range.upperBound))
+                }
+                .tint(Color.dsBrand)
+                .accessibilityValue(localization.number(viewModel.scaleValue))
+                stepButton("plus", enabled: viewModel.scaleValue < range.upperBound) {
+                    viewModel.scaleValue += 1
+                }
+            }
+            .font(DSFont.footnote)
+            .foregroundStyle(Color.dsTextSecondary)
+        }
+        .dsCard()
+        .sensoryFeedback(.selection, trigger: viewModel.scaleValue)
+    }
+
+    private func stepButton(_ systemImage: String, enabled: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .font(.system(.body, weight: .semibold))
+                .frame(width: DSSize.minTap, height: DSSize.minTap)
+                .background(Color.dsBrandSoft, in: Circle())
+                .foregroundStyle(Color.dsBrand)
+        }
+        .buttonStyle(.dsPressable)
+        .disabled(!enabled)
+        .accessibilityHidden(true)
+    }
+
+    private func freeTextInput(isOptional: Bool) -> some View {
+        @Bindable var viewModel = viewModel
+        let shape = RoundedRectangle(cornerRadius: DSRadius.medium, style: .continuous)
+        return VStack(alignment: .leading, spacing: DSSpacing.xs) {
+            if isOptional {
+                Text(localization.localizedString("question_optional"))
+                    .font(DSFont.caption)
+                    .foregroundStyle(Color.dsTextSecondary)
+            }
+            TextEditor(text: $viewModel.freeTextAnswer)
+                .focused($isInputFocused)
+                .font(DSFont.body)
+                .foregroundStyle(Color.dsTextPrimary)
+                .scrollContentBackground(.hidden)
+                .frame(minHeight: 120)
+                .padding(DSSpacing.xs)
+                .background(Color.dsSurface, in: shape)
+                .overlay(alignment: .topLeading) {
+                    if viewModel.freeTextAnswer.isEmpty {
+                        Text(localization.localizedString("free_text_placeholder"))
+                            .font(DSFont.body)
+                            .foregroundStyle(Color.dsTextTertiary)
+                            .padding(.horizontal, DSSpacing.xs + 5)
+                            .padding(.vertical, DSSpacing.xs + 8)
+                            .allowsHitTesting(false)
+                            .accessibilityHidden(true)
+                    }
+                }
+                .overlay(shape.strokeBorder(isInputFocused ? Color.dsBrand : Color.dsStroke, lineWidth: isInputFocused ? 1.5 : 1))
+                .animation(DSMotion.quick, value: isInputFocused)
+        }
+    }
+
+    private func integerInput(range: ClosedRange<Int>) -> some View {
+        let shape = RoundedRectangle(cornerRadius: DSRadius.medium, style: .continuous)
+        let warning = integerWarning(range: range)
+
+        return VStack(alignment: .leading, spacing: DSSpacing.s) {
+            TextField(
+                localization.localizedString("free_text_placeholder"),
+                text: Binding(
+                    get: { viewModel.freeTextAnswer },
+                    set: { viewModel.freeTextAnswer = String($0.prefix(3)) }
+                )
+            )
             .keyboardType(.numberPad)
             .focused($isInputFocused)
-            .font(.system(size: 22, weight: .semibold, design: .rounded))
-            .padding(14)
-            .background(Color.gray.opacity(0.05))
-            .cornerRadius(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(
-                        showsHint ? Color.orange.opacity(0.6) : Color.gray.opacity(0.2),
-                        lineWidth: 1
-                    )
-            )
+            .font(DSFont.title)
+            .foregroundStyle(Color.dsTextPrimary)
+            .padding(.horizontal, DSSpacing.m)
+            .frame(minHeight: DSSize.answerOptionMinHeight)
+            .background(Color.dsSurface, in: shape)
+            .overlay(shape.strokeBorder(borderColor(focused: isInputFocused, hasWarning: warning != nil), lineWidth: isInputFocused ? 1.5 : 1))
+            .accessibilityLabel(localization.localizedString(viewModel.currentQuestion?.textKey ?? "question_label"))
 
-            if showsHint {
-                Text(String(format: localization.localizedString("integer_invalid_hint"), range.lowerBound, range.upperBound))
-                    .font(.system(size: 13, design: .rounded))
-                    .foregroundColor(.orange)
-                    .fixedSize(horizontal: false, vertical: true)
+            if let warning {
+                Banner(kind: .notice, text: warning)
                     .transition(.opacity)
             }
         }
-        .animation(.easeInOut(duration: 0.2), value: showsHint)
+        .animation(DSMotion.quick, value: warning)
+        .onAppear { isInputFocused = true }
     }
 
-    // MARK: - Option Row
-    
-    private func optionRow(_ option: AnswerOption) -> some View {
-        Button(action: {
-            viewModel.selectOption(option.id)
-        }) {
-            HStack(spacing: 14) {
-                ZStack {
-                    Circle()
-                        .stroke(
-                            viewModel.selectedOptionId == option.id
-                                ? Color(red: 0.55, green: 0.48, blue: 0.85)
-                                : Color.gray.opacity(0.3),
-                            lineWidth: 2
-                        )
-                        .frame(width: 24, height: 24)
-                    
-                    if viewModel.selectedOptionId == option.id {
-                        Circle()
-                            .fill(
-                                LinearGradient(
-                                    colors: [Color(red: 0.55, green: 0.48, blue: 0.85), Color(red: 0.42, green: 0.68, blue: 0.84)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .frame(width: 14, height: 14)
-                            .transition(.scale.combined(with: .opacity))
+    private func borderColor(focused: Bool, hasWarning: Bool) -> Color {
+        if hasWarning { return .dsGentle }
+        return focused ? .dsBrand : .dsStroke
+    }
+
+    /// The message under a number answer, or nil when it is empty or valid.
+    /// An age under 18 gets its own message; a single digit waits until the user stops typing.
+    private func integerWarning(range: ClosedRange<Int>) -> String? {
+        let text = viewModel.freeTextAnswer.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty, viewModel.integerAnswer(in: range) == nil else { return nil }
+        if range == PredictionRequestBuilder.ageRange,
+           let value = Self.wholeNumber(text), value < range.lowerBound {
+            return text.count >= 2 || !isInputFocused ? localization.localizedString("age_under_18_warning") : nil
+        }
+        return localization.localizedString("integer_invalid_hint", range.lowerBound, range.upperBound)
+    }
+
+    /// Reads any Unicode digits, e.g. Persian "۱۶". Display only; the view model validates the answer.
+    private static func wholeNumber(_ text: String) -> Int? {
+        var value = 0
+        for character in text {
+            guard let digit = character.wholeNumberValue, character.isNumber else { return nil }
+            value = value * 10 + digit
+        }
+        return value
+    }
+
+    // MARK: - Grid section
+
+    /// Each item gets its own card with wrapping answer chips; at large text sizes the chips stack.
+    private func gridSection(_ section: TestSection) -> some View {
+        VStack(spacing: DSSpacing.s) {
+            ForEach(section.questions) { question in
+                VStack(alignment: .leading, spacing: DSSpacing.s) {
+                    Text(localization.localizedString(question.textKey))
+                        .font(DSFont.heading)
+                        .foregroundStyle(Color.dsTextPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    ChipGroup {
+                        ForEach(question.options ?? []) { option in
+                            SelectableChip(
+                                title: localization.localizedString(option.textKey),
+                                isSelected: viewModel.gridAnswers[question.id] == option.id
+                            ) {
+                                viewModel.selectGridOption(questionId: question.id, optionId: option.id)
+                            }
+                        }
                     }
                 }
-                .animation(.spring(response: 0.3, dampingFraction: 0.7), value: viewModel.selectedOptionId)
-                
-                Text(localization.localizedString(option.textKey))
-                    .font(.system(size: 15, design: .rounded))
-                    .foregroundColor(.primary)
-                    .multilineTextAlignment(.leading)
-                
-                Spacer()
+                .dsCard(padding: DSSpacing.m)
+                .accessibilityElement(children: .contain)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
-            .background(
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(
-                        viewModel.selectedOptionId == option.id
-                            ? Color(red: 0.55, green: 0.48, blue: 0.85).opacity(0.08)
-                            : Color.clear
-                    )
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 14)
-                    .stroke(
-                        viewModel.selectedOptionId == option.id
-                            ? Color(red: 0.55, green: 0.48, blue: 0.85).opacity(0.3)
-                            : Color.gray.opacity(0.12),
-                        lineWidth: 1
-                    )
-            )
-            // Make the whole row tappable, not only the text and the radio outline.
-            .contentShape(RoundedRectangle(cornerRadius: 14))
         }
-        .buttonStyle(.plain)
+        .sensoryFeedback(.selection, trigger: viewModel.gridAnswers)
     }
-    
-    // MARK: - Navigation Buttons
-    
-    private var navigationButtons: some View {
-        HStack(spacing: 12) {
-            if viewModel.currentSectionIndex > 0 || viewModel.currentQuestionIndex > 0 {
-                Button(action: {
-                    isInputFocused = false
-                    viewModel.previousQuestion()
-                }) {
-                    Image(systemName: "arrow.left")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundColor(Color(red: 0.55, green: 0.48, blue: 0.85))
-                        .frame(width: 54, height: 54)
-                        .background(
-                            RoundedRectangle(cornerRadius: 16)
-                                .fill(Color(red: 0.55, green: 0.48, blue: 0.85).opacity(0.1))
-                        )
-                }
-            }
-            
-            Button(action: {
-                // Dismiss the keyboard before the text field leaves the screen.
-                isInputFocused = false
-                viewModel.nextQuestion()
-            }) {
-                HStack(spacing: 8) {
-                    Text(viewModel.isLastQuestion
-                         ? localization.localizedString("finish_button")
-                         : localization.localizedString("next_button"))
-                        .font(.system(size: 17, weight: .semibold, design: .rounded))
-                    Image(systemName: viewModel.isLastQuestion ? "checkmark" : "arrow.right")
-                        .font(.system(size: 15, weight: .semibold))
-                }
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .frame(height: 54)
-                .background(
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(
-                            viewModel.canProceedQuestion
-                                ? LinearGradient(
-                                    colors: [Color(red: 0.55, green: 0.48, blue: 0.85), Color(red: 0.42, green: 0.68, blue: 0.84)],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                  )
-                                : LinearGradient(
-                                    colors: [.gray.opacity(0.4), .gray.opacity(0.3)],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                  )
-                        )
-                )
-                .shadow(
-                    color: viewModel.canProceedQuestion
-                        ? Color(red: 0.55, green: 0.48, blue: 0.85).opacity(0.4)
-                        : .clear,
-                    radius: 12, y: 6
+
+    // MARK: - Actions
+
+    private var actionBar: some View {
+        BottomActionBar {
+            Button(action: advance) {
+                DSButtonLabel(
+                    title: localization.localizedString(viewModel.isLastQuestion ? "finish_button" : "next_button"),
+                    systemImage: viewModel.isLastQuestion ? "checkmark" : "arrow.forward"
                 )
             }
+            .buttonStyle(.dsPrimary)
             .disabled(!viewModel.canProceedQuestion)
         }
-        .opacity(showContent ? 1 : 0)
+    }
+
+    private var canGoBack: Bool {
+        viewModel.currentSectionIndex > 0 || viewModel.currentQuestionIndex > 0
+    }
+
+    private var questionKey: String {
+        "\(viewModel.currentSectionIndex)-\(viewModel.currentQuestionIndex)"
+    }
+
+    private var motion: Animation {
+        DSMotion.animation(DSMotion.standard, reduceMotion: reduceMotion)
+    }
+
+    private var questionTransition: AnyTransition {
+        if reduceMotion { return .opacity }
+        let forward = AnyTransition.asymmetric(
+            insertion: .move(edge: .trailing).combined(with: .opacity),
+            removal: .move(edge: .leading).combined(with: .opacity)
+        )
+        let backward = AnyTransition.asymmetric(
+            insertion: .move(edge: .leading).combined(with: .opacity),
+            removal: .move(edge: .trailing).combined(with: .opacity)
+        )
+        return isNavigatingBack ? backward : forward
+    }
+
+    /// Selects the answer and, unless it is the last question, moves on after a short pause.
+    private func choose(_ option: AnswerOption) {
+        viewModel.selectOption(option.id)
+        advanceTask?.cancel()
+        guard !viewModel.isLastQuestion else { return }
+        let key = questionKey
+        advanceTask = Task {
+            try? await Task.sleep(for: DSMotion.autoAdvanceDelay)
+            guard !Task.isCancelled, key == questionKey, viewModel.canProceedQuestion else { return }
+            advance()
+        }
+    }
+
+    private func advance() {
+        advanceTask?.cancel()
+        isInputFocused = false
+        isNavigatingBack = false
+        viewModel.nextQuestion()
+    }
+
+    private func goBack() {
+        guard canGoBack else { return }
+        advanceTask?.cancel()
+        isInputFocused = false
+        isNavigatingBack = true
+        let earlierAnswers = viewModel.answers
+        withAnimation(motion) {
+            viewModel.previousQuestion()
+        }
+        restoreSelection(from: earlierAnswers)
+    }
+
+    /// `previousQuestion()` clears the selection; show the answer the user gave before so going back is cheap.
+    private func restoreSelection(from answers: [UserAnswer]) {
+        guard let section = viewModel.currentSection else { return }
+        if section.displayMode == .allAtOnce {
+            for question in section.questions {
+                if let answer = answers.first(where: { $0.questionId == question.id }),
+                   case .option(let option) = answer.answerValue {
+                    viewModel.gridAnswers[question.id] = option.id
+                }
+            }
+            return
+        }
+        guard let question = viewModel.currentQuestion,
+              let answer = answers.last(where: { $0.sectionId == section.id && $0.questionId == question.id }) else { return }
+        switch answer.answerValue {
+        case .option(let option): viewModel.selectedOptionId = option.id
+        case .scale(let value): viewModel.scaleValue = value
+        case .text(let text): viewModel.freeTextAnswer = text
+        }
+    }
+
+    /// Swiping towards the trailing edge goes back, like the system back gesture (mirrored in Persian).
+    private var swipeBack: some Gesture {
+        DragGesture(minimumDistance: 24, coordinateSpace: .global)
+            .onEnded { value in
+                let horizontal = value.translation.width
+                guard abs(horizontal) > 80, abs(value.translation.height) < 60 else { return }
+                let towardsTrailing = layoutDirection == .rightToLeft ? horizontal < 0 : horizontal > 0
+                if towardsTrailing { goBack() }
+            }
+    }
+
+    private func flashSaved() {
+        savedTask?.cancel()
+        savedTask = Task {
+            // Saving is debounced in the view model; show the note once it has had time to run.
+            try? await Task.sleep(for: .milliseconds(700))
+            guard !Task.isCancelled else { return }
+            withAnimation(DSMotion.gentle) { showsSaved = true }
+            try? await Task.sleep(for: .seconds(1.8))
+            guard !Task.isCancelled else { return }
+            withAnimation(DSMotion.gentle) { showsSaved = false }
+        }
     }
 }
 
-#Preview {
-    QuestionnaireView()
-        .environment(WellBeingViewModel())
-        .environment(LocalizationManager())
+#if DEBUG
+#Preview("Light") {
+    PreviewHost(.questionnaire(answered: 8)) { QuestionnaireView() }
 }
+
+#Preview("Dark") {
+    PreviewHost(.questionnaire(answered: 6)) { QuestionnaireView() }
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Persian (RTL)") {
+    PreviewHost(.questionnaire(answered: 0), language: .persian) { QuestionnaireView() }
+}
+#endif

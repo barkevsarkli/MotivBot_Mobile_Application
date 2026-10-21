@@ -6,6 +6,7 @@ struct MindWellApp: App {
     @Environment(\.scenePhase) private var scenePhase
     @State private var localization: LocalizationManager
     @State private var viewModel: WellBeingViewModel
+    @AppStorage(ThemePreference.storageKey) private var themePreference: ThemePreference = .system
 
     init() {
         let localization = LocalizationManager()
@@ -18,7 +19,7 @@ struct MindWellApp: App {
             ContentView()
                 .environment(viewModel)
                 .environment(localization)
-                .preferredColorScheme(viewModel.isDarkMode ? .dark : .light)
+                .preferredColorScheme(themePreference.colorScheme)
                 .environment(\.layoutDirection, localization.layoutDirection)
                 .task { viewModel.prewarmService() }
         }

@@ -1,90 +1,78 @@
 import SwiftUI
 
 struct ContentView: View {
-    
+
     @Environment(WellBeingViewModel.self) var viewModel
-    
-    var body: some View {
-        @Bindable var viewModel = viewModel
-        
-        ZStack {
-            // Dynamic gradient background
-            backgroundGradient
-                .ignoresSafeArea()
-            
-            // Main content (screen switching)
-            VStack {
-                switch viewModel.currentScreen {
-                case .emotionInput:
-                    EmotionInputView()
-                        .transition(.asymmetric(
-                            insertion: .move(edge: .trailing).combined(with: .opacity),
-                            removal: .move(edge: .leading).combined(with: .opacity)
-                        ))
-                case .questionnaire:
-                    QuestionnaireView()
-                        .transition(.asymmetric(
-                            insertion: .move(edge: .trailing).combined(with: .opacity),
-                            removal: .move(edge: .leading).combined(with: .opacity)
-                        ))
-                case .loading:
-                    LoadingView()
-                        .transition(.opacity.combined(with: .scale))
-                case .result:
-                    ResultView()
-                        .transition(.asymmetric(
-                            insertion: .move(edge: .bottom).combined(with: .opacity),
-                            removal: .opacity
-                        ))
-                }
-            }
-            .animation(.easeInOut(duration: 0.45), value: viewModel.currentScreen)
-            
-            // Top bar: Theme toggle (left) + Language toggle (right)
-            VStack {
-                HStack {
-                    ThemeToggleView()
-                    Spacer()
-                    LanguageToggleView()
-                }
-                .padding(.horizontal, 16)
-                .padding(.top, 8)
-                Spacer()
-            }
-        }
+    @Environment(LocalizationManager.self) var localization
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// True once the user leaves the welcome screen. View state only: the view model starts on the
+    /// emotion input screen, and the welcome screen is shown in front of it until the user taps Start.
+    @State private var hasStarted = false
+
+    private enum Route: Hashable {
+        case resume
+        case welcome
+        case screen(AppScreen)
     }
-    
-    // MARK: - Background Gradient
-    
-    private var backgroundGradient: some View {
-        Group {
-            if viewModel.isDarkMode {
-                LinearGradient(
-                    colors: [
-                        Color(red: 0.08, green: 0.08, blue: 0.15),
-                        Color(red: 0.12, green: 0.10, blue: 0.22),
-                        Color(red: 0.06, green: 0.06, blue: 0.12)
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            } else {
-                LinearGradient(
-                    colors: [
-                        Color(red: 0.93, green: 0.91, blue: 0.98),
-                        Color(red: 0.87, green: 0.92, blue: 0.99),
-                        Color(red: 0.95, green: 0.90, blue: 0.96)
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
+
+    private var route: Route {
+        if viewModel.resumableSession != nil { return .resume }
+        if viewModel.currentScreen == .emotionInput && !hasStarted { return .welcome }
+        return .screen(viewModel.currentScreen)
+    }
+
+    var body: some View {
+        ZStack {
+            AppBackground()
+
+            Group {
+                switch route {
+                case .resume:
+                    ResumePromptView(onContinue: { hasStarted = true })
+                case .welcome:
+                    WelcomeView(onStart: { hasStarted = true })
+                case .screen(.emotionInput):
+                    EmotionInputView(onBack: { hasStarted = false })
+                case .screen(.questionnaire):
+                    QuestionnaireView()
+                case .screen(.loading):
+                    LoadingView()
+                case .screen(.result):
+                    ResultView()
+                }
+            }
+            .transition(screenTransition)
+        }
+        .animation(DSMotion.animation(DSMotion.standard, reduceMotion: reduceMotion), value: route)
+        .onChange(of: viewModel.currentScreen) { oldScreen, newScreen in
+            // A restart returns to the emotion input screen; show the welcome screen again.
+            if newScreen == .emotionInput && oldScreen != .emotionInput {
+                hasStarted = false
             }
         }
+        .environment(\.locale, localization.locale)
+    }
+
+    private var screenTransition: AnyTransition {
+        if reduceMotion { return .opacity }
+        return .asymmetric(
+            insertion: .opacity.combined(with: .offset(y: 16)),
+            removal: .opacity
+        )
     }
 }
 
-#Preview {
-    ContentView()
-        .environment(WellBeingViewModel())
-        .environment(LocalizationManager())
+#if DEBUG
+#Preview("Light") {
+    PreviewHost { ContentView() }
 }
+
+#Preview("Dark") {
+    PreviewHost { ContentView() }
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Persian (RTL)") {
+    PreviewHost(language: .persian) { ContentView() }
+}
+#endif

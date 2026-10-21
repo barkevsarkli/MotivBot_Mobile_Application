@@ -1,149 +1,133 @@
 import SwiftUI
-import Combine
 
 struct LoadingView: View {
-    
+
     @Environment(WellBeingViewModel.self) var viewModel
     @Environment(LocalizationManager.self) var localization
-    @State private var rotation: Double = 0
-    @State private var pulse: Bool = false
-    @State private var showText = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var isBreathingIn = false
     @State private var currentTipIndex = 0
-    
-    private let tips: [String] = [
-        "loading_tip_1",
-        "loading_tip_2",
-        "loading_tip_3"
-    ]
-    
-    let timer = Timer.publish(every: 3.0, on: .main, in: .common).autoconnect()
-    
+
+    private let tips = ["loading_tip_1", "loading_tip_2", "loading_tip_3"]
+    private let tipInterval: Duration = .seconds(6)
+
     var body: some View {
-        VStack(spacing: 36) {
-            Spacer()
-            
-            // Animated loading indicator
-            ZStack {
-                // Outer ring
-                Circle()
-                    .stroke(
-                        LinearGradient(
-                            colors: [
-                                Color(red: 0.55, green: 0.48, blue: 0.85).opacity(0.3),
-                                Color(red: 0.42, green: 0.68, blue: 0.84).opacity(0.1)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        lineWidth: 4
-                    )
-                    .frame(width: 100, height: 100)
-                
-                // Spinning arc
-                Circle()
-                    .trim(from: 0, to: 0.3)
-                    .stroke(
-                        LinearGradient(
-                            colors: [
-                                Color(red: 0.55, green: 0.48, blue: 0.85),
-                                Color(red: 0.42, green: 0.68, blue: 0.84)
-                            ],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        ),
-                        style: StrokeStyle(lineWidth: 4, lineCap: .round)
-                    )
-                    .frame(width: 100, height: 100)
-                    .rotationEffect(.degrees(rotation))
-                    .opacity(isFailed ? 0 : 1)
-                
-                // Center icon
-                Image(systemName: "brain.head.profile")
-                    .font(.system(size: 36))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [Color(red: 0.55, green: 0.48, blue: 0.85), Color(red: 0.42, green: 0.68, blue: 0.84)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .scaleEffect(pulse ? 1.1 : 0.95)
-            }
-            
-            // Loading text
-            VStack(spacing: 12) {
-                Text(localization.localizedString("loading_title"))
-                    .font(.system(size: 22, weight: .bold, design: .rounded))
-                    .foregroundColor(.primary)
-                
-                Text(localization.localizedString(subtitleKey))
-                    .font(.system(size: 15, design: .rounded))
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 40)
-                    .id(subtitleKey)
-                    .transition(.opacity)
-                    .animation(.easeInOut(duration: 0.3), value: subtitleKey)
-            }
-            .opacity(showText ? 1 : 0)
-            .offset(y: showText ? 0 : 20)
-            
-            // Rotating tips
-            Text(localization.localizedString(tips[currentTipIndex]))
-                .font(.system(size: 14, weight: .medium, design: .rounded))
-                .foregroundColor(.secondary.opacity(0.7))
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 50)
-                .transition(.opacity)
-                .id(currentTipIndex)
-                .animation(.easeInOut(duration: 0.5), value: currentTipIndex)
-            
-            // Error display
-            if case .failed(let error) = viewModel.analysisPhase {
-                VStack(spacing: 12) {
-                    Text(localization.localizedString(errorKey(for: error)))
-                        .font(.system(size: 14, design: .rounded))
-                        .foregroundColor(.secondary)
+        ScrollView {
+            ScreenColumn(spacing: DSSpacing.xl) {
+                Spacer(minLength: DSSpacing.xl)
+
+                breathingMark
+                    .frame(maxWidth: .infinity)
+
+                VStack(spacing: DSSpacing.s) {
+                    Text(localization.localizedString(isFailed ? "loading_failed_title" : "loading_title"))
+                        .font(DSFont.title)
+                        .foregroundStyle(Color.dsTextPrimary)
                         .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.horizontal, 30)
-                    
-                    Button(localization.localizedString("retry_button")) {
-                        Task {
-                            await viewModel.submitForAnalysis()
-                        }
+                        .accessibilityAddTraits(.isHeader)
+
+                    Text(localization.localizedString(subtitleKey))
+                        .font(DSFont.body)
+                        .foregroundStyle(Color.dsTextSecondary)
+                        .multilineTextAlignment(.center)
+                        .dsBodyText()
+                        .id(subtitleKey)
+                        .transition(.opacity)
+                }
+                .frame(maxWidth: .infinity)
+                .animation(DSMotion.gentle, value: subtitleKey)
+
+                statusContent
+                    .frame(maxWidth: .infinity)
+            }
+            .padding(.bottom, DSSpacing.l)
+            .dsAppear()
+        }
+        .scrollBounceBehavior(.basedOnSize)
+        .safeAreaInset(edge: .top) { TopBar() }
+        .safeAreaInset(edge: .bottom) {
+            if isFailed {
+                BottomActionBar {
+                    Button {
+                        Task { await viewModel.submitForAnalysis() }
+                    } label: {
+                        DSButtonLabel(title: localization.localizedString("retry_button"), systemImage: "arrow.clockwise")
                     }
-                    .font(.system(size: 15, weight: .semibold, design: .rounded))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 10)
-                    .background(
-                        Capsule()
-                            .fill(Color(red: 0.55, green: 0.48, blue: 0.85))
-                    )
+                    .buttonStyle(.dsPrimary)
+                }
+                .transition(.opacity)
+            }
+        }
+        .animation(DSMotion.standard, value: isFailed)
+        .onAppear(perform: startBreathing)
+        .onChange(of: reduceMotion) { startBreathing() }
+        .task(id: isFailed) {
+            guard !isFailed else { return }
+            while !Task.isCancelled {
+                try? await Task.sleep(for: tipInterval)
+                guard !Task.isCancelled else { return }
+                withAnimation(DSMotion.gentle) {
+                    currentTipIndex = (currentTipIndex + 1) % tips.count
                 }
             }
-            
-            Spacer()
         }
-        .onAppear {
-            // Start animations
-            withAnimation(.linear(duration: 1.2).repeatForever(autoreverses: false)) {
-                rotation = 360
-            }
-            withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
-                pulse = true
-            }
-            withAnimation(.easeOut(duration: 0.6).delay(0.3)) {
-                showText = true
-            }
-        }
-        .onReceive(timer) { _ in
-            withAnimation {
-                currentTipIndex = (currentTipIndex + 1) % tips.count
-            }
+        .onChange(of: viewModel.analysisPhase) { _, phase in
+            announce(phase)
         }
     }
+
+    // MARK: - Parts
+
+    /// Two soft circles that grow and shrink over four seconds, like a slow breath.
+    private var breathingMark: some View {
+        ZStack {
+            Circle()
+                .fill(Color.dsBrandSoft)
+                .frame(width: 148, height: 148)
+                .scaleEffect(isBreathingIn ? 1 : 0.82)
+            Circle()
+                .fill(Color.dsBrand.opacity(0.18))
+                .frame(width: 104, height: 104)
+                .scaleEffect(isBreathingIn ? 1 : 0.88)
+            Image(systemName: isFailed ? "cloud" : "leaf.fill")
+                .font(.system(size: 40))
+                .foregroundStyle(Color.dsBrand)
+                .contentTransition(.symbolEffect(.replace))
+        }
+        .accessibilityHidden(true)
+    }
+
+    @ViewBuilder
+    private var statusContent: some View {
+        switch viewModel.analysisPhase {
+        case .failed(let error):
+            Banner(kind: .notice, text: localization.localizedString(error.messageKey))
+                .transition(.opacity)
+        case .modelWakingUp:
+            VStack(spacing: DSSpacing.m) {
+                Banner(kind: .info, text: localization.localizedString("loading_waking_banner"))
+                tip
+            }
+            .transition(.opacity)
+        case .idle, .connecting, .analysing:
+            tip
+        }
+    }
+
+    private var tip: some View {
+        Text(localization.localizedString(tips[currentTipIndex]))
+            .font(DSFont.callout)
+            .foregroundStyle(Color.dsTextSecondary)
+            .multilineTextAlignment(.center)
+            .dsBodyText()
+            .padding(.horizontal, DSSpacing.m)
+            .id(currentTipIndex)
+            .transition(.opacity)
+            // Changing every few seconds would be noisy for VoiceOver; the status is announced instead.
+            .accessibilityHidden(true)
+    }
+
+    // MARK: - Behaviour
 
     private var isFailed: Bool {
         if case .failed = viewModel.analysisPhase { return true }
@@ -158,13 +142,39 @@ struct LoadingView: View {
         }
     }
 
-    private func errorKey(for error: AnalysisError) -> String {
-        error.messageKey
+    private func startBreathing() {
+        guard !reduceMotion else {
+            isBreathingIn = true
+            return
+        }
+        isBreathingIn = false
+        withAnimation(.easeInOut(duration: 4).repeatForever(autoreverses: true)) {
+            isBreathingIn = true
+        }
+    }
+
+    private func announce(_ phase: WellBeingViewModel.AnalysisPhase) {
+        let text: String
+        switch phase {
+        case .modelWakingUp: text = localization.localizedString("loading_model_starting")
+        case .failed(let error): text = localization.localizedString(error.messageKey)
+        case .idle, .connecting, .analysing: return
+        }
+        AccessibilityNotification.Announcement(text).post()
     }
 }
 
-#Preview {
-    LoadingView()
-        .environment(WellBeingViewModel())
-        .environment(LocalizationManager())
+#if DEBUG
+#Preview("Light") {
+    PreviewHost(.loading(.analysing)) { LoadingView() }
 }
+
+#Preview("Dark, waking up") {
+    PreviewHost(.loading(.modelWakingUp)) { LoadingView() }
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Persian (RTL), failed") {
+    PreviewHost(.loading(.failed(.offline)), language: .persian) { LoadingView() }
+}
+#endif

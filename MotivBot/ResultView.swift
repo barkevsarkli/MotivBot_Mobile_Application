@@ -1,511 +1,330 @@
 import SwiftUI
 
 struct ResultView: View {
-    
+
     @Environment(WellBeingViewModel.self) var viewModel
     @Environment(LocalizationManager.self) var localization
-    @State private var showContent = false
-    @State private var showReflection = false
-    @FocusState private var isTextFieldFocused: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @FocusState private var isNoteFocused: Bool
+    @State private var exportFile: ResultExportFile?
+    @State private var exportFailed = false
+    @State private var hasAppeared = false
 
-    private let brandPurple = Color(red: 0.55, green: 0.48, blue: 0.85)
-    private let brandBlue = Color(red: 0.42, green: 0.68, blue: 0.84)
-    
     var body: some View {
         @Bindable var viewModel = viewModel
-        
+
         ScrollView {
-            VStack(spacing: 24) {
-                Spacer().frame(height: 70)
-                
-                if !viewModel.isCompleted {
-                    header
-
-                    if let prediction = viewModel.prediction {
-                        // Support card first, so it is the first thing a user at risk sees.
-                        if viewModel.elevatedRisk {
-                            supportCard
-                        }
-                        if !prediction.messages.isEmpty {
-                            messagesCard(prediction.messages)
-                        }
-                        dimensionsCard(prediction)
-                        disclaimer
-                        shareButton
-                    }
-
-                    // MARK: - Reflection Section
-                    reflectionSection
-
-                    // Submit reflection button
-                    submitButton
+            ScreenColumn(spacing: DSSpacing.l) {
+                if viewModel.isCompleted {
+                    completion
+                        .transition(.opacity.combined(with: .scale(scale: reduceMotion ? 1 : 0.96)))
                 } else {
-                    // MARK: - Completion State
-                    completionView
+                    results
+                        .transition(.opacity)
                 }
-                
-                Spacer().frame(height: 40)
             }
-            .padding(.horizontal, 20)
+            .padding(.top, DSSpacing.xs)
+            .padding(.bottom, DSSpacing.xl)
         }
         .scrollDismissesKeyboard(.interactively)
-        .onAppear {
-            withAnimation(.easeOut(duration: 0.7).delay(0.2)) {
-                showContent = true
-            }
-            withAnimation(.easeOut(duration: 0.7).delay(0.8)) {
-                showReflection = true
-            }
+        .safeAreaInset(edge: .top) { TopBar() }
+        .animation(DSMotion.animation(DSMotion.soft, reduceMotion: reduceMotion), value: viewModel.isCompleted)
+        .sensoryFeedback(.success, trigger: hasAppeared) { _, appeared in appeared }
+        .onAppear { hasAppeared = true }
+        .sheet(item: $exportFile) { file in
+            ExportShareSheet(file: file)
+                .presentationDetents([.medium, .large])
+                .ignoresSafeArea()
         }
         .sheet(isPresented: $viewModel.showShareSheet) {
             if let csvURL = viewModel.csvFileURL {
                 ShareSheet(activityItems: [csvURL])
             }
         }
+        .alert(localization.localizedString("export_failed"), isPresented: $exportFailed) {
+            Button(localization.localizedString("ok_button"), role: .cancel) {}
+        }
     }
-    
-    // MARK: - Header
+
+    // MARK: - Results
+
+    @ViewBuilder
+    private var results: some View {
+        header
+            .dsAppear()
+
+        if let prediction = viewModel.prediction {
+            // The support card comes first so a user at risk sees it before anything else.
+            if viewModel.elevatedRisk {
+                SupportCard(
+                    title: localization.localizedString("support_title"),
+                    message: localization.localizedString("support_body")
+                )
+                .dsAppear(delay: 0.1)
+            }
+
+            if !prediction.messages.isEmpty {
+                messages(prediction.messages)
+                    .dsAppear(delay: 0.2)
+            }
+
+            dimensions(prediction)
+                .dsAppear(delay: 0.3)
+
+            disclaimer
+                .dsAppear(delay: 0.35)
+
+            exportSection
+                .dsAppear(delay: 0.4)
+        }
+
+        reflection
+            .dsAppear(delay: 0.5)
+    }
 
     private var header: some View {
-        VStack(spacing: 10) {
-            HStack(spacing: 8) {
-                Image(systemName: "leaf.fill")
-                    .font(.system(size: 20))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [brandPurple, brandBlue],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-
-                Text(localization.localizedString("result_title"))
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
-                    .foregroundColor(.primary)
-            }
-
+        VStack(alignment: .leading, spacing: DSSpacing.xs) {
+            Text(localization.localizedString("result_title"))
+                .font(DSFont.display)
+                .foregroundStyle(Color.dsTextPrimary)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
             Text(localization.localizedString("result_subtitle"))
-                .font(.system(size: 14, design: .rounded))
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
+                .font(DSFont.body)
+                .foregroundStyle(Color.dsTextSecondary)
+                .dsBodyText()
         }
-        .opacity(showContent ? 1 : 0)
-        .offset(y: showContent ? 0 : 20)
     }
 
-    // MARK: - Support Card
-
-    private var supportCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 10) {
-                Image(systemName: "heart.circle.fill")
-                    .font(.system(size: 26))
-                    .foregroundColor(brandPurple)
-
-                Text(localization.localizedString("support_title"))
-                    .font(.system(size: 17, weight: .bold, design: .rounded))
-                    .foregroundColor(.primary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
-            Text(localization.localizedString("support_body"))
-                .font(.system(size: 15, design: .rounded))
-                .foregroundColor(.primary.opacity(0.85))
-                .lineSpacing(3)
-                .fixedSize(horizontal: false, vertical: true)
-
-            Text(localization.localizedString("support_resources_body"))
-                .font(.system(size: 14, design: .rounded))
-                .foregroundColor(.secondary)
-                .lineSpacing(3)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .padding(20)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 22)
-                .fill(brandPurple.opacity(0.10))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 22)
-                .stroke(brandPurple.opacity(0.35), lineWidth: 1.5)
-        )
-        .accessibilityElement(children: .combine)
-        .opacity(showContent ? 1 : 0)
-        .offset(y: showContent ? 0 : 20)
-    }
-
-    // MARK: - Motivational Messages
-
-    private func messagesCard(_ messages: [PredictionResponse.Message]) -> some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack(spacing: 10) {
-                Image(systemName: "quote.bubble.fill")
-                    .font(.system(size: 20))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [brandPurple, brandBlue],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                Text(localization.localizedString("messages_title"))
-                    .font(.system(size: 17, weight: .bold, design: .rounded))
-                    .foregroundColor(.primary)
-            }
-
-            ForEach(Array(messages.enumerated()), id: \.offset) { index, message in
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(localization.localizedString(categoryKey(message.category)))
-                        .font(.system(size: 12, weight: .semibold, design: .rounded))
-                        .foregroundColor(brandPurple)
-                        .textCase(.uppercase)
-                    Text(message.text)
-                        .font(.system(size: 15, design: .rounded))
-                        .foregroundColor(.primary.opacity(0.9))
-                        .lineSpacing(3)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                .accessibilityElement(children: .combine)
-                if index < messages.count - 1 {
-                    Divider()
-                        .background(Color.gray.opacity(0.15))
-                }
+    private func messages(_ messages: [PredictionResponse.Message]) -> some View {
+        VStack(alignment: .leading, spacing: DSSpacing.s) {
+            sectionTitle("messages_title")
+            ForEach(Array(MessageCategoryStyle.ordered(messages).enumerated()), id: \.offset) { _, message in
+                let style = MessageCategoryStyle(category: message.category)
+                MessageCard(
+                    style: style,
+                    categoryTitle: localization.localizedString(style.titleKey),
+                    text: message.text,
+                    author: message.author
+                )
             }
         }
-        .padding(20)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 22)
-                .fill(.ultraThinMaterial)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 22)
-                .stroke(brandPurple.opacity(0.25), lineWidth: 1)
-        )
-        .opacity(showContent ? 1 : 0)
-        .offset(y: showContent ? 0 : 25)
     }
 
-    private func categoryKey(_ category: String) -> String {
-        switch category {
-        case "Emotional Validation": return "message_category_validation"
-        case "Cognitive Reframing": return "message_category_reframing"
-        case "Action-Oriented Encouragement": return "message_category_action"
-        default: return "message_category_other"
-        }
-    }
-
-    // MARK: - Dimensions
-
-    private func dimensionsCard(_ prediction: PredictionResponse) -> some View {
+    private func dimensions(_ prediction: PredictionResponse) -> some View {
         let rows: [(WellBeingDimension, PredictionResponse.Level)] = WellBeingDimension.allCases.compactMap { dimension in
             prediction.level(for: dimension).map { (dimension, $0) }
         }
 
-        return VStack(alignment: .leading, spacing: 0) {
-            ForEach(Array(rows.enumerated()), id: \.element.0) { index, row in
-                dimensionRow(row.0, level: row.1)
-                if index < rows.count - 1 {
-                    Divider()
-                        .background(Color.gray.opacity(0.15))
-                        .padding(.vertical, 14)
+        return VStack(alignment: .leading, spacing: DSSpacing.s) {
+            sectionTitle("dimensions_title")
+            VStack(alignment: .leading, spacing: DSSpacing.m) {
+                ForEach(Array(rows.enumerated()), id: \.element.0) { index, row in
+                    DimensionRow(
+                        dimension: row.0,
+                        level: row.1,
+                        title: localization.localizedString(row.0.titleKey),
+                        message: localization.localizedString(row.0.messageKey(for: row.1))
+                    )
+                    if index < rows.count - 1 {
+                        Divider().overlay(Color.dsStroke)
+                    }
                 }
             }
-        }
-        .padding(20)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 22)
-                .fill(.ultraThinMaterial)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 22)
-                .stroke(Color.gray.opacity(0.12), lineWidth: 1)
-        )
-        .opacity(showContent ? 1 : 0)
-        .offset(y: showContent ? 0 : 30)
-    }
-
-    private func dimensionRow(_ dimension: WellBeingDimension, level: PredictionResponse.Level) -> some View {
-        let color = toneColor(dimension.tone(for: level))
-
-        return HStack(alignment: .top, spacing: 14) {
-            Image(systemName: dimension.iconName)
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundColor(color)
-                .frame(width: 40, height: 40)
-                .background(Circle().fill(color.opacity(0.14)))
-
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(alignment: .center) {
-                    Text(localization.localizedString(dimension.titleKey))
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
-                        .foregroundColor(.primary)
-                    Spacer(minLength: 8)
-                    levelIndicator(level, color: color)
-                }
-
-                Text(localization.localizedString(dimension.messageKey(for: level)))
-                    .font(.system(size: 14, design: .rounded))
-                    .foregroundColor(.primary.opacity(0.75))
-                    .lineSpacing(3)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(
-            localization.localizedString(dimension.titleKey) + ". "
-                + localization.localizedString(dimension.messageKey(for: level))
-        )
-    }
-
-    /// Three soft steps; one filled for No, two for Low, three for High.
-    private func levelIndicator(_ level: PredictionResponse.Level, color: Color) -> some View {
-        let filled = (PredictionResponse.Level.allCases.firstIndex(of: level) ?? 0) + 1
-        return HStack(spacing: 4) {
-            ForEach(0..<3, id: \.self) { step in
-                Capsule()
-                    .fill(step < filled ? color : Color.gray.opacity(0.2))
-                    .frame(width: 16, height: 6)
-            }
+            .dsCard()
         }
     }
-
-    private func toneColor(_ tone: WellBeingDimension.Tone) -> Color {
-        switch tone {
-        case .steady: return Color(red: 0.30, green: 0.70, blue: 0.60)
-        case .gentle: return Color(red: 0.85, green: 0.65, blue: 0.30)
-        case .care: return Color(red: 0.86, green: 0.50, blue: 0.45)
-        }
-    }
-
-    // MARK: - Disclaimer and Share
 
     private var disclaimer: some View {
-        HStack(alignment: .top, spacing: 10) {
-            Image(systemName: "info.circle")
-                .font(.system(size: 14))
-                .foregroundColor(.secondary)
+        Label {
             Text(localization.localizedString("result_disclaimer"))
-                .font(.system(size: 13, design: .rounded))
-                .foregroundColor(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-            Spacer(minLength: 0)
+                .font(DSFont.footnote)
+                .foregroundStyle(Color.dsTextSecondary)
+                .dsBodyText()
+        } icon: {
+            Image(systemName: "info.circle")
+                .foregroundStyle(Color.dsTextSecondary)
         }
-        .padding(.horizontal, 4)
-        .opacity(showContent ? 1 : 0)
+        .padding(.horizontal, DSSpacing.xxs)
     }
 
-    private var shareButton: some View {
-        Button(action: {
-            viewModel.showShareSheet = true
-        }) {
-            HStack(spacing: 8) {
-                Image(systemName: "square.and.arrow.up")
-                    .font(.system(size: 15, weight: .semibold))
-                Text(localization.localizedString("share_results_button"))
-                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+    // MARK: - Export
+
+    private var exportSection: some View {
+        VStack(alignment: .leading, spacing: DSSpacing.s) {
+            VStack(alignment: .leading, spacing: DSSpacing.xxs) {
+                Text(localization.localizedString("export_title"))
+                    .font(DSFont.heading)
+                    .foregroundStyle(Color.dsTextPrimary)
+                    .accessibilityAddTraits(.isHeader)
+                Text(localization.localizedString("export_body"))
+                    .font(DSFont.callout)
+                    .foregroundStyle(Color.dsTextSecondary)
+                    .dsBodyText()
             }
-            .foregroundColor(brandPurple)
-            .padding(.horizontal, 28)
-            .padding(.vertical, 12)
-            .background(
-                Capsule()
-                    .stroke(brandPurple, lineWidth: 2)
-            )
+
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: DSSpacing.xs) { exportButtons }
+                VStack(spacing: DSSpacing.xs) { exportButtons }
+            }
+
+            if viewModel.csvFileURL != nil {
+                Button {
+                    viewModel.showShareSheet = true
+                } label: {
+                    Label(localization.localizedString("share_results_button"), systemImage: "square.and.arrow.up")
+                }
+                .buttonStyle(.dsTertiary)
+            }
         }
-        .disabled(viewModel.csvFileURL == nil)
-        .opacity(showContent ? 1 : 0)
+        .dsCard()
     }
 
-    // MARK: - Reflection Section
-    
-    private var reflectionSection: some View {
+    @ViewBuilder
+    private var exportButtons: some View {
+        Button { export(.pdf) } label: {
+            DSButtonLabel(title: localization.localizedString("export_pdf"), systemImage: "doc.richtext")
+        }
+        .buttonStyle(.dsSecondary)
+
+        Button { export(.image) } label: {
+            DSButtonLabel(title: localization.localizedString("export_image"), systemImage: "photo")
+        }
+        .buttonStyle(.dsSecondary)
+    }
+
+    private func export(_ format: ResultExportFormat) {
+        guard let summary = viewModel.resultSummary else { return }
+        do {
+            exportFile = try ResultExporter.makeFile(format, summary: summary, localization: localization)
+        } catch {
+            exportFailed = true
+        }
+    }
+
+    // MARK: - Reflection
+
+    private var reflection: some View {
         @Bindable var viewModel = viewModel
-        
-        return VStack(alignment: .leading, spacing: 16) {
-            Text(localization.localizedString("reflection_title"))
-                .font(.system(size: 18, weight: .bold, design: .rounded))
-                .foregroundColor(.primary)
-            
-            Text(localization.localizedString("reflection_question"))
-                .font(.system(size: 15, design: .rounded))
-                .foregroundColor(.secondary)
-            
-            // Emoji feeling selector
-            HStack(spacing: 12) {
+
+        return VStack(alignment: .leading, spacing: DSSpacing.m) {
+            VStack(alignment: .leading, spacing: DSSpacing.xxs) {
+                Text(localization.localizedString("reflection_title"))
+                    .font(DSFont.heading)
+                    .foregroundStyle(Color.dsTextPrimary)
+                    .accessibilityAddTraits(.isHeader)
+                Text(localization.localizedString("reflection_question"))
+                    .font(DSFont.callout)
+                    .foregroundStyle(Color.dsTextSecondary)
+                    .dsBodyText()
+            }
+
+            ChipGroup {
                 ForEach(Array(viewModel.feelingEmojis.enumerated()), id: \.offset) { index, feeling in
-                    Button(action: {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    SelectableChip(
+                        title: localization.localizedString(feeling.labelKey),
+                        isSelected: viewModel.selectedFeelingIndex == index
+                    ) {
+                        withAnimation(DSMotion.quick) {
                             viewModel.selectedFeelingIndex = index
                         }
-                    }) {
-                        VStack(spacing: 6) {
-                            Text(feeling.emoji)
-                                .font(.system(size: viewModel.selectedFeelingIndex == index ? 36 : 28))
-                                .scaleEffect(viewModel.selectedFeelingIndex == index ? 1.15 : 1.0)
-                            
-                            Text(localization.localizedString(feeling.labelKey))
-                                .font(.system(size: 10, weight: .medium, design: .rounded))
-                                .foregroundColor(viewModel.selectedFeelingIndex == index ? .primary : .secondary)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.7)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(
-                            RoundedRectangle(cornerRadius: 14)
-                                .fill(
-                                    viewModel.selectedFeelingIndex == index
-                                        ? Color(red: 0.55, green: 0.48, blue: 0.85).opacity(0.1)
-                                        : Color.clear
-                                )
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 14)
-                                .stroke(
-                                    viewModel.selectedFeelingIndex == index
-                                        ? Color(red: 0.55, green: 0.48, blue: 0.85).opacity(0.4)
-                                        : Color.gray.opacity(0.12),
-                                    lineWidth: 1
-                                )
-                        )
                     }
-                    .buttonStyle(.plain)
                 }
             }
-            
-            // Optional text reflection
-            VStack(alignment: .leading, spacing: 6) {
+            .sensoryFeedback(.selection, trigger: viewModel.selectedFeelingIndex)
+
+            VStack(alignment: .leading, spacing: DSSpacing.xs) {
                 Text(localization.localizedString("reflection_optional"))
-                    .font(.system(size: 13, weight: .medium, design: .rounded))
-                    .foregroundColor(.secondary)
-                
+                    .font(DSFont.caption)
+                    .foregroundStyle(Color.dsTextSecondary)
+                    .accessibilityHidden(true)
+
+                let shape = RoundedRectangle(cornerRadius: DSRadius.medium, style: .continuous)
                 TextField(localization.localizedString("reflection_placeholder"), text: $viewModel.reflectionText, axis: .vertical)
-                    .focused($isTextFieldFocused)
+                    .focused($isNoteFocused)
                     .lineLimit(3...6)
-                    .padding(14)
-                    .background(
-                        RoundedRectangle(cornerRadius: 14)
-                            .fill(.ultraThinMaterial)
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 14)
-                            .stroke(
-                                isTextFieldFocused
-                                    ? Color(red: 0.55, green: 0.48, blue: 0.85).opacity(0.5)
-                                    : Color.gray.opacity(0.15),
-                                lineWidth: 1
-                            )
-                    )
-                    .font(.system(size: 15, design: .rounded))
+                    .font(DSFont.body)
+                    .foregroundStyle(Color.dsTextPrimary)
+                    .padding(DSSpacing.s)
+                    .frame(minHeight: DSSize.minTap)
+                    .background(Color.dsSurfaceMuted, in: shape)
+                    .overlay(shape.strokeBorder(isNoteFocused ? Color.dsBrand : Color.dsStroke, lineWidth: isNoteFocused ? 1.5 : 1))
+                    .animation(DSMotion.quick, value: isNoteFocused)
+                    .accessibilityLabel(localization.localizedString("reflection_optional"))
             }
+
+            Button {
+                isNoteFocused = false
+                viewModel.submitReflection()
+            } label: {
+                DSButtonLabel(title: localization.localizedString("submit_reflection"), systemImage: "checkmark")
+            }
+            .buttonStyle(.dsPrimary)
         }
-        .padding(20)
-        .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(.ultraThinMaterial)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 20)
-                .stroke(Color.gray.opacity(0.1), lineWidth: 1)
-        )
-        .opacity(showReflection ? 1 : 0)
-        .offset(y: showReflection ? 0 : 30)
+        .dsCard()
     }
-    
-    // MARK: - Submit Button
-    
-    private var submitButton: some View {
-        Button(action: {
-            isTextFieldFocused = false
-            viewModel.submitReflection()
-        }) {
-            HStack(spacing: 8) {
-                Text(localization.localizedString("submit_reflection"))
-                    .font(.system(size: 17, weight: .semibold, design: .rounded))
-                Image(systemName: "heart.fill")
-                    .font(.system(size: 15))
+
+    // MARK: - Completion
+
+    private var completion: some View {
+        VStack(spacing: DSSpacing.l) {
+            Spacer(minLength: DSSpacing.xxl)
+
+            Image(systemName: "leaf.fill")
+                .font(.system(size: 40))
+                .foregroundStyle(Color.dsSteady)
+                .frame(width: 96, height: 96)
+                .background(Color.dsSteadySoft, in: Circle())
+                .symbolEffect(.bounce, options: .nonRepeating, value: viewModel.isCompleted)
+                .accessibilityHidden(true)
+
+            VStack(spacing: DSSpacing.s) {
+                Text(localization.localizedString("completion_title"))
+                    .font(DSFont.display)
+                    .foregroundStyle(Color.dsTextPrimary)
+                    .multilineTextAlignment(.center)
+                    .accessibilityAddTraits(.isHeader)
+                Text(localization.localizedString("completion_message"))
+                    .font(DSFont.body)
+                    .foregroundStyle(Color.dsTextSecondary)
+                    .multilineTextAlignment(.center)
+                    .dsBodyText()
             }
-            .foregroundColor(.white)
-            .frame(maxWidth: .infinity)
-            .frame(height: 54)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(
-                        LinearGradient(
-                            colors: [Color(red: 0.55, green: 0.48, blue: 0.85), Color(red: 0.42, green: 0.68, blue: 0.84)],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-            )
-            .shadow(color: Color(red: 0.55, green: 0.48, blue: 0.85).opacity(0.4), radius: 12, y: 6)
-        }
-        .opacity(showReflection ? 1 : 0)
-    }
-    
-    // MARK: - Completion View
-    
-    private var completionView: some View {
-        VStack(spacing: 24) {
-            Spacer().frame(height: 40)
-            
-            // Checkmark animation
-            ZStack {
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [Color(red: 0.30, green: 0.78, blue: 0.55), Color(red: 0.25, green: 0.65, blue: 0.50)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(width: 90, height: 90)
-                    .shadow(color: Color(red: 0.30, green: 0.78, blue: 0.55).opacity(0.4), radius: 16, y: 8)
-                
-                Image(systemName: "checkmark")
-                    .font(.system(size: 40, weight: .bold))
-                    .foregroundColor(.white)
-            }
-            
-            Text(localization.localizedString("completion_title"))
-                .font(.system(size: 26, weight: .bold, design: .rounded))
-                .foregroundColor(.primary)
-            
-            Text(localization.localizedString("completion_message"))
-                .font(.system(size: 16, design: .rounded))
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 20)
-            
-            // Restart button
-            Button(action: {
+
+            Button {
+                ResultExporter.removeFiles()
                 viewModel.restartAssessment()
-            }) {
-                HStack(spacing: 8) {
-                    Image(systemName: "arrow.counterclockwise")
-                        .font(.system(size: 15, weight: .semibold))
-                    Text(localization.localizedString("restart_button"))
-                        .font(.system(size: 16, weight: .semibold, design: .rounded))
-                }
-                .foregroundColor(Color(red: 0.55, green: 0.48, blue: 0.85))
-                .padding(.horizontal, 28)
-                .padding(.vertical, 14)
-                .background(
-                    Capsule()
-                        .stroke(Color(red: 0.55, green: 0.48, blue: 0.85), lineWidth: 2)
-                )
+            } label: {
+                DSButtonLabel(title: localization.localizedString("restart_button"), systemImage: "arrow.counterclockwise")
             }
-            .padding(.top, 8)
+            .buttonStyle(.dsSecondary)
         }
-        .transition(.scale.combined(with: .opacity))
+        .frame(maxWidth: .infinity)
+    }
+
+    private func sectionTitle(_ key: String) -> some View {
+        Text(localization.localizedString(key))
+            .font(DSFont.heading)
+            .foregroundStyle(Color.dsTextPrimary)
+            .accessibilityAddTraits(.isHeader)
     }
 }
 
-#Preview {
-    ResultView()
-        .environment(WellBeingViewModel())
-        .environment(LocalizationManager())
+#if DEBUG
+#Preview("Light, support card") {
+    PreviewHost(.result(elevatedRisk: true)) { ResultView() }
 }
+
+#Preview("Dark") {
+    PreviewHost(.result(elevatedRisk: false)) { ResultView() }
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Persian (RTL)") {
+    PreviewHost(.result(elevatedRisk: true), language: .persian) { ResultView() }
+}
+
+#Preview("Completed") {
+    PreviewHost(.completed) { ResultView() }
+}
+#endif

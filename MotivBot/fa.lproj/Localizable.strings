@@ -2,8 +2,6 @@
 
 /* اپلیکیشن */
 "app_title" = "موتیوبات";
-"theme_toggle" = "تغییر حالت تاریک/روشن";
-"language_toggle" = "تغییر زبان";
 
 /* صفحه ۱: ورود احساسات */
 "emotion_prompt" = "احساسات فعلی خود را در ۳ تا ۴ جمله بیان کنید.";
@@ -170,9 +168,9 @@
 /* صفحه ۳: بارگذاری */
 "loading_title" = "در حال تحلیل…";
 "loading_subtitle" = "در حال بررسی آنچه به اشتراک گذاشتید هستیم. این کار معمولاً چند ثانیه طول می‌کشد.";
-"loading_tip_1" = "💡 نفس عمیق کشیدن می‌تواند سیستم عصبی شما را بازنشانی کند";
-"loading_tip_2" = "🌱 هر قدم کوچک به سمت خودآگاهی مهم است";
-"loading_tip_3" = "✨ با بیان صادقانه خود، شجاعت نشان دادید";
+"loading_tip_1" = "نفس عمیق کشیدن می‌تواند سیستم عصبی شما را بازنشانی کند";
+"loading_tip_2" = "هر قدم کوچک به سمت خودآگاهی مهم است";
+"loading_tip_3" = "با بیان صادقانه خود، شجاعت نشان دادید";
 "retry_button" = "تلاش مجدد";
 
 /* صفحه ۴: نتیجه */
@@ -250,3 +248,47 @@
 "resume_body" = "یک ارزیابی ناتمام دارید.";
 "resume_continue" = "ادامه";
 "resume_start_over" = "شروع دوباره";
+
+/* MARK: design */
+"welcome_tagline" = "یک بررسی کوتاه برای نگاهی آرام به احساسات شما.";
+"welcome_expect_title" = "آنچه پیش رو دارید";
+"welcome_expect_time" = "حدود ۱۰ دقیقه طول می‌کشد.";
+"welcome_expect_steps" = "ابتدا چند جمله می‌نویسید، سپس به چند پرسش کوتاه پاسخ می‌دهید.";
+"welcome_expect_once" = "یک بررسی یک‌باره است.";
+"welcome_not_diagnosis" = "این یک تشخیص نیست؛ نگاهی آرام به حال این لحظهٔ شماست.";
+"welcome_language_label" = "زبان";
+"welcome_language_hint" = "پس از شروع بررسی، زبان قابل تغییر نیست.";
+"welcome_start" = "شروع";
+"language_name_tr" = "Türkçe";
+"language_name_fa" = "فارسی";
+"theme_menu" = "حالت نمایش";
+"theme_system" = "سیستم";
+"theme_light" = "روشن";
+"theme_dark" = "تیره";
+"back_button" = "بازگشت";
+"cancel_button" = "انصراف";
+"ok_button" = "باشه";
+"resume_progress" = "به %1$@ پرسش از %2$@ پاسخ داده‌اید";
+"resume_started" = "شروع: %@";
+"resume_confirm_title" = "می‌خواهید از نو شروع کنید؟";
+"resume_confirm_message" = "پاسخ‌هایی که تاکنون داده‌اید پاک می‌شوند.";
+"resume_confirm_action" = "پاک کردن پاسخ‌ها و شروع دوباره";
+"emotion_title" = "الان حالتان چطور است؟";
+"emotion_ready" = "آمادهٔ ادامه هستید";
+"section_progress" = "بخش %1$@ از %2$@";
+"question_progress" = "پرسش %1$@ از %2$@";
+"overall_progress_value" = "%1$@ پرسش از %2$@ پاسخ داده شده";
+"progress_saved" = "پیشرفت شما ذخیره شد";
+"question_optional" = "اختیاری";
+"age_under_18_warning" = "این بررسی برای بزرگسالان ۱۸ سال و بالاتر طراحی شده است.";
+"loading_failed_title" = "کمی مکث کنیم";
+"loading_waking_banner" = "سرویس مدتی استفاده نشده و در حال آماده شدن است. این ممکن است حدود یک دقیقه طول بکشد.";
+"dimensions_title" = "نمای امروز";
+"export_title" = "ذخیرهٔ خلاصه";
+"export_body" = "خلاصه‌ای یک‌صفحه‌ای شامل سطح‌ها، پیام‌ها و یادداشت توضیحی.";
+"export_pdf" = "PDF";
+"export_image" = "تصویر";
+"export_failed" = "خلاصه آماده نشد. لطفاً دوباره تلاش کنید.";
+"export_page_title" = "خلاصهٔ بررسی";
+"export_dimensions_title" = "نمای امروز";
+"export_footer" = "ساخته‌شده با MotivBot";
