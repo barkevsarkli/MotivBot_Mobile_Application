@@ -51,6 +51,8 @@ struct ContentView: View {
             }
         }
         .environment(\.locale, localization.locale)
+        // An export left behind when the app was closed with the share sheet open.
+        .task { ResultExporter.removeFiles() }
     }
 
     private var screenTransition: AnyTransition {
