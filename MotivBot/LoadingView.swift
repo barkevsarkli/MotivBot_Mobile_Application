@@ -152,19 +152,14 @@ struct LoadingView: View {
 
     private var subtitleKey: String {
         switch viewModel.analysisPhase {
-        case .modelStarting: return "loading_model_starting"
+        case .modelWakingUp: return "loading_model_starting"
         case .failed: return "loading_failed_subtitle"
         case .idle, .connecting, .analysing: return "loading_subtitle"
         }
     }
 
-    private func errorKey(for error: MotivBotAPIError) -> String {
-        switch error {
-        case .serverUnreachable: return "error_server_unreachable"
-        case .modelLoading: return "error_model_loading"
-        case .invalidInput: return "error_invalid_input"
-        case .decoding, .http: return "error_generic"
-        }
+    private func errorKey(for error: AnalysisError) -> String {
+        error.messageKey
     }
 }
 

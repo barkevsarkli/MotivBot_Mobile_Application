@@ -241,3 +241,12 @@
 "message_category_reframing" = "نگاهی دیگر";
 "message_category_action" = "یک قدم کوچک";
 "message_category_other" = "برای شما";
+
+/* MARK: integration */
+"error_service_busy" = "سرویس تحلیل در حال حاضر بسیار شلوغ است. لطفاً چند دقیقه دیگر دوباره تلاش کنید.";
+"emotion_wrong_language" = "لطفاً متن خود را به فارسی بنویسید.";
+"emotion_too_long" = "متن شما خیلی طولانی است. لطفاً حداکثر %d نویسه بنویسید.";
+"resume_title" = "از جایی که ماندید ادامه دهید";
+"resume_body" = "یک ارزیابی ناتمام دارید.";
+"resume_continue" = "ادامه";
+"resume_start_over" = "شروع دوباره";
