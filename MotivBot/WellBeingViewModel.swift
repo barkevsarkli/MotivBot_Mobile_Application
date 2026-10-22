@@ -407,6 +407,7 @@ class WellBeingViewModel {
             csvString += "Gender (0 = male; 0.5 = not specified; 1 = female),\(request.gender.numericValue)\n"
             csvString += "PHQ-9 (0-27),\(request.phq9Score)\n"
             csvString += "RSES (0-30),\(request.rsesScore)\n"
+            csvString += "RSES sent to model (10-40),\(request.pipelineRSESScore)\n"
             csvString += "\nDimension,Score,Level\n"
             for dimension in WellBeingDimension.allCases {
                 guard let probability = prediction.probability(for: dimension),

@@ -7,7 +7,8 @@ import Foundation
 //      body {"text": ..., "age": ..., "gender": ..., "phq9": ..., "rses": ...} -> {"event_id": "..."}
 //   2. GET  {base}/gradio_api/call/run_pipeline/{event_id}
 //      -> server-sent events; "event: complete" carries data = [markdown summary, structured JSON]
-// Scoring follows how_to_score.docx; the scores are computed in the app.
+// Scoring follows how_to_score.docx; the scores are computed in the app. The pipeline expects RSES on 10-40,
+// so the 0-30 total is sent with +10 (`pipelineRSESScore`).
 // The Space detects the language of the text and answers in it (see `PipelineLanguage`).
 
 struct PredictionRequest: Equatable {
@@ -47,6 +48,10 @@ struct PredictionRequest: Equatable {
         }
     }
 
+    /// The RSES total on the pipeline's 10-40 scale: `rsesScore` + 10, i.e. each item scored 1-4 instead of 0-3.
+    var pipelineRSESScore: Int { rsesScore + Self.pipelineRSESOffset }
+    static let pipelineRSESOffset = 10
+
     /// PHQ-9 item 9 asks about thoughts of self-harm.
     var selfHarmItem: Int { phq9Items.count == 9 ? phq9Items[8] : 0 }
 
@@ -82,14 +87,14 @@ extension PredictionRequest {
 extension PredictionRequest: Encodable {
     private enum CodingKeys: String, CodingKey { case text, age, gender, phq9, rses }
 
-    /// `{"text": ..., "age": ..., "gender": ..., "phq9": ..., "rses": ...}` for the v2 endpoint.
+    /// `{"text": ..., "age": ..., "gender": ..., "phq9": ..., "rses": ...}` for the v2 endpoint. `rses` is on 10-40.
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(text, forKey: .text)
         try container.encode(age, forKey: .age)
         try container.encode(gender.rawValue, forKey: .gender)
         try container.encode(phq9Score, forKey: .phq9)
-        try container.encode(rsesScore, forKey: .rses)
+        try container.encode(pipelineRSESScore, forKey: .rses)
     }
 }
 

@@ -72,10 +72,10 @@ struct PredictionRequestBuilderTests {
             answers: Fixture.answers()
         )
         let json = try JSONSerialization.jsonObject(with: JSONEncoder().encode(request)) as! NSDictionary
-        // PHQ-9 = 10; RSES = 24 on the 0-30 scale.
+        // PHQ-9 = 10; RSES = 24 on the 0-30 scale, sent as 34 on the pipeline's 10-40 scale.
         let expected: NSDictionary = [
             "text": "Herkes beni sinirlendiriyor, artık tahammülüm kalmadı",
-            "age": 25, "gender": "Erkek", "phq9": 10, "rses": 24,
+            "age": 25, "gender": "Erkek", "phq9": 10, "rses": 34,
         ]
         #expect(json == expected)
     }
@@ -105,6 +105,7 @@ struct PredictionRequestBuilderTests {
         let request = try PredictionRequestBuilder.build(emotionText: "text", answers: Fixture.answers(rses: items))
         #expect(request.rsesItems == items)
         #expect(request.rsesScore == expected)
+        #expect(request.pipelineRSESScore == expected + 10)
     }
 
     @Test(arguments: [
@@ -248,6 +249,7 @@ struct WellBeingViewModelPredictionTests {
         let csv = viewModel.generateCSV()
         #expect(csv.contains("PHQ-9 (0-27),10"))
         #expect(csv.contains("RSES (0-30),24"))
+        #expect(csv.contains("RSES sent to model (10-40),34"))
         #expect(csv.contains("(0 = male; 0.5 = not specified; 1 = female),0.0"))
         #expect(csv.contains("Anxiety_Fear_Worry,0.880,High"))
         #expect(csv.contains("elevated_risk,true"))
