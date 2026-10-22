@@ -154,6 +154,7 @@
 "result_title" = "Bugün paylaştıklarınız";
 "reflection_title" = "Son Düşünce";
 "reflection_question" = "Bu değerlendirmeden sonra kendinizi nasıl hissediyorsunuz?";
+"reflection_required_hint" = "Oturumu tamamlamak için birini seçin.";
 "reflection_optional" = "Düşüncelerinizi paylaşın (isteğe bağlı)";
 "reflection_placeholder" = "Düşüncelerinizi buraya yazın...";
 "submit_reflection" = "Oturumu Tamamla";
@@ -214,6 +215,12 @@
 "message_category_reframing" = "Başka bir bakış açısı";
 "message_category_action" = "Küçük bir adım";
 "message_category_other" = "Sizin için";
+"messages_swipe_hint" = "Beğenmediğiniz sözü sola, beğendiğinizi sağa kaydırın.";
+"message_like" = "Beğendim";
+"message_dislike" = "Beğenmedim";
+"messages_done_title" = "Tüm sözleri değerlendirdiniz";
+"messages_done_body" = "Geri bildiriminiz için teşekkürler.";
+"messages_replay" = "Sözleri yeniden gör";
 
 /* MARK: integration */
 "error_service_busy" = "Analiz servisi şu anda çok yoğun. Lütfen birkaç dakika sonra tekrar deneyin.";
@@ -256,7 +263,6 @@
 "age_under_18_warning" = "Bu değerlendirme 18 yaş ve üzeri yetişkinler için hazırlanmıştır.";
 "loading_failed_title" = "Biraz ara verelim";
 "loading_waking_banner" = "Servis bir süredir kullanılmadığı için uyanıyor. Bu bir dakika kadar sürebilir.";
-"dimensions_title" = "Bugünkü görünüm";
 "export_title" = "Özetinizi kaydedin";
 "export_body" = "Seviyeleri, mesajları ve bilgilendirme notunu içeren tek sayfalık bir özet.";
 "export_pdf" = "PDF";

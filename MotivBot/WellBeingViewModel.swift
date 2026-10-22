@@ -85,6 +85,8 @@ class WellBeingViewModel {
     // Result / Reflection state
     var reflectionText: String = ""
     var selectedFeelingIndex: Int? = nil
+    /// Swipe feedback on the motivational messages: true when liked (swiped right), false when disliked (swiped left).
+    private(set) var messageFeedback: [PredictionResponse.Message: Bool] = [:]
     var isCompleted: Bool = false
     var showShareSheet: Bool = false
     var csvFileURL: URL? = nil
@@ -438,10 +440,11 @@ class WellBeingViewModel {
                 csvString += "\(dimension.rawValue),\(String(format: "%.3f", probability)),\(level.rawValue)\n"
             }
             csvString += "elevated_risk,\(elevatedRisk)\n"
-            csvString += "\nMessage category,Relevance,Message\n"
+            csvString += "\nMessage category,Relevance,Message,Feedback\n"
             for message in prediction.messages {
                 let text = message.text.replacingOccurrences(of: "\n", with: " ").replacingOccurrences(of: ",", with: ";")
-                csvString += "\(message.category),\(message.score),\(text)\n"
+                let feedback = messageFeedback[message].map { $0 ? "liked" : "disliked" } ?? ""
+                csvString += "\(message.category),\(message.score),\(text),\(feedback)\n"
             }
         }
 
@@ -658,7 +661,21 @@ class WellBeingViewModel {
 
     // MARK: - Reflection
     
+    /// Records a swipe on a message and rewrites the CSV so the feedback is shared with the results.
+    func rateMessage(_ message: PredictionResponse.Message, liked: Bool) {
+        messageFeedback[message] = liked
+        if prediction != nil {
+            saveCSV()
+        }
+    }
+
+    /// The feeling is required; the note stays optional.
+    var canSubmitReflection: Bool {
+        selectedFeelingIndex != nil
+    }
+
     func submitReflection() {
+        guard canSubmitReflection else { return }
         withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
             isCompleted = true
         }
@@ -696,6 +713,7 @@ class WellBeingViewModel {
             elevatedRisk = false
             reflectionText = ""
             selectedFeelingIndex = nil
+            messageFeedback = [:]
             isCompleted = false
             showShareSheet = false
             csvFileURL = nil

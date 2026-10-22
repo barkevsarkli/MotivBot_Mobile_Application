@@ -267,6 +267,42 @@ struct WellBeingViewModelPredictionTests {
         #expect(!viewModel.elevatedRisk)
     }
 
+    @Test func messageSwipesAreRecordedInCSV() async throws {
+        let viewModel = makeViewModel(StubService(.success(try Fixture.response())))
+        await viewModel.submitForAnalysis()
+        let messages = try #require(viewModel.prediction?.messages)
+
+        viewModel.rateMessage(messages[0], liked: true)
+        viewModel.rateMessage(messages[1], liked: false)
+
+        #expect(viewModel.messageFeedback[messages[0]] == true)
+        #expect(viewModel.messageFeedback[messages[1]] == false)
+        #expect(viewModel.messageFeedback[messages[2]] == nil)
+        let csv = try String(contentsOf: try #require(viewModel.csvFileURL), encoding: .utf8)
+        #expect(csv.contains("Message category,Relevance,Message,Feedback"))
+        #expect(csv.contains(",liked\n"))
+        #expect(csv.contains(",disliked\n"))
+
+        viewModel.restartAssessment()
+        #expect(viewModel.messageFeedback.isEmpty)
+    }
+
+    @Test func reflectionNeedsAFeeling() async throws {
+        let viewModel = makeViewModel(StubService(.success(try Fixture.response())))
+        await viewModel.submitForAnalysis()
+
+        viewModel.reflectionText = "Biraz rahatladım"
+        viewModel.submitReflection()
+        #expect(!viewModel.canSubmitReflection)
+        #expect(!viewModel.isCompleted)
+
+        // The note stays optional.
+        viewModel.reflectionText = ""
+        viewModel.selectedFeelingIndex = 2
+        viewModel.submitReflection()
+        #expect(viewModel.isCompleted)
+    }
+
     @Test func unreachableServerKeepsUserOnLoadingWithError() async {
         let viewModel = makeViewModel(StubService(.failure(.offline)))
         viewModel.currentScreen = .loading

@@ -164,6 +164,7 @@
 "result_title" = "آنچه امروز به اشتراک گذاشتید";
 "reflection_title" = "تأمل نهایی";
 "reflection_question" = "بعد از این بررسی چه احساسی دارید؟";
+"reflection_required_hint" = "برای تکمیل جلسه یکی را انتخاب کنید.";
 "reflection_optional" = "نظرات خود را به اشتراک بگذارید (اختیاری)";
 "reflection_placeholder" = "تأملات خود را اینجا بنویسید...";
 "submit_reflection" = "تکمیل جلسه";
@@ -226,6 +227,12 @@
 "message_category_reframing" = "نگاهی دیگر";
 "message_category_action" = "یک قدم کوچک";
 "message_category_other" = "برای شما";
+"messages_swipe_hint" = "جمله‌ای را که نپسندیدید به چپ و جمله‌ای را که پسندیدید به راست بکشید.";
+"message_like" = "پسندیدم";
+"message_dislike" = "نپسندیدم";
+"messages_done_title" = "همهٔ جمله‌ها را ارزیابی کردید";
+"messages_done_body" = "از بازخورد شما سپاسگزاریم.";
+"messages_replay" = "دیدن دوبارهٔ جمله‌ها";
 
 /* MARK: integration */
 "error_service_busy" = "سرویس تحلیل در حال حاضر بسیار شلوغ است. لطفاً چند دقیقه دیگر دوباره تلاش کنید.";
@@ -268,7 +275,6 @@
 "age_under_18_warning" = "این بررسی برای بزرگسالان ۱۸ سال و بالاتر طراحی شده است.";
 "loading_failed_title" = "کمی مکث کنیم";
 "loading_waking_banner" = "سرویس مدتی استفاده نشده و در حال آماده شدن است. این ممکن است حدود یک دقیقه طول بکشد.";
-"dimensions_title" = "نمای امروز";
 "export_title" = "ذخیرهٔ خلاصه";
 "export_body" = "خلاصه‌ای یک‌صفحه‌ای شامل سطح‌ها، پیام‌ها و یادداشت توضیحی.";
 "export_pdf" = "PDF";

@@ -54,22 +54,11 @@ struct ResultView: View {
             .dsAppear()
 
         if let prediction = viewModel.prediction {
-            // The support card comes first so a user at risk sees it before anything else.
-            if viewModel.elevatedRisk {
-                SupportCard(
-                    title: localization.localizedString("support_title"),
-                    message: localization.localizedString("support_body")
-                )
-                .dsAppear(delay: 0.1)
-            }
-
+            // The levels are only in the PDF / image summary, not on this screen.
             if !prediction.messages.isEmpty {
                 messages(prediction.messages)
                     .dsAppear(delay: 0.2)
             }
-
-            dimensions(prediction)
-                .dsAppear(delay: 0.3)
 
             disclaimer
                 .dsAppear(delay: 0.35)
@@ -97,41 +86,25 @@ struct ResultView: View {
     }
 
     private func messages(_ messages: [PredictionResponse.Message]) -> some View {
-        VStack(alignment: .leading, spacing: DSSpacing.s) {
-            sectionTitle("messages_title")
-            ForEach(Array(MessageCategoryStyle.ordered(messages).enumerated()), id: \.offset) { _, message in
-                let style = MessageCategoryStyle(category: message.category)
-                MessageCard(
-                    style: style,
-                    categoryTitle: localization.localizedString(style.titleKey),
-                    text: message.text,
-                    author: message.author
-                )
-            }
-        }
-    }
-
-    private func dimensions(_ prediction: PredictionResponse) -> some View {
-        let rows: [(WellBeingDimension, PredictionResponse.Level)] = WellBeingDimension.allCases.compactMap { dimension in
-            prediction.level(for: dimension).map { (dimension, $0) }
-        }
+        let ordered = MessageCategoryStyle.ordered(messages)
 
         return VStack(alignment: .leading, spacing: DSSpacing.s) {
-            sectionTitle("dimensions_title")
-            VStack(alignment: .leading, spacing: DSSpacing.m) {
-                ForEach(Array(rows.enumerated()), id: \.element.0) { index, row in
-                    DimensionRow(
-                        dimension: row.0,
-                        level: row.1,
-                        title: localization.localizedString(row.0.titleKey),
-                        message: localization.localizedString(row.0.messageKey(for: row.1))
-                    )
-                    if index < rows.count - 1 {
-                        Divider().overlay(Color.dsStroke)
-                    }
-                }
+            sectionTitle("messages_title")
+            MessageDeck(
+                messages: ordered,
+                strings: MessageDeck.Strings(
+                    hint: localization.localizedString("messages_swipe_hint"),
+                    like: localization.localizedString("message_like"),
+                    dislike: localization.localizedString("message_dislike"),
+                    doneTitle: localization.localizedString("messages_done_title"),
+                    doneBody: localization.localizedString("messages_done_body"),
+                    replay: localization.localizedString("messages_replay"),
+                    categoryTitle: { localization.localizedString($0.titleKey) }
+                ),
+                startIndex: ordered.firstIndex { viewModel.messageFeedback[$0] == nil } ?? ordered.count
+            ) { message, liked in
+                viewModel.rateMessage(message, liked: liked)
             }
-            .dsCard()
         }
     }
 
@@ -235,6 +208,14 @@ struct ResultView: View {
             }
             .sensoryFeedback(.selection, trigger: viewModel.selectedFeelingIndex)
 
+            if !viewModel.canSubmitReflection {
+                Text(localization.localizedString("reflection_required_hint"))
+                    .font(DSFont.caption)
+                    .foregroundStyle(Color.dsTextSecondary)
+                    .dsBodyText()
+                    .transition(.opacity)
+            }
+
             VStack(alignment: .leading, spacing: DSSpacing.xs) {
                 Text(localization.localizedString("reflection_optional"))
                     .font(DSFont.caption)
@@ -262,6 +243,7 @@ struct ResultView: View {
                 DSButtonLabel(title: localization.localizedString("submit_reflection"), systemImage: "checkmark")
             }
             .buttonStyle(.dsPrimary)
+            .disabled(!viewModel.canSubmitReflection)
         }
         .dsCard()
     }
@@ -315,7 +297,7 @@ struct ResultView: View {
 }
 
 #if DEBUG
-#Preview("Light, support card") {
+#Preview("Light") {
     PreviewHost(.result(elevatedRisk: true)) { ResultView() }
 }
 
