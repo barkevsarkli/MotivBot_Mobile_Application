@@ -143,7 +143,30 @@ class WellBeingViewModel {
     }
     
     var totalQuestions: Int {
-        sections.reduce(0) { $0 + $1.questions.count }
+        sections.reduce(0) { $0 + shownQuestionCount(in: $1) }
+    }
+
+    /// Whether `question` is asked given the answers so far. A conditional question counts as asked
+    /// until the question it depends on is answered.
+    func isShown(_ question: Question) -> Bool {
+        guard let condition = question.showIf,
+              let answer = answers.last(where: { $0.questionId == condition.questionId }),
+              case .option(let option) = answer.answerValue else { return true }
+        return option.id == condition.optionId
+    }
+
+    func shownQuestionCount(in section: TestSection) -> Int {
+        section.questions.filter(isShown).count
+    }
+
+    /// Index of the first asked question in `section` at or after `start`, or nil if there is none.
+    private func firstShownQuestionIndex(in section: TestSection, from start: Int) -> Int? {
+        section.questions.indices.dropFirst(start).first { isShown(section.questions[$0]) }
+    }
+
+    /// Index of the last asked question in `section` before `end`.
+    private func lastShownQuestionIndex(in section: TestSection, before end: Int) -> Int {
+        section.questions.indices.prefix(end).last { isShown(section.questions[$0]) } ?? 0
     }
     
     var answeredQuestions: Int {
@@ -157,7 +180,7 @@ class WellBeingViewModel {
     
     var isLastQuestion: Bool {
         guard let section = currentSection else { return true }
-        let isLastInSection = currentQuestionIndex >= section.questions.count - 1
+        let isLastInSection = firstShownQuestionIndex(in: section, from: currentQuestionIndex + 1) == nil
         let isLastSection = currentSectionIndex >= sections.count - 1
         return isLastInSection && isLastSection
     }
@@ -313,10 +336,10 @@ class WellBeingViewModel {
         scaleValue = 5
         freeTextAnswer = ""
         
-        // Advance to next question or section
+        // Advance to the next asked question or section
         withAnimation(.easeInOut(duration: 0.35)) {
-            if currentQuestionIndex < section.questions.count - 1 {
-                currentQuestionIndex += 1
+            if let next = firstShownQuestionIndex(in: section, from: currentQuestionIndex + 1) {
+                currentQuestionIndex = next
             } else if currentSectionIndex < sections.count - 1 {
                 currentSectionIndex += 1
                 currentQuestionIndex = 0
@@ -349,13 +372,13 @@ class WellBeingViewModel {
                         // Remove all answers for the previous allAtOnce section
                         answers.removeAll { $0.sectionId == prevSection.id }
                     } else {
-                        currentQuestionIndex = prevSection.questions.count - 1
+                        currentQuestionIndex = lastShownQuestionIndex(in: prevSection, before: prevSection.questions.count)
                         if !answers.isEmpty { answers.removeLast() }
                     }
                 }
-            } else {
+            } else if let section = currentSection {
+                currentQuestionIndex = lastShownQuestionIndex(in: section, before: currentQuestionIndex)
                 if !answers.isEmpty { answers.removeLast() }
-                currentQuestionIndex -= 1
             }
         } else if currentSectionIndex > 0 {
             currentSectionIndex -= 1
@@ -364,7 +387,7 @@ class WellBeingViewModel {
                 answers.removeAll { $0.sectionId == prevSection.id }
                 currentQuestionIndex = 0
             } else {
-                currentQuestionIndex = prevSection.questions.count - 1
+                currentQuestionIndex = lastShownQuestionIndex(in: prevSection, before: prevSection.questions.count)
                 if !answers.isEmpty { answers.removeLast() }
             }
         }

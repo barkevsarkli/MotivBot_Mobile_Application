@@ -102,7 +102,7 @@ struct QuestionnaireView: View {
     private var sectionFractions: [Double] {
         viewModel.sections.map { section in
             let answered = viewModel.answers.filter { $0.sectionId == section.id }.count
-            return Double(answered) / Double(max(section.questions.count, 1))
+            return Double(answered) / Double(max(viewModel.shownQuestionCount(in: section), 1))
         }
     }
 
@@ -139,7 +139,7 @@ struct QuestionnaireView: View {
                 Text(localization.localizedString(
                     "question_progress",
                     localization.number(viewModel.currentQuestionIndex + 1),
-                    localization.number(viewModel.currentSection?.questions.count ?? 0)
+                    localization.number(viewModel.currentSection.map(viewModel.shownQuestionCount) ?? 0)
                 ))
                 .font(DSFont.caption)
                 .foregroundStyle(Color.dsTextSecondary)

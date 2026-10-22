@@ -23,19 +23,6 @@
 "qa_2_opt3" = "Belirtmek istemiyorum";
 "previous_button" = "Önceki";
 
-"qa_3" = "Gelir düzeyiniz nedir?";
-"qa_3_opt1" = "Çok düşük";
-"qa_3_opt2" = "Düşük";
-"qa_3_opt3" = "Orta";
-"qa_3_opt4" = "Yüksek";
-"qa_3_opt5" = "Çok yüksek";
-
-"qa_4" = "Eğitim düzeyiniz nedir?";
-"qa_4_opt1" = "İlköğretim";
-"qa_4_opt2" = "Lise";
-"qa_4_opt3" = "Üniversite";
-"qa_4_opt4" = "Yüksek lisans/ Doktora";
-
 "qa_5" = "Daha önce bir ruh sağlığı çalışanınca konulmuş bir tanınız var mı? (Cevabınız 'evet' ise lütfen tanıyı yazınız)";
 "qa_5_opt1" = "Evet";
 "qa_5_opt2" = "Hayır";

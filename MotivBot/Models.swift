@@ -25,15 +25,24 @@ struct Question: Identifiable {
     let imageName: String?
     /// Optional questions can be skipped with an empty answer.
     let isOptional: Bool
-    
-    init(id: Int, textKey: String, type: QuestionType = .singleChoice, options: [AnswerOption]? = nil, imageName: String? = nil, isOptional: Bool = false) {
+    /// When set, the question is asked only if the condition holds and is skipped otherwise.
+    let showIf: QuestionCondition?
+
+    init(id: Int, textKey: String, type: QuestionType = .singleChoice, options: [AnswerOption]? = nil, imageName: String? = nil, isOptional: Bool = false, showIf: QuestionCondition? = nil) {
         self.id = id
         self.textKey = textKey
         self.type = type
         self.options = options
         self.imageName = imageName
         self.isOptional = isOptional
+        self.showIf = showIf
     }
+}
+
+/// Holds when the single-choice question `questionId` was answered with option `optionId`.
+struct QuestionCondition {
+    let questionId: Int
+    let optionId: Int
 }
 
 struct AnswerOption: Identifiable {
@@ -96,29 +105,6 @@ struct TestData {
                     ]
                 ),
                 Question(
-                    id: 3,
-                    textKey: "qa_3",
-                    type: .singleChoice,
-                    options: [
-                        AnswerOption(id: 1, textKey: "qa_3_opt1", value: 1),
-                        AnswerOption(id: 2, textKey: "qa_3_opt2", value: 2),
-                        AnswerOption(id: 3, textKey: "qa_3_opt3", value: 3),
-                        AnswerOption(id: 4, textKey: "qa_3_opt4", value: 4),
-                        AnswerOption(id: 5, textKey: "qa_3_opt5", value: 5)
-                    ]
-                ),
-                Question(
-                    id: 4,
-                    textKey: "qa_4",
-                    type: .singleChoice,
-                    options: [
-                        AnswerOption(id: 1, textKey: "qa_4_opt1", value: 1),
-                        AnswerOption(id: 2, textKey: "qa_4_opt2", value: 2),
-                        AnswerOption(id: 3, textKey: "qa_4_opt3", value: 3),
-                        AnswerOption(id: 4, textKey: "qa_4_opt4", value: 4)
-                    ]
-                ),
-                Question(
                     id: 5,
                     textKey: "qa_5",
                     type: .singleChoice,
@@ -127,11 +113,12 @@ struct TestData {
                         AnswerOption(id: 2, textKey: "qa_5_opt2", value: 0)
                     ]
                 ),
+                // Asked, and required, only after "yes" to qa_5.
                 Question(
                     id: 6,
                     textKey: "qa_6",
                     type: .freeText,
-                    isOptional: true
+                    showIf: QuestionCondition(questionId: 5, optionId: 1)
                 )
             ]
         ),

@@ -549,7 +549,7 @@ struct PersistenceTests {
         #expect(relaunched.currentScreen == .questionnaire)
         #expect(relaunched.emotionText == persianText)
         #expect(relaunched.answers.count == 2)
-        #expect(relaunched.currentQuestion?.id == 3)
+        #expect(relaunched.currentQuestion?.id == 5)
         #expect(relaunched.resumableSession == nil)
     }
 

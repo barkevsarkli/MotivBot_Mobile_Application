@@ -25,10 +25,8 @@ enum Fixture {
         var result: [UserAnswer] = [
             UserAnswer(sectionId: 1, questionId: 1, answerValue: .text(age)),
             UserAnswer(sectionId: 1, questionId: 2, answerValue: .option(option(2, value: genderValue))),
-            UserAnswer(sectionId: 1, questionId: 3, answerValue: .option(option(3, value: 3))),
-            UserAnswer(sectionId: 1, questionId: 4, answerValue: .option(option(4, value: 3))),
+            // "No" to the diagnosis question, so the treatment question is skipped.
             UserAnswer(sectionId: 1, questionId: 5, answerValue: .option(option(5, value: 0))),
-            UserAnswer(sectionId: 1, questionId: 6, answerValue: .text("")),
         ]
         for (index, value) in phq9.enumerated() {
             result.append(UserAnswer(sectionId: 2, questionId: 7 + index, answerValue: .option(option(7 + index, value: value))))
@@ -310,11 +308,50 @@ struct WellBeingViewModelPredictionTests {
         }
     }
 
-    @Test func treatmentQuestionIsOptional() {
+    /// Answers age and gender, then the diagnosis question with `diagnosisOptionId` (1 = yes, 2 = no).
+    private func answerDemographics(diagnosisOptionId: Int) -> WellBeingViewModel {
         let viewModel = WellBeingViewModel(service: StubService(.failure(.decoding)), store: InMemorySessionStore())
-        viewModel.currentQuestionIndex = 5
+        viewModel.freeTextAnswer = "30"
+        viewModel.nextQuestion()
+        viewModel.selectOption(2)
+        viewModel.nextQuestion()
+        #expect(viewModel.currentQuestion?.id == 5)
+        viewModel.selectOption(diagnosisOptionId)
+        viewModel.nextQuestion()
+        return viewModel
+    }
+
+    @Test func demographicsAskNoIncomeOrEducation() {
+        #expect(TestData.sections[0].questions.map(\.id) == [1, 2, 5, 6])
+    }
+
+    @Test func noDiagnosisSkipsTreatmentQuestion() {
+        let viewModel = answerDemographics(diagnosisOptionId: 2)
+        #expect(viewModel.currentSectionIndex == 1)
+        #expect(viewModel.currentQuestion?.id == 7)
+        #expect(!viewModel.answers.contains { $0.questionId == 6 })
+        #expect(viewModel.shownQuestionCount(in: viewModel.sections[0]) == 3)
+    }
+
+    @Test func diagnosisMakesTreatmentQuestionRequired() {
+        let viewModel = answerDemographics(diagnosisOptionId: 1)
         #expect(viewModel.currentQuestion?.id == 6)
-        viewModel.freeTextAnswer = ""
+        viewModel.freeTextAnswer = "  "
+        #expect(!viewModel.canProceedQuestion)
+        viewModel.freeTextAnswer = "Bireysel psikoterapi"
         #expect(viewModel.canProceedQuestion)
+        viewModel.nextQuestion()
+        #expect(viewModel.currentQuestion?.id == 7)
+    }
+
+    @Test func goingBackPastSkippedQuestionReturnsToDiagnosis() {
+        let viewModel = answerDemographics(diagnosisOptionId: 2)
+        viewModel.previousQuestion()
+        #expect(viewModel.currentQuestion?.id == 5)
+        #expect(viewModel.answers.map(\.questionId) == [1, 2])
+
+        viewModel.selectOption(1)
+        viewModel.nextQuestion()
+        #expect(viewModel.currentQuestion?.id == 6)
     }
 }
