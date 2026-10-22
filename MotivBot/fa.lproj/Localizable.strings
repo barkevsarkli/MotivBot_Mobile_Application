@@ -248,10 +248,8 @@
 "welcome_start" = "شروع";
 "language_name_tr" = "Türkçe";
 "language_name_fa" = "فارسی";
-"theme_menu" = "حالت نمایش";
-"theme_system" = "سیستم";
-"theme_light" = "روشن";
-"theme_dark" = "تیره";
+"theme_switch_to_light" = "تغییر به حالت روشن";
+"theme_switch_to_dark" = "تغییر به حالت تیره";
 "back_button" = "بازگشت";
 "cancel_button" = "انصراف";
 "ok_button" = "باشه";

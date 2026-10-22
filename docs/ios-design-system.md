@@ -120,7 +120,7 @@ Two text modifiers:
 | `MessageCard` | `DSResultComponents.swift` | Tinted by `MessageCategoryStyle` (validation, reframing, action, other). |
 | `SupportCard` | `DSResultComponents.swift` | Care tone, warm and never alarming. The icon goes above the text at accessibility sizes. |
 | `Banner` | `DSResultComponents.swift` | `info` (sky) and `notice` (honey) only. There is no error style on purpose. |
-| `ThemeMenu` | `DSControls.swift` | System, Light or Dark, stored in `@AppStorage("themePreference")`. Applied in `MindWellApp`. |
+| `ThemeToggle` | `DSControls.swift` | Follows the system by default. A tap switches to the opposite of the system appearance, the next tap back to the system. Stored in `@AppStorage("themePreference")`, applied in `MindWellApp`. |
 | `LanguagePicker` | `DSControls.swift` | Each language is written in its own script. Disabled when the language is locked. |
 | `TopBar`, `BottomActionBar`, `ScreenColumn` | `DSControls.swift` | Screen chrome. The bottom bar is a floating glass panel. |
 | `ResultSummaryPage`, `ResultExporter`, `ExportShareSheet` | `Export/` | One-page PDF or PNG summary (see Results). |

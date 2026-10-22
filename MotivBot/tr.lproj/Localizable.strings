@@ -236,10 +236,8 @@
 "welcome_start" = "Başla";
 "language_name_tr" = "Türkçe";
 "language_name_fa" = "فارسی";
-"theme_menu" = "Görünüm";
-"theme_system" = "Sistem";
-"theme_light" = "Açık";
-"theme_dark" = "Koyu";
+"theme_switch_to_light" = "Açık görünüme geç";
+"theme_switch_to_dark" = "Koyu görünüme geç";
 "back_button" = "Geri";
 "cancel_button" = "Vazgeç";
 "ok_button" = "Tamam";

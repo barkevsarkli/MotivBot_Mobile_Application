@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// The appearance the user picked. `system` follows the device setting and is the default.
-enum ThemePreference: String, CaseIterable, Identifiable {
+/// The appearance the user picked. `system` follows the device setting and is the default;
+/// `light` or `dark` is set by `ThemeToggle` as the opposite of the system appearance.
+enum ThemePreference: String {
     case system
     case light
     case dark
@@ -9,29 +10,11 @@ enum ThemePreference: String, CaseIterable, Identifiable {
     /// `@AppStorage` key. The value is a display preference, not personal data.
     static let storageKey = "themePreference"
 
-    var id: String { rawValue }
-
     var colorScheme: ColorScheme? {
         switch self {
         case .system: return nil
         case .light: return .light
         case .dark: return .dark
-        }
-    }
-
-    var titleKey: String {
-        switch self {
-        case .system: return "theme_system"
-        case .light: return "theme_light"
-        case .dark: return "theme_dark"
-        }
-    }
-
-    var systemImage: String {
-        switch self {
-        case .system: return "circle.lefthalf.filled"
-        case .light: return "sun.max"
-        case .dark: return "moon"
         }
     }
 }

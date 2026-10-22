@@ -1,35 +1,45 @@
 import SwiftUI
 
-// MARK: - Theme menu
+// MARK: - Theme toggle
 
-/// System / Light / Dark. The choice is kept with `@AppStorage`; the root applies it.
-struct ThemeMenu: View {
+/// Follows the system by default. A tap switches to the opposite of the system appearance, the next tap
+/// back to the system. The choice is kept with `@AppStorage`; the root applies it.
+struct ThemeToggle: View {
     @Environment(LocalizationManager.self) private var localization
+    @Environment(\.colorScheme) private var colorScheme
     @AppStorage(ThemePreference.storageKey) private var preference: ThemePreference = .system
 
+    /// While the preference is `system`, `colorScheme` is the system's, so its opposite is the override.
+    private var next: ThemePreference {
+        guard preference == .system else { return .system }
+        return colorScheme == .dark ? .light : .dark
+    }
+
+    /// The appearance the tap leads to, shown on the button.
+    private var target: ColorScheme {
+        colorScheme == .dark ? .light : .dark
+    }
+
+    private var systemImage: String { target == .dark ? "moon" : "sun.max" }
+    private var labelKey: String { target == .dark ? "theme_switch_to_dark" : "theme_switch_to_light" }
+
     var body: some View {
-        Menu {
-            Picker(selection: $preference) {
-                ForEach(ThemePreference.allCases) { option in
-                    Label(localization.localizedString(option.titleKey), systemImage: option.systemImage)
-                        .tag(option)
-                }
-            } label: {
-                Text(localization.localizedString("theme_menu"))
-            }
+        Button {
+            preference = next
         } label: {
-            Image(systemName: preference.systemImage)
+            Image(systemName: systemImage)
                 .font(.system(.body, weight: .semibold))
                 .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                 .foregroundStyle(Color.dsTextPrimary)
                 .frame(width: DSSize.minTap, height: DSSize.minTap)
                 .dsGlass(in: Circle(), interactive: true)
                 .contentShape(Circle())
+                .contentTransition(.symbolEffect(.replace))
         }
-        .accessibilityLabel(localization.localizedString("theme_menu"))
-        .accessibilityValue(localization.localizedString(preference.titleKey))
+        .buttonStyle(.dsPressable)
+        .accessibilityLabel(localization.localizedString(labelKey))
         .accessibilityShowsLargeContentViewer {
-            Label(localization.localizedString("theme_menu"), systemImage: preference.systemImage)
+            Label(localization.localizedString(labelKey), systemImage: systemImage)
         }
         .sensoryFeedback(.selection, trigger: preference)
     }
@@ -85,7 +95,7 @@ struct LanguagePicker: View {
 
 // MARK: - Bars
 
-/// The row above a screen's content: an optional leading control and the theme menu.
+/// The row above a screen's content: an optional leading control and the theme toggle.
 struct TopBar<Leading: View>: View {
     @ViewBuilder var leading: Leading
 
@@ -93,7 +103,7 @@ struct TopBar<Leading: View>: View {
         HStack {
             leading
             Spacer()
-            ThemeMenu()
+            ThemeToggle()
         }
         .padding(.horizontal, DSSpacing.screen - 4)
         .padding(.top, DSSpacing.xxs)
