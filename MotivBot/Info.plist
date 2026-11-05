@@ -4,12 +4,5 @@
 <dict>
 	<key>MotivBotAPIBaseURL</key>
 	<string>$(MOTIVBOT_API_BASE_URL)</string>
-	<key>NSAppTransportSecurity</key>
-	<dict>
-		<key>NSAllowsLocalNetworking</key>
-		<true/>
-	</dict>
-	<key>NSLocalNetworkUsageDescription</key>
-	<string>MotivBot connects to the analysis service running on your local network.</string>
 </dict>
 </plist>

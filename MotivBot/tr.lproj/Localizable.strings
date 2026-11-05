@@ -1,8 +1,6 @@
 /* MotivBot - Türkçe */
 
 "app_title" = "MotivBot";
-"theme_toggle" = "Karanlık/Aydınlık Modu Değiştir";
-"language_toggle" = "Dili değiştir";
 
 "emotion_prompt" = "Mevcut duygularınızı 3-4 cümleyle ifade edin.";
 "your_thoughts" = "DÜŞÜNCELERİNİZ";
@@ -24,19 +22,6 @@
 "qa_2_opt2" = "Kadın";
 "qa_2_opt3" = "Belirtmek istemiyorum";
 "previous_button" = "Önceki";
-
-"qa_3" = "Gelir düzeyiniz nedir?";
-"qa_3_opt1" = "Çok düşük";
-"qa_3_opt2" = "Düşük";
-"qa_3_opt3" = "Orta";
-"qa_3_opt4" = "Yüksek";
-"qa_3_opt5" = "Çok yüksek";
-
-"qa_4" = "Eğitim düzeyiniz nedir?";
-"qa_4_opt1" = "İlköğretim";
-"qa_4_opt2" = "Lise";
-"qa_4_opt3" = "Üniversite";
-"qa_4_opt4" = "Yüksek lisans/ Doktora";
 
 "qa_5" = "Daha önce bir ruh sağlığı çalışanınca konulmuş bir tanınız var mı? (Cevabınız 'evet' ise lütfen tanıyı yazınız)";
 "qa_5_opt1" = "Evet";
@@ -161,9 +146,9 @@
 
 "loading_title" = "Analiz ediliyor…";
 "loading_subtitle" = "Paylaştıklarınıza bakıyoruz. Bu genellikle birkaç saniye sürer.";
-"loading_tip_1" = "💡 Derin bir nefes almak sinir sisteminizi sıfırlayabilir";
-"loading_tip_2" = "🌱 Öz farkındalığa yönelik her küçük adım önemlidir";
-"loading_tip_3" = "✨ Kendinizi dürüstçe ifade ederek cesaret gösterdiniz";
+"loading_tip_1" = "Derin bir nefes almak sinir sisteminizi sıfırlayabilir";
+"loading_tip_2" = "Öz farkındalığa yönelik her küçük adım önemlidir";
+"loading_tip_3" = "Kendinizi dürüstçe ifade ederek cesaret gösterdiniz";
 "retry_button" = "Tekrar Dene";
 
 "result_title" = "Bugün paylaştıklarınız";
@@ -229,3 +214,54 @@
 "message_category_reframing" = "Başka bir bakış açısı";
 "message_category_action" = "Küçük bir adım";
 "message_category_other" = "Sizin için";
+
+/* MARK: integration */
+"error_service_busy" = "Analiz servisi şu anda çok yoğun. Lütfen birkaç dakika sonra tekrar deneyin.";
+"emotion_wrong_language" = "Lütfen Türkçe yazın. Türkçe karakterler (ç, ğ, ı, ö, ş, ü) kullanmak metninizin doğru anlaşılmasına yardımcı olur.";
+"emotion_too_long" = "Metniniz çok uzun. Lütfen en fazla %d karakter yazın.";
+"resume_title" = "Kaldığınız yerden devam edin";
+"resume_body" = "Tamamlanmamış bir değerlendirmeniz var.";
+"resume_continue" = "Devam et";
+"resume_start_over" = "Baştan başla";
+
+/* MARK: design */
+"welcome_tagline" = "Duygularınıza nazikçe bakmanız için kısa bir değerlendirme.";
+"welcome_expect_title" = "Sizi neler bekliyor";
+"welcome_expect_time" = "Yaklaşık 10 dakika sürer.";
+"welcome_expect_steps" = "Önce birkaç cümle yazacak, ardından kısa sorulara yanıt vereceksiniz.";
+"welcome_expect_once" = "Tek seferlik bir değerlendirmedir.";
+"welcome_not_diagnosis" = "Bu bir tanı değildir; o anki hislerinize nazik bir bakıştır.";
+"welcome_language_label" = "Dil";
+"welcome_language_hint" = "Değerlendirme başladıktan sonra dil değiştirilemez.";
+"welcome_start" = "Başla";
+"language_name_tr" = "Türkçe";
+"language_name_fa" = "فارسی";
+"theme_switch_to_light" = "Açık görünüme geç";
+"theme_switch_to_dark" = "Koyu görünüme geç";
+"back_button" = "Geri";
+"cancel_button" = "Vazgeç";
+"ok_button" = "Tamam";
+"resume_progress" = "%2$@ sorudan %1$@ tanesini yanıtladınız";
+"resume_started" = "Başlangıç: %@";
+"resume_confirm_title" = "Baştan başlamak istiyor musunuz?";
+"resume_confirm_message" = "Şimdiye kadar verdiğiniz yanıtlar silinecek.";
+"resume_confirm_action" = "Yanıtları sil ve baştan başla";
+"emotion_title" = "Şu an nasılsınız?";
+"emotion_ready" = "Devam etmeye hazırsınız";
+"section_progress" = "Bölüm %1$@ / %2$@";
+"question_progress" = "Soru %1$@ / %2$@";
+"overall_progress_value" = "%2$@ sorudan %1$@ tanesi yanıtlandı";
+"progress_saved" = "İlerlemeniz kaydedildi";
+"question_optional" = "İsteğe bağlı";
+"age_under_18_warning" = "Bu değerlendirme 18 yaş ve üzeri yetişkinler için hazırlanmıştır.";
+"loading_failed_title" = "Biraz ara verelim";
+"loading_waking_banner" = "Servis bir süredir kullanılmadığı için uyanıyor. Bu bir dakika kadar sürebilir.";
+"dimensions_title" = "Bugünkü görünüm";
+"export_title" = "Özetinizi kaydedin";
+"export_body" = "Seviyeleri, mesajları ve bilgilendirme notunu içeren tek sayfalık bir özet.";
+"export_pdf" = "PDF";
+"export_image" = "Görsel";
+"export_failed" = "Özet hazırlanamadı. Lütfen tekrar deneyin.";
+"export_page_title" = "Değerlendirme özeti";
+"export_dimensions_title" = "Bugünkü görünüm";
+"export_footer" = "MotivBot ile oluşturuldu";
