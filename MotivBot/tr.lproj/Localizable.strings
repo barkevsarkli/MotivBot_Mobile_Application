@@ -264,9 +264,12 @@
 "loading_failed_title" = "Biraz ara verelim";
 "loading_waking_banner" = "Servis bir süredir kullanılmadığı için uyanıyor. Bu bir dakika kadar sürebilir.";
 "export_title" = "Özetinizi kaydedin";
+"export_button" = "Özeti indir";
 "export_body" = "Seviyeleri, mesajları ve bilgilendirme notunu içeren tek sayfalık bir özet.";
-"export_pdf" = "PDF";
-"export_image" = "Görsel";
+"export_pdf_title" = "PDF olarak indir";
+"export_pdf_detail" = "A4 sayfa · Yazdırmaya uygun";
+"export_image_title" = "Görsel olarak indir";
+"export_image_detail" = "PNG · Paylaşmaya uygun";
 "export_failed" = "Özet hazırlanamadı. Lütfen tekrar deneyin.";
 "export_page_title" = "Değerlendirme özeti";
 "export_dimensions_title" = "Bugünkü görünüm";

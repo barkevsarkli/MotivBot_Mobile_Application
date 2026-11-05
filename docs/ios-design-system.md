@@ -116,13 +116,14 @@ Two text modifiers:
 | `SegmentedProgressBar` | `DSProgress.swift` | One segment per section, with width weighted by question count. Mirrors in RTL. VoiceOver reads it as a single value. |
 | `ProgressRing` | `DSProgress.swift` | Resume prompt. Mirrors in RTL. |
 | `LevelIndicator` | `DSProgress.swift` | 3 steps (filled or outlined) instead of percentages. Readable in black and white. |
-| `MessageCard` | `DSResultComponents.swift` | Tinted by `MessageCategoryStyle` (validation, reframing, action, other). |
-| `MessageDeck` | `DSResultComponents.swift` | The messages as a card stack. Swipe right = liked, left = not liked; the directions stay physical in Persian. Like / dislike buttons and VoiceOver actions do the same. Reduce Motion: the card fades out instead of flying off. |
+| `MessageCard` | `DSResultComponents.swift` | A large slide (at least 380 pt tall, 32 pt corners) tinted by `MessageCategoryStyle` (validation, reframing, action, other): the category in a pill, an opening quote mark, the message in `DSFont.quote` (title2), and the category symbol as a faint watermark. |
+| `MessageDeck` | `DSResultComponents.swift` | The messages as a stack of slides; up to two cards peek out behind the top one, and every slide takes the height of the tallest message so the deck does not jump. Swipe right = liked, left = not liked; the directions stay physical in Persian. The 64 pt like (filled brand) and dislike buttons and VoiceOver actions do the same; progress is a row of dots. Reduce Motion: the card fades out instead of flying off. |
 | `Banner` | `DSResultComponents.swift` | `info` (sky) and `notice` (honey) only. There is no error style on purpose. |
 | `ThemeToggle` | `DSControls.swift` | Follows the system by default. A tap switches to the opposite of the system appearance, the next tap back to the system. Stored in `@AppStorage("themePreference")`, applied in `MindWellApp`. |
 | `LanguagePicker` | `DSControls.swift` | Each language is written in its own script. Disabled when the language is locked. |
-| `TopBar`, `BottomActionBar`, `ScreenColumn` | `DSControls.swift` | Screen chrome. The bottom bar is a floating glass panel. |
+| `TopBar`, `BottomActionBar`, `ScreenColumn` | `DSControls.swift` | Screen chrome. `TopBar` takes an optional leading control and optional trailing controls placed before the theme toggle. The bottom bar is a floating glass panel. |
 | `ResultSummaryPage`, `ResultExporter`, `ExportShareSheet` | `Export/` | One-page PDF or PNG summary (see Results). |
+| `ExportOptionsSheet`, `ExportHero`, `SummaryPagePreview`, `ExportOptionRow` | `Export/ResultExportPanel.swift` | The download sheet: a live miniature of the summary page and one row per format, with a spinner while the file renders. |
 
 `DSTheme.swift` adds `AppLanguage.locale` (`tr_TR`, `fa_IR`) and `AppLanguage.calendar` (Persian or Gregorian). It
 also adds `LocalizationManager` helpers:
@@ -227,8 +228,11 @@ The results screen has these parts, in this order:
    `viewModel.messageFeedback` and written to the CSV. When every card is rated a thank-you card offers to show them
    again.
 3. Disclaimer: this is not a diagnosis.
-4. **Export**: PDF and Image buttons. The existing CSV share button is unchanged and only appears when
-   `csvFileURL` is set.
+4. **Export** is not on the page any more. A download button (`square.and.arrow.down`) sits next to the theme
+   toggle while the results are shown. It opens `ExportOptionsSheet`, which is as tall as its content: the title,
+   a miniature of the summary page, a PDF row (A4, for printing) and a PNG row (for sharing), and the CSV share
+   button when `csvFileURL` is set. The chosen file is rendered in the sheet, the sheet closes, and the share
+   sheet opens, so two sheets never overlap.
 5. **Reflection**: feeling chips (text only, no emoji), an optional note, and Submit. A feeling is required: Submit
    stays disabled until one is chosen.
 6. **Completion** (after Submit): a leaf that bounces once, a thank-you message, and Restart. Restart also deletes

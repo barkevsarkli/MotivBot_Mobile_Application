@@ -10,6 +10,8 @@ enum DSFont {
     static let title = Font.system(.title2, design: .rounded, weight: .semibold)
     static let heading = Font.system(.headline, design: .rounded, weight: .semibold)
     static let question = Font.system(.title3, design: .default, weight: .medium)
+    /// A motivational message on its slide.
+    static let quote = Font.system(.title2, design: .default, weight: .medium)
     static let body = Font.system(.body)
     static let bodyEmphasis = Font.system(.body, weight: .semibold)
     static let callout = Font.system(.callout)
@@ -37,6 +39,8 @@ enum DSRadius {
     static let small: CGFloat = 12
     static let medium: CGFloat = 16
     static let large: CGFloat = 24
+    /// Message slides.
+    static let slide: CGFloat = 32
 }
 
 enum DSSize {

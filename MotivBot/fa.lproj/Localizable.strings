@@ -276,9 +276,12 @@
 "loading_failed_title" = "کمی مکث کنیم";
 "loading_waking_banner" = "سرویس مدتی استفاده نشده و در حال آماده شدن است. این ممکن است حدود یک دقیقه طول بکشد.";
 "export_title" = "ذخیرهٔ خلاصه";
+"export_button" = "دریافت خلاصه";
 "export_body" = "خلاصه‌ای یک‌صفحه‌ای شامل سطح‌ها، پیام‌ها و یادداشت توضیحی.";
-"export_pdf" = "PDF";
-"export_image" = "تصویر";
+"export_pdf_title" = "ذخیره به‌صورت PDF";
+"export_pdf_detail" = "یک صفحهٔ A4 · مناسب چاپ";
+"export_image_title" = "ذخیره به‌صورت تصویر";
+"export_image_detail" = "PNG · مناسب اشتراک‌گذاری";
 "export_failed" = "خلاصه آماده نشد. لطفاً دوباره تلاش کنید.";
 "export_page_title" = "خلاصهٔ بررسی";
 "export_dimensions_title" = "نمای امروز";

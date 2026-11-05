@@ -7,7 +7,10 @@ struct ResultView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @FocusState private var isNoteFocused: Bool
     @State private var exportFile: ResultExportFile?
-    @State private var exportFailed = false
+    @State private var showExportOptions = false
+    /// What the export sheet chose; shared once that sheet has closed, so two sheets never overlap.
+    @State private var pendingExportFile: ResultExportFile?
+    @State private var pendingCSVShare = false
     @State private var hasAppeared = false
 
     var body: some View {
@@ -27,10 +30,39 @@ struct ResultView: View {
             .padding(.bottom, DSSpacing.xl)
         }
         .scrollDismissesKeyboard(.interactively)
-        .safeAreaInset(edge: .top) { TopBar() }
+        .safeAreaInset(edge: .top) {
+            TopBar { EmptyView() } trailing: {
+                if canExport {
+                    GlassIconButton(
+                        systemImage: "square.and.arrow.down",
+                        accessibilityLabel: localization.localizedString("export_button")
+                    ) {
+                        showExportOptions = true
+                    }
+                    .transition(.opacity.combined(with: .scale(scale: reduceMotion ? 1 : 0.8)))
+                }
+            }
+        }
         .animation(DSMotion.animation(DSMotion.soft, reduceMotion: reduceMotion), value: viewModel.isCompleted)
         .sensoryFeedback(.success, trigger: hasAppeared) { _, appeared in appeared }
         .onAppear { hasAppeared = true }
+        .sheet(isPresented: $showExportOptions, onDismiss: presentPendingShare) {
+            if let summary = viewModel.resultSummary {
+                ExportOptionsSheet(
+                    summary: summary,
+                    localization: localization,
+                    canShareCSV: viewModel.csvFileURL != nil,
+                    onFile: { file in
+                        pendingExportFile = file
+                        showExportOptions = false
+                    },
+                    onShareCSV: {
+                        pendingCSVShare = true
+                        showExportOptions = false
+                    }
+                )
+            }
+        }
         .sheet(item: $exportFile) { file in
             ExportShareSheet(file: file)
                 .presentationDetents([.medium, .large])
@@ -41,9 +73,11 @@ struct ResultView: View {
                 ShareSheet(activityItems: [csvURL])
             }
         }
-        .alert(localization.localizedString("export_failed"), isPresented: $exportFailed) {
-            Button(localization.localizedString("ok_button"), role: .cancel) {}
-        }
+    }
+
+    /// The download button is only on the results, not on the thank-you screen after Submit.
+    private var canExport: Bool {
+        !viewModel.isCompleted && viewModel.resultSummary != nil
     }
 
     // MARK: - Results
@@ -62,13 +96,10 @@ struct ResultView: View {
 
             disclaimer
                 .dsAppear(delay: 0.35)
-
-            exportSection
-                .dsAppear(delay: 0.4)
         }
 
         reflection
-            .dsAppear(delay: 0.5)
+            .dsAppear(delay: 0.45)
     }
 
     private var header: some View {
@@ -123,56 +154,13 @@ struct ResultView: View {
 
     // MARK: - Export
 
-    private var exportSection: some View {
-        VStack(alignment: .leading, spacing: DSSpacing.s) {
-            VStack(alignment: .leading, spacing: DSSpacing.xxs) {
-                Text(localization.localizedString("export_title"))
-                    .font(DSFont.heading)
-                    .foregroundStyle(Color.dsTextPrimary)
-                    .dsTitleText()
-                    .accessibilityAddTraits(.isHeader)
-                Text(localization.localizedString("export_body"))
-                    .font(DSFont.callout)
-                    .foregroundStyle(Color.dsTextSecondary)
-                    .dsBodyText()
-            }
-
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: DSSpacing.xs) { exportButtons }
-                VStack(spacing: DSSpacing.xs) { exportButtons }
-            }
-
-            if viewModel.csvFileURL != nil {
-                Button {
-                    viewModel.showShareSheet = true
-                } label: {
-                    Label(localization.localizedString("share_results_button"), systemImage: "square.and.arrow.up")
-                }
-                .buttonStyle(.dsTertiary)
-            }
-        }
-        .dsCard()
-    }
-
-    @ViewBuilder
-    private var exportButtons: some View {
-        Button { export(.pdf) } label: {
-            DSButtonLabel(title: localization.localizedString("export_pdf"), systemImage: "doc.richtext")
-        }
-        .buttonStyle(.dsSecondary)
-
-        Button { export(.image) } label: {
-            DSButtonLabel(title: localization.localizedString("export_image"), systemImage: "photo")
-        }
-        .buttonStyle(.dsSecondary)
-    }
-
-    private func export(_ format: ResultExportFormat) {
-        guard let summary = viewModel.resultSummary else { return }
-        do {
-            exportFile = try ResultExporter.makeFile(format, summary: summary, localization: localization)
-        } catch {
-            exportFailed = true
+    private func presentPendingShare() {
+        if let file = pendingExportFile {
+            pendingExportFile = nil
+            exportFile = file
+        } else if pendingCSVShare {
+            pendingCSVShare = false
+            viewModel.showShareSheet = true
         }
     }
 

@@ -95,15 +95,25 @@ struct LanguagePicker: View {
 
 // MARK: - Bars
 
-/// The row above a screen's content: an optional leading control and the theme toggle.
-struct TopBar<Leading: View>: View {
-    @ViewBuilder var leading: Leading
+/// The row above a screen's content: an optional leading control, optional trailing controls and the theme toggle.
+struct TopBar<Leading: View, Trailing: View>: View {
+    private let leading: Leading
+    /// Screen-specific controls, shown just before the theme toggle (e.g. download on the results screen).
+    private let trailing: Trailing
+
+    init(@ViewBuilder leading: () -> Leading, @ViewBuilder trailing: () -> Trailing) {
+        self.leading = leading()
+        self.trailing = trailing()
+    }
 
     var body: some View {
         HStack {
             leading
             Spacer()
-            ThemeToggle()
+            HStack(spacing: DSSpacing.xs) {
+                trailing
+                ThemeToggle()
+            }
         }
         .padding(.horizontal, DSSpacing.screen - 4)
         .padding(.top, DSSpacing.xxs)
@@ -111,9 +121,15 @@ struct TopBar<Leading: View>: View {
     }
 }
 
-extension TopBar where Leading == EmptyView {
+extension TopBar where Trailing == EmptyView {
+    init(@ViewBuilder leading: () -> Leading) {
+        self.init(leading: leading, trailing: { EmptyView() })
+    }
+}
+
+extension TopBar where Leading == EmptyView, Trailing == EmptyView {
     init() {
-        self.leading = EmptyView()
+        self.init(leading: { EmptyView() })
     }
 }
 
