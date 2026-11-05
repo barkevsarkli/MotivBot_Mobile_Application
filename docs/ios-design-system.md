@@ -116,9 +116,8 @@ Two text modifiers:
 | `SegmentedProgressBar` | `DSProgress.swift` | One segment per section, with width weighted by question count. Mirrors in RTL. VoiceOver reads it as a single value. |
 | `ProgressRing` | `DSProgress.swift` | Resume prompt. Mirrors in RTL. |
 | `LevelIndicator` | `DSProgress.swift` | 3 steps (filled or outlined) instead of percentages. Readable in black and white. |
-| `DimensionRow` | `DSResultComponents.swift` | Icon, title, level and sentence. Stacks at accessibility sizes. VoiceOver reads the title and the sentence. |
 | `MessageCard` | `DSResultComponents.swift` | Tinted by `MessageCategoryStyle` (validation, reframing, action, other). |
-| `SupportCard` | `DSResultComponents.swift` | Care tone, warm and never alarming. The icon goes above the text at accessibility sizes. |
+| `MessageDeck` | `DSResultComponents.swift` | The messages as a card stack. Swipe right = liked, left = not liked; the directions stay physical in Persian. Like / dislike buttons and VoiceOver actions do the same. Reduce Motion: the card fades out instead of flying off. |
 | `Banner` | `DSResultComponents.swift` | `info` (sky) and `notice` (honey) only. There is no error style on purpose. |
 | `ThemeToggle` | `DSControls.swift` | Follows the system by default. A tap switches to the opposite of the system appearance, the next tap back to the system. Stored in `@AppStorage("themePreference")`, applied in `MindWellApp`. |
 | `LanguagePicker` | `DSControls.swift` | Each language is written in its own script. Disabled when the language is locked. |
@@ -218,20 +217,24 @@ to the analysis service.
 
 ![Results with support card](ios-design-system/result-tr-light.jpg) ![Results, Persian dark](ios-design-system/result-fa-dark.jpg)
 
+The screenshots predate the message deck and still show the support card and today's view.
+
 The results screen has these parts, in this order:
 
 1. Header: "What you shared today" and a short subtitle.
-2. **Support card**, only when `elevatedRisk` is true (decided by the model). It comes first so it is seen before
-   anything else.
-3. **Messages**: up to three cards ordered validation, reframing, action, each with its category name and tint.
-4. **Today's view**: the five dimensions, each with an icon, a 3-step level and one sentence. There are no
-   percentages.
-5. Disclaimer: this is not a diagnosis.
-6. **Export**: PDF and Image buttons. The existing CSV share button is unchanged and only appears when
+2. **Messages**: up to three cards ordered validation, reframing, action, shown one at a time as a `MessageDeck`.
+   Swiping right means the message was liked, left that it was not. The feedback is kept in
+   `viewModel.messageFeedback` and written to the CSV. When every card is rated a thank-you card offers to show them
+   again.
+3. Disclaimer: this is not a diagnosis.
+4. **Export**: PDF and Image buttons. The existing CSV share button is unchanged and only appears when
    `csvFileURL` is set.
-7. **Reflection**: feeling chips (text only, no emoji), an optional note, and Submit.
-8. **Completion** (after Submit): a leaf that bounces once, a thank-you message, and Restart. Restart also deletes
+5. **Reflection**: feeling chips (text only, no emoji), an optional note, and Submit. A feeling is required: Submit
+   stays disabled until one is chosen.
+6. **Completion** (after Submit): a leaf that bounces once, a thank-you message, and Restart. Restart also deletes
    exported files.
+
+The support box and the five dimensions are no longer on the screen; they are only in the PDF / image summary.
 
 There is a success haptic when the results appear.
 
@@ -267,7 +270,7 @@ Persian date and digits.
 | Check | How | Result |
 |---|---|---|
 | Colour contrast | Script over every token pair in light and dark (table above) | Every text pair is at least 4.5:1 |
-| Dynamic Type | Simulator at `accessibility-extra-extra-extra-large` (AX5), Welcome and Results in tr and fa | Text wraps and scrolls with no clipping. Two issues found and fixed: titles broke long Turkish words in the middle, and icon buttons grew past their circle. Accessibility layouts are used by `DimensionRow`, `SupportCard`, `ChipGroup` and `LanguagePicker` |
+| Dynamic Type | Simulator at `accessibility-extra-extra-extra-large` (AX5), Welcome and Results in tr and fa | Text wraps and scrolls with no clipping. Two issues found and fixed: titles broke long Turkish words in the middle, and icon buttons grew past their circle. Accessibility layouts are used by `ChipGroup` and `LanguagePicker` |
 | RTL | Simulator in fa, light and dark; Persian previews for every screen | Layout, progress bar, ring, chevrons, swipe-back and the export page all mirror |
 | Tap targets | Code review of every control | Icon buttons 44 pt, answer rows 56 pt, buttons 54 pt, chips 44 pt |
 | Reduce Motion | Code review | Every transition and appear animation uses `DSMotion.animation(_:reduceMotion:)` or a fade-only path. The breathing circles stay still |

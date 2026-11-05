@@ -98,80 +98,6 @@ enum MessageCategoryStyle: Int, CaseIterable {
     }
 }
 
-// MARK: - Dimension row
-
-/// One result dimension: icon, soft title, three-step level and one supportive sentence.
-/// VoiceOver reads the title and the sentence only, never a level number.
-struct DimensionRow: View {
-    let dimension: WellBeingDimension
-    let level: PredictionResponse.Level
-    let title: String
-    let message: String
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-
-    private var tone: WellBeingDimension.Tone { dimension.tone(for: level) }
-
-    var body: some View {
-        Group {
-            if dynamicTypeSize.isAccessibilitySize {
-                VStack(alignment: .leading, spacing: DSSpacing.s) {
-                    icon
-                    titleAndLevel
-                    sentence
-                }
-            } else {
-                HStack(alignment: .top, spacing: DSSpacing.s) {
-                    icon
-                    VStack(alignment: .leading, spacing: DSSpacing.xs) {
-                        titleAndLevel
-                        sentence
-                    }
-                }
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(title)
-        .accessibilityValue(message)
-    }
-
-    private var icon: some View {
-        Image(systemName: dimension.iconName)
-            .font(.system(.body, weight: .semibold))
-            .foregroundStyle(tone.color)
-            .frame(width: 40, height: 40)
-            .background(tone.softColor, in: Circle())
-    }
-
-    private var titleAndLevel: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(alignment: .firstTextBaseline, spacing: DSSpacing.xs) {
-                titleText
-                Spacer(minLength: DSSpacing.xs)
-                LevelIndicator(filledSteps: level.filledSteps, color: tone.color)
-            }
-            VStack(alignment: .leading, spacing: DSSpacing.xs) {
-                titleText
-                LevelIndicator(filledSteps: level.filledSteps, color: tone.color)
-            }
-        }
-    }
-
-    private var titleText: some View {
-        Text(title)
-            .font(DSFont.heading)
-            .foregroundStyle(Color.dsTextPrimary)
-            .dsTitleText()
-    }
-
-    private var sentence: some View {
-        Text(message)
-            .font(DSFont.callout)
-            .foregroundStyle(Color.dsTextSecondary)
-            .dsBodyText()
-    }
-}
-
 // MARK: - Message card
 
 /// A motivational message from the pipeline, tinted by its category.
@@ -210,37 +136,222 @@ struct MessageCard: View {
     }
 }
 
-// MARK: - Support card
+// MARK: - Message deck
 
-/// Shown at the top of the results when the risk is elevated. Warm and visible, never alarming.
-struct SupportCard: View {
-    let title: String
-    let message: String
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+/// The motivational messages as a stack of cards. Swiping right means the message was liked, left that it was not.
+/// The directions are physical, also in Persian. The buttons and the VoiceOver actions do the same as a swipe.
+struct MessageDeck: View {
+    struct Strings {
+        let hint: String
+        let like: String
+        let dislike: String
+        let doneTitle: String
+        let doneBody: String
+        let replay: String
+        let categoryTitle: (MessageCategoryStyle) -> String
+    }
+
+    let messages: [PredictionResponse.Message]
+    let strings: Strings
+    let onRate: (PredictionResponse.Message, Bool) -> Void
+
+    @State private var index: Int
+    @State private var offset: CGFloat = 0
+    /// Locks a drag to horizontal or vertical on its first movement, so the page still scrolls over a card.
+    @State private var isHorizontalDrag: Bool?
+    @State private var isLeaving = false
+    @Environment(\.layoutDirection) private var layoutDirection
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private static let threshold: CGFloat = 110
+    private static let flyDistance: CGFloat = 600
+
+    /// `startIndex` lets a deck that is shown again continue after the messages already rated.
+    init(messages: [PredictionResponse.Message], strings: Strings, startIndex: Int = 0, onRate: @escaping (PredictionResponse.Message, Bool) -> Void) {
+        self.messages = messages
+        self.strings = strings
+        self.onRate = onRate
+        _index = State(initialValue: min(startIndex, messages.count))
+    }
 
     var body: some View {
-        // At accessibility sizes the icon goes above the text so the message keeps the full width.
-        let layout = dynamicTypeSize.isAccessibilitySize
-            ? AnyLayout(VStackLayout(alignment: .leading, spacing: DSSpacing.s))
-            : AnyLayout(HStackLayout(alignment: .top, spacing: DSSpacing.s))
-        layout {
-            Image(systemName: "heart.circle.fill")
-                .font(.system(.title2))
-                .foregroundStyle(Color.dsCare)
-                .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: DSSpacing.xs) {
-                Text(title)
-                    .font(DSFont.heading)
-                    .foregroundStyle(Color.dsTextPrimary)
-                    .dsTitleText()
-                Text(message)
-                    .font(DSFont.body)
-                    .foregroundStyle(Color.dsTextPrimary)
-                    .dsBodyText()
+        Group {
+            if index < messages.count {
+                VStack(spacing: DSSpacing.m) {
+                    Text(strings.hint)
+                        .font(DSFont.footnote)
+                        .foregroundStyle(Color.dsTextSecondary)
+                        .multilineTextAlignment(.center)
+                        .dsBodyText()
+                        .frame(maxWidth: .infinity)
+                        .accessibilityHidden(true)
+                    cards
+                    controls
+                }
+            } else {
+                done
+                    .transition(.opacity)
             }
         }
-        .dsCard(fill: .dsCareSoft, stroke: Color.dsCare.opacity(0.35))
-        .accessibilityElement(children: .combine)
+        .sensoryFeedback(.impact(weight: .light), trigger: index)
+    }
+
+    // MARK: Cards
+
+    private var cards: some View {
+        ZStack {
+            ForEach(Array(messages.indices.filter { $0 == index || $0 == index + 1 }.reversed()), id: \.self) { position in
+                let isTop = position == index
+                card(messages[position])
+                    .overlay(alignment: .top) {
+                        if isTop { stamp }
+                    }
+                    .scaleEffect(isTop ? 1 : 0.95, anchor: .bottom)
+                    .offset(x: isTop ? offset : 0, y: isTop ? 0 : DSSpacing.s)
+                    .rotationEffect(.degrees(isTop && !reduceMotion ? Double(offset / 20) : 0), anchor: .bottom)
+                    .opacity(isTop ? (isLeaving ? 0 : 1) : 0.6)
+                    .allowsHitTesting(isTop)
+                    .accessibilityHidden(!isTop)
+                    .accessibilityHint(isTop ? strings.hint : "")
+                    .accessibilityAction(named: strings.like) { rate(liked: true) }
+                    .accessibilityAction(named: strings.dislike) { rate(liked: false) }
+                    .simultaneousGesture(drag, including: isTop ? .all : .none)
+                    // The card that flew off is already off screen, so it leaves without a transition.
+                    .transition(.asymmetric(insertion: .opacity, removal: .identity))
+            }
+        }
+        .padding(.bottom, DSSpacing.s)
+        // Left and right stay physical in Persian; the cards themselves keep the language's direction.
+        .environment(\.layoutDirection, .leftToRight)
+    }
+
+    private func card(_ message: PredictionResponse.Message) -> some View {
+        let style = MessageCategoryStyle(category: message.category)
+        return MessageCard(style: style, categoryTitle: strings.categoryTitle(style), text: message.text, author: message.author)
+            .environment(\.layoutDirection, layoutDirection)
+    }
+
+    private var stamp: some View {
+        let liked = offset > 0
+        return Image(systemName: liked ? "hand.thumbsup.fill" : "hand.thumbsdown.fill")
+            .font(.system(.title3, weight: .semibold))
+            .foregroundStyle(liked ? Color.dsSteady : Color.dsTextSecondary)
+            .frame(width: DSSize.minTap, height: DSSize.minTap)
+            .background(Color.dsSurface, in: Circle())
+            .overlay(Circle().strokeBorder(Color.dsStroke, lineWidth: 1))
+            .offset(y: -DSSpacing.m)
+            .opacity(min(abs(offset) / Self.threshold, 1))
+            .accessibilityHidden(true)
+    }
+
+    private var drag: some Gesture {
+        DragGesture(minimumDistance: 12)
+            .onChanged { value in
+                guard !isLeaving else { return }
+                if isHorizontalDrag == nil {
+                    isHorizontalDrag = abs(value.translation.width) > abs(value.translation.height)
+                }
+                guard isHorizontalDrag == true else { return }
+                offset = value.translation.width
+            }
+            .onEnded { value in
+                defer { isHorizontalDrag = nil }
+                guard isHorizontalDrag == true, !isLeaving else { return }
+                let distance = abs(offset) > Self.threshold ? offset : value.predictedEndTranslation.width
+                if abs(distance) > Self.threshold {
+                    rate(liked: distance > 0)
+                } else {
+                    withAnimation(DSMotion.animation(DSMotion.soft, reduceMotion: reduceMotion)) { offset = 0 }
+                }
+            }
+    }
+
+    // MARK: Controls
+
+    private var controls: some View {
+        HStack {
+            RateButton(systemImage: "hand.thumbsdown", tint: .dsTextSecondary, label: strings.dislike) { rate(liked: false) }
+            Spacer()
+            Text(verbatim: "\(index + 1) / \(messages.count)")
+                .font(DSFont.footnote)
+                .foregroundStyle(Color.dsTextSecondary)
+                .accessibilityHidden(true)
+            Spacer()
+            RateButton(systemImage: "hand.thumbsup", tint: .dsBrand, label: strings.like) { rate(liked: true) }
+        }
+        .padding(.horizontal, DSSpacing.l)
+        .environment(\.layoutDirection, .leftToRight)
+    }
+
+    private var done: some View {
+        VStack(spacing: DSSpacing.s) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(.title2))
+                .foregroundStyle(Color.dsSteady)
+                .accessibilityHidden(true)
+            Text(strings.doneTitle)
+                .font(DSFont.heading)
+                .foregroundStyle(Color.dsTextPrimary)
+                .multilineTextAlignment(.center)
+                .dsTitleText()
+            Text(strings.doneBody)
+                .font(DSFont.callout)
+                .foregroundStyle(Color.dsTextSecondary)
+                .multilineTextAlignment(.center)
+                .dsBodyText()
+            Button(strings.replay) {
+                withAnimation(DSMotion.animation(DSMotion.soft, reduceMotion: reduceMotion)) { index = 0 }
+            }
+            .buttonStyle(.dsTertiary)
+        }
+        .frame(maxWidth: .infinity)
+        .dsCard()
+    }
+
+    // MARK: Rating
+
+    private func rate(liked: Bool) {
+        guard index < messages.count, !isLeaving else { return }
+        onRate(messages[index], liked)
+        // With Reduce Motion the card fades out instead of flying off.
+        withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : .easeIn(duration: 0.25)) {
+            isLeaving = true
+            if !reduceMotion {
+                offset = liked ? Self.flyDistance : -Self.flyDistance
+            }
+        } completion: {
+            withAnimation(DSMotion.animation(DSMotion.soft, reduceMotion: reduceMotion)) {
+                index += 1
+                offset = 0
+                isLeaving = false
+            }
+        }
+    }
+}
+
+/// A round like or dislike button under the message deck.
+private struct RateButton: View {
+    let systemImage: String
+    let tint: Color
+    let label: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .font(.system(.title3, weight: .semibold))
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                .foregroundStyle(tint)
+                .frame(width: DSSize.buttonMinHeight, height: DSSize.buttonMinHeight)
+                .background(Color.dsSurface, in: Circle())
+                .overlay(Circle().strokeBorder(Color.dsStroke, lineWidth: 1))
+                .contentShape(Circle())
+        }
+        .buttonStyle(.dsPressable)
+        .accessibilityLabel(label)
+        .accessibilityShowsLargeContentViewer {
+            Label(label, systemImage: systemImage)
+        }
     }
 }
 
@@ -283,13 +394,29 @@ struct Banner: View {
 #Preview("Result components") {
     ScrollView {
         VStack(spacing: DSSpacing.m) {
-            SupportCard(title: "Bununla tek başınıza baş etmek zorunda değilsiniz", message: "Güvendiğiniz biriyle konuşmak iyi gelebilir.")
             MessageCard(style: .validation, categoryTitle: "Duygularınız geçerli", text: "Hissettikleriniz anlaşılır.", author: nil)
-            DimensionRow(dimension: .positiveAffect, level: .high, title: "Neşe ve enerji", message: "Paylaştıklarınızda gerçek bir neşe var gibi görünüyor.")
-                .dsCard()
             Banner(kind: .info, text: "Analiz servisi uyanıyor.")
             Banner(kind: .notice, text: "Lütfen Türkçe yazın.")
         }
+        .padding()
+    }
+    .background(AppBackground())
+}
+
+#Preview("Message deck") {
+    ScrollView {
+        MessageDeck(
+            messages: PreviewFixtures.prediction.messages,
+            strings: MessageDeck.Strings(
+                hint: "Beğenmediğiniz sözü sola, beğendiğinizi sağa kaydırın.",
+                like: "Beğendim",
+                dislike: "Beğenmedim",
+                doneTitle: "Tüm sözleri değerlendirdiniz",
+                doneBody: "Geri bildiriminiz için teşekkürler.",
+                replay: "Sözleri yeniden gör",
+                categoryTitle: { _ in "Duygularınız geçerli" }
+            )
+        ) { _, _ in }
         .padding()
     }
     .background(AppBackground())
