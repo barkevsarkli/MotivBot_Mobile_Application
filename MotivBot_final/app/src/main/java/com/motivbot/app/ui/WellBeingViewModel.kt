@@ -1,422 +1,627 @@
 package com.motivbot.app.ui
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.motivbot.app.R
-import com.motivbot.app.core.AppError
 import com.motivbot.app.core.AppLanguage
-import com.motivbot.app.core.AppResult
 import com.motivbot.app.core.StringProvider
-import com.motivbot.app.data.repository.MotivationRepository
-import com.motivbot.app.data.repository.SessionRepository
-import com.motivbot.app.data.repository.SettingsRepository
-import com.motivbot.app.domain.model.AnswerValue
-import com.motivbot.app.domain.model.AppScreen
-import com.motivbot.app.domain.model.QuestionType
-import com.motivbot.app.domain.model.SectionDisplayMode
-import com.motivbot.app.domain.model.UserAnswer
-import com.motivbot.app.domain.usecase.AnswerRowMapper
-import com.motivbot.app.domain.usecase.BuildPromptUseCase
-import com.motivbot.app.domain.usecase.CsvExporter
+import com.motivbot.app.data.remote.PredictionProgress
+import com.motivbot.app.data.remote.PredictionService
+import com.motivbot.app.data.session.SavedResult
+import com.motivbot.app.data.session.SavedSession
+import com.motivbot.app.data.session.SessionStore
+import com.motivbot.app.data.session.restore
+import com.motivbot.app.data.session.saved
+import com.motivbot.app.domain.AnalysisError
+import com.motivbot.app.domain.AnswerValue
+import com.motivbot.app.domain.AppScreen
+import com.motivbot.app.domain.CsvBuilder
+import com.motivbot.app.domain.MotivBotApiException
+import com.motivbot.app.domain.PipelineLanguage
+import com.motivbot.app.domain.PredictionRequest
+import com.motivbot.app.domain.PredictionRequestBuilder
+import com.motivbot.app.domain.PredictionResponse
+import com.motivbot.app.domain.Question
+import com.motivbot.app.domain.QuestionType
+import com.motivbot.app.domain.ReflectionRating
+import com.motivbot.app.domain.ReflectionTopic
+import com.motivbot.app.domain.ResultSummary
+import com.motivbot.app.domain.SectionDisplayMode
+import com.motivbot.app.domain.TestData
+import com.motivbot.app.domain.TestSection
+import com.motivbot.app.domain.UserAnswer
+import com.motivbot.app.domain.WellBeingDimension
+import com.motivbot.app.domain.graphemeCount
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/** Writes and removes the shared CSV (SurveyAnswers.csv). */
+interface CsvSink {
+    /** Returns true when the file was written. */
+    fun write(csv: String): Boolean
+    fun delete()
+}
+
+/** Everything the view model needs from outside, so tests can swap each part. */
+class WellBeingDependencies(
+    val service: PredictionService,
+    val store: SessionStore,
+    val strings: StringProvider,
+    val csvSink: CsvSink,
+    val localization: LocalizationManager = LocalizationManager(),
+    val saveDelayMillis: Long = 500,
+    val now: () -> Long = System::currentTimeMillis,
+)
+
+/** A saved, unfinished assessment the UI can offer to continue. */
+data class ResumableSession(
+    val language: AppLanguage,
+    val startedAtMillis: Long,
+    val answeredQuestions: Int,
+    val totalQuestions: Int,
+)
+
+sealed interface AnalysisPhase {
+    data object Idle : AnalysisPhase
+    data object Connecting : AnalysisPhase
+
+    /** The Space is starting; this can take about a minute. */
+    data object ModelWakingUp : AnalysisPhase
+    data object Analysing : AnalysisPhase
+    data class Failed(val error: AnalysisError) : AnalysisPhase
+
+    val isInProgress: Boolean get() = this == Connecting || this == ModelWakingUp || this == Analysing
+}
+
+enum class EmotionTextStatus { TooShort, TooLong, WrongLanguage, Valid }
+
 /**
- * Port of `WellBeingViewModel.swift`.
- *
- * Structural changes from the Swift original:
- *  - `@Observable` + loose `var`s → a single `StateFlow<WellBeingUiState>` updated with `update {}`,
- *    which is atomic and therefore safe even though several coroutines write to it;
- *  - `@MainActor` → nothing needed: `viewModelScope` is main-dispatched, and every suspending
- *    dependency is main-safe on its own (Room and OkHttp both move off the main thread);
- *  - `withAnimation { … }` calls are gone. Animation is a rendering concern; the Compose screens
- *    express it with `AnimatedContent`/`animateFloatAsState` keyed on the same state values;
- *  - the API call and the CSV write are no longer interleaved in one method — the questionnaire is
- *    persisted first (so the data survives even if the network call dies), then the AI is asked.
+ * Port of `WellBeingViewModel.swift`. State is Compose snapshot state, so screens read it directly,
+ * the way SwiftUI views read the `@Observable` model on iOS.
  */
 @HiltViewModel
-class WellBeingViewModel @Inject constructor(
-    private val motivationRepository: MotivationRepository,
-    private val sessionRepository: SessionRepository,
-    private val settingsRepository: SettingsRepository,
-    private val buildPrompt: BuildPromptUseCase,
-    private val answerRowMapper: AnswerRowMapper,
-    private val csvExporter: CsvExporter,
-    private val stringProvider: StringProvider,
-) : ViewModel() {
+class WellBeingViewModel @Inject constructor(dependencies: WellBeingDependencies) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(WellBeingUiState())
-    val uiState: StateFlow<WellBeingUiState> = _uiState.asStateFlow()
+    private val service = dependencies.service
+    private val store = dependencies.store
+    private val strings = dependencies.strings
+    private val csvSink = dependencies.csvSink
+    private val saveDelayMillis = dependencies.saveDelayMillis
+    private val now = dependencies.now
+    val localization = dependencies.localization
 
-    /** Row id of the session currently being filled in; null before the questionnaire finishes. */
-    private var activeSessionId: Long? = null
+    val sections: List<TestSection> = TestData.sections
 
-    /** Held so a retry can cancel an in-flight attempt instead of racing it. */
-    private var submissionJob: Job? = null
+    var currentScreen by mutableStateOf(AppScreen.EmotionInput)
+        private set
+
+    private var emotionTextState by mutableStateOf("")
+
+    /** Starting to type locks the language; clearing the text on the first screen unlocks it again. */
+    var emotionText: String
+        get() = emotionTextState
+        set(value) {
+            if (value == emotionTextState) return
+            emotionTextState = value
+            updateLanguageLock()
+            scheduleSave()
+        }
+
+    // Questionnaire state
+    var currentSectionIndex by mutableIntStateOf(0)
+        private set
+    var currentQuestionIndex by mutableIntStateOf(0)
+        private set
+    var selectedOptionId by mutableStateOf<Int?>(null)
+    var scaleValue by mutableIntStateOf(5)
+    var freeTextAnswer by mutableStateOf("")
+    /** Settable from tests in this module, as on iOS; the screens only read it. */
+    var answers by mutableStateOf<List<UserAnswer>>(emptyList())
+        internal set
+
+    /** questionId to selected option id, for all-at-once sections. */
+    var gridAnswers by mutableStateOf<Map<Int, Int>>(emptyMap())
+
+    // Analysis state
+    var analysisPhase by mutableStateOf<AnalysisPhase>(AnalysisPhase.Idle)
+        private set
+    var prediction by mutableStateOf<PredictionResponse?>(null)
+        private set
+
+    /** The request that produced [prediction]. Not restored after relaunch. */
+    var submittedRequest by mutableStateOf<PredictionRequest?>(null)
+        private set
+    private var resultDateMillis by mutableStateOf<Long?>(null)
+
+    /** Shows the support card: PHQ-9 item 9 above "not at all", or a likely presence of depression in the text. */
+    var elevatedRisk by mutableStateOf(false)
+        private set
+
+    // Save & resume
+    var resumableSession by mutableStateOf<ResumableSession?>(null)
+        private set
+
+    // Reflection
+    var reflectionText by mutableStateOf("")
+    var reflectionRatings by mutableStateOf<Map<ReflectionTopic, ReflectionRating>>(emptyMap())
+        private set
+    var isCompleted by mutableStateOf(false)
+        private set
+
+    /** True while SurveyAnswers.csv holds the current result. */
+    var hasCsv by mutableStateOf(false)
+        private set
+
+    private var pendingSession: Pair<SavedSession, List<UserAnswer>>? = null
+    private var saveJob: Job? = null
+    private var analysisJob: Job? = null
+    private var sessionStartedAt: Long? = null
 
     init {
-        // Theme and language are owned by the settings store, not by this ViewModel; mirror them
-        // into the UI state so the screens still read everything from one place.
-        viewModelScope.launch {
-            combine(
-                settingsRepository.isDarkMode,
-                settingsRepository.language,
-                ::Pair,
-            ).collect { (isDarkMode, language) ->
-                // Keep the process locale in step with the stored preference, so the toggle badge
-                // and the strings on screen can never disagree.
-                settingsRepository.ensureLocaleApplied(language)
-                _uiState.update { it.copy(isDarkMode = isDarkMode, language = language) }
+        restoreSavedState()
+    }
+
+    // MARK: - Derived state
+
+    /** The result for PDF / image export, or null before a result exists. */
+    val resultSummary: ResultSummary?
+        get() {
+            val prediction = prediction ?: return null
+            val date = resultDateMillis ?: return null
+            return ResultSummary.of(prediction, date, localization.currentLanguage, elevatedRisk)
+        }
+
+    /** The language can change only on the first screen, before the assessment starts. */
+    val canChangeLanguage: Boolean
+        get() = currentScreen == AppScreen.EmotionInput && !localization.isLocked && resumableSession == null
+
+    val currentSection: TestSection? get() = sections.getOrNull(currentSectionIndex)
+    val currentQuestion: Question? get() = currentSection?.questions?.getOrNull(currentQuestionIndex)
+
+    val totalQuestions: Int get() = sections.sumOf { shownQuestionCount(it) }
+    val answeredQuestions: Int get() = answers.size
+
+    val overallProgress: Double
+        get() = if (totalQuestions > 0) answeredQuestions.toDouble() / totalQuestions else 0.0
+
+    /** Whether [question] is asked given the answers so far. A conditional question counts until its condition is answered. */
+    fun isShown(question: Question): Boolean {
+        val condition = question.showIf ?: return true
+        val answer = answers.lastOrNull { it.questionId == condition.questionId }?.answerValue as? AnswerValue.Option
+            ?: return true
+        return answer.option.id == condition.optionId
+    }
+
+    fun shownQuestionCount(section: TestSection): Int = section.questions.count(::isShown)
+
+    private fun firstShownQuestionIndex(section: TestSection, from: Int): Int? =
+        section.questions.indices.firstOrNull { it >= from && isShown(section.questions[it]) }
+
+    private fun lastShownQuestionIndex(section: TestSection, before: Int): Int =
+        section.questions.indices.lastOrNull { it < before && isShown(section.questions[it]) } ?: 0
+
+    val isLastQuestion: Boolean
+        get() {
+            val section = currentSection ?: return true
+            val isLastInSection = firstShownQuestionIndex(section, currentQuestionIndex + 1) == null
+            return isLastInSection && currentSectionIndex >= sections.size - 1
+        }
+
+    val emotionTextStatus: EmotionTextStatus
+        get() {
+            val text = emotionText.trim()
+            val length = text.graphemeCount()
+            return when {
+                length < PredictionRequest.TEXT_LENGTH_RANGE.first -> EmotionTextStatus.TooShort
+                length > PredictionRequest.TEXT_LENGTH_RANGE.last -> EmotionTextStatus.TooLong
+                PipelineLanguage.detect(text) != PipelineLanguage.of(localization.currentLanguage) -> EmotionTextStatus.WrongLanguage
+                else -> EmotionTextStatus.Valid
             }
         }
+
+    val canProceedEmotion: Boolean get() = emotionTextStatus == EmotionTextStatus.Valid
+
+    val canProceedQuestion: Boolean
+        get() {
+            val section = currentSection ?: return false
+            if (section.displayMode == SectionDisplayMode.AllAtOnce) {
+                return section.questions.all { gridAnswers[it.id] != null }
+            }
+            val question = currentQuestion ?: return false
+            return when (val type = question.type) {
+                QuestionType.SingleChoice -> selectedOptionId != null
+                is QuestionType.Scale -> true
+                QuestionType.FreeText -> question.isOptional || freeTextAnswer.isNotBlank()
+                is QuestionType.IntegerInput -> integerAnswer(type.range) != null
+            }
+        }
+
+    /** The typed number for an integer question, or null if it is not a whole number in [range]. */
+    fun integerAnswer(range: IntRange): Int? {
+        if (range == PredictionRequestBuilder.AGE_RANGE) return PredictionRequestBuilder.parseAge(freeTextAnswer)
+        return freeTextAnswer.trim().toIntOrNull()?.takeIf { it in range }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────────
-    // Screen 1 — emotion input
-    // ─────────────────────────────────────────────────────────────────────────────
+    // MARK: - Navigation
 
-    fun onEmotionTextChange(text: String) = _uiState.update { it.copy(emotionText = text) }
-
-    /** Swift: `submitEmotionAndProceed()`. */
     fun submitEmotionAndProceed() {
-        if (!_uiState.value.canProceedEmotion) return
-        goToScreen(AppScreen.Questionnaire)
+        if (!canProceedEmotion) return
+        localization.lock()
+        currentScreen = AppScreen.Questionnaire
+        scheduleSave()
+        // The questionnaire takes minutes; wake the Space now.
+        prewarmService()
     }
 
-    // ─────────────────────────────────────────────────────────────────────────────
-    // Screen 2 — questionnaire
-    // ─────────────────────────────────────────────────────────────────────────────
-
-    /** Swift: `selectOption(_:)`. */
-    fun selectOption(optionId: Int) = _uiState.update { it.copy(selectedOptionId = optionId) }
-
-    /** Swift: `selectGridOption(questionId:optionId:)`. */
-    fun selectGridOption(questionId: Int, optionId: Int) = _uiState.update {
-        it.copy(gridAnswers = it.gridAnswers + (questionId to optionId))
+    /** Pings the Space in the background. Call at launch; safe to call repeatedly. */
+    fun prewarmService() {
+        viewModelScope.launch { service.prewarm() }
     }
 
-    fun onScaleValueChange(value: Int) = _uiState.update { it.copy(scaleValue = value) }
-
-    fun onFreeTextChange(text: String) = _uiState.update { it.copy(freeTextAnswer = text) }
-
-    /**
-     * Accepts digits only, capped at three of them.
-     *
-     * Filtering at the source means the state can never hold a sign, a decimal point, letters, or a
-     * 10 000-digit paste — so `toIntOrNull()` downstream cannot overflow and the field cannot be
-     * used as an injection vector into the AI prompt.
-     */
-    fun onNumberChange(text: String) = _uiState.update {
-        it.copy(numberAnswer = text.filter(Char::isDigit).take(MAX_NUMBER_DIGITS))
+    fun selectOption(optionId: Int) {
+        selectedOptionId = optionId
     }
 
-    /**
-     * Swift: `nextQuestion()`.
-     *
-     * Records the current answer(s), then advances — question, then section, then out of the
-     * questionnaire entirely. Behaviour is identical to the Swift version, including the fact that
-     * an `AllAtOnce` section commits all of its answers in one go.
-     */
+    fun selectGridOption(questionId: Int, optionId: Int) {
+        gridAnswers = gridAnswers + (questionId to optionId)
+    }
+
     fun nextQuestion() {
-        val state = _uiState.value
-        val section = state.currentSection ?: return
-        if (!state.canProceedQuestion) return
-
+        val section = currentSection ?: return
         if (section.displayMode == SectionDisplayMode.AllAtOnce) {
-            val gridAnswers = section.questions.mapNotNull { question ->
-                val optionId = state.gridAnswers[question.id] ?: return@mapNotNull null
-                val option = question.options?.firstOrNull { it.id == optionId }
-                    ?: return@mapNotNull null
+            val recorded = section.questions.mapNotNull { question ->
+                val option = question.options?.firstOrNull { it.id == gridAnswers[question.id] } ?: return@mapNotNull null
                 UserAnswer(section.id, question.id, AnswerValue.Option(option))
             }
-
-            _uiState.update { it.copy(answers = it.answers + gridAnswers, gridAnswers = emptyMap()) }
-            advanceSection()
+            answers = answers + recorded
+            gridAnswers = emptyMap()
+            advanceSectionOrFinish()
+            scheduleSave()
             return
         }
-
-        val question = state.currentQuestion ?: return
-
-        val answerValue: AnswerValue = when (question.type) {
-            is QuestionType.SingleChoice -> {
-                val option = question.options
-                    ?.firstOrNull { it.id == state.selectedOptionId }
-                    ?: return // Swift bailed out the same way rather than recording a partial answer.
+        val question = currentQuestion ?: return
+        val value: AnswerValue = when (val type = question.type) {
+            QuestionType.SingleChoice -> {
+                val option = question.options?.firstOrNull { it.id == selectedOptionId } ?: return
                 AnswerValue.Option(option)
             }
-
-            is QuestionType.Scale -> AnswerValue.Scale(state.scaleValue)
-
-            is QuestionType.FreeText -> AnswerValue.Text(state.freeTextAnswer.trim())
-
-            // `canProceedQuestion` already gated this, so the value is in range; bail rather than
-            // record a bogus answer if that ever stops being true.
-            is QuestionType.Number ->
-                AnswerValue.Number(state.numberAnswerValue ?: return)
+            is QuestionType.Scale -> AnswerValue.Scale(scaleValue)
+            QuestionType.FreeText -> AnswerValue.Text(freeTextAnswer.trim())
+            is QuestionType.IntegerInput -> AnswerValue.Text((integerAnswer(type.range) ?: return).toString())
         }
+        answers = answers + UserAnswer(section.id, question.id, value)
 
-        _uiState.update {
-            it.copy(
-                answers = it.answers + UserAnswer(section.id, question.id, answerValue),
-                // Reset the per-question inputs, exactly as the Swift version did.
-                selectedOptionId = null,
-                scaleValue = WellBeingUiState.DEFAULT_SCALE_VALUE,
-                freeTextAnswer = "",
-                numberAnswer = "",
-            )
-        }
+        selectedOptionId = null
+        scaleValue = 5
+        freeTextAnswer = ""
 
-        if (state.currentQuestionIndex < section.questions.lastIndex) {
-            _uiState.update { it.copy(currentQuestionIndex = it.currentQuestionIndex + 1) }
+        val next = firstShownQuestionIndex(section, currentQuestionIndex + 1)
+        if (next != null) {
+            currentQuestionIndex = next
         } else {
-            advanceSection()
+            advanceSectionOrFinish()
+        }
+        scheduleSave()
+    }
+
+    private fun advanceSectionOrFinish() {
+        if (currentSectionIndex < sections.size - 1) {
+            currentSectionIndex += 1
+            currentQuestionIndex = 0
+        } else {
+            // All questions answered: go to loading and send them.
+            currentScreen = AppScreen.Loading
+            submitForAnalysis()
         }
     }
 
-    /** Moves to the next section, or finishes the assessment if this was the last one. */
-    private fun advanceSection() {
-        val state = _uiState.value
-        if (state.currentSectionIndex < state.sections.lastIndex) {
-            _uiState.update {
-                it.copy(currentSectionIndex = it.currentSectionIndex + 1, currentQuestionIndex = 0)
-            }
-        } else {
-            goToScreen(AppScreen.Loading)
-            finishAssessment()
-        }
-    }
-
-    /**
-     * Swift: `previousQuestion()`.
-     *
-     * The rewind rules are subtle and are reproduced as-is: stepping back inside a sequential
-     * section drops the last recorded answer, while stepping back into (or out of) an `AllAtOnce`
-     * section clears that whole section's answers so the grid is re-answered from scratch.
-     */
     fun previousQuestion() {
-        val state = _uiState.value
-        if (state.currentSectionIndex == 0 && state.currentQuestionIndex == 0) return
-
-        val isGridSection = state.currentSection?.displayMode == SectionDisplayMode.AllAtOnce
-
-        when {
-            // Leaving a grid section backwards: discard the (uncommitted) grid selections.
-            isGridSection -> {
-                if (state.currentSectionIndex > 0) {
-                    val previousIndex = state.currentSectionIndex - 1
-                    val previousSection = state.sections[previousIndex]
-
-                    _uiState.update { current ->
-                        if (previousSection.displayMode == SectionDisplayMode.AllAtOnce) {
-                            current.copy(
-                                gridAnswers = emptyMap(),
-                                currentSectionIndex = previousIndex,
-                                answers = current.answers.filterNot { it.sectionId == previousSection.id },
-                            )
-                        } else {
-                            current.copy(
-                                gridAnswers = emptyMap(),
-                                currentSectionIndex = previousIndex,
-                                currentQuestionIndex = previousSection.questions.lastIndex,
-                                answers = current.answers.dropLast(1),
-                            )
-                        }
-                    }
-                } else {
-                    _uiState.update { it.copy(gridAnswers = emptyMap()) }
-                }
-            }
-
-            // Ordinary step back inside a sequential section.
-            state.currentQuestionIndex > 0 -> _uiState.update {
-                it.copy(
-                    answers = it.answers.dropLast(1),
-                    currentQuestionIndex = it.currentQuestionIndex - 1,
-                )
-            }
-
-            // First question of a sequential section: step into the previous section.
-            state.currentSectionIndex > 0 -> {
-                val previousIndex = state.currentSectionIndex - 1
-                val previousSection = state.sections[previousIndex]
-
-                _uiState.update { current ->
-                    if (previousSection.displayMode == SectionDisplayMode.AllAtOnce) {
-                        current.copy(
-                            currentSectionIndex = previousIndex,
-                            currentQuestionIndex = 0,
-                            answers = current.answers.filterNot { it.sectionId == previousSection.id },
-                        )
+        if (currentSectionIndex == 0 && currentQuestionIndex == 0) return
+        val section = currentSection
+        if (currentQuestionIndex > 0 || section?.displayMode == SectionDisplayMode.AllAtOnce) {
+            if (section?.displayMode == SectionDisplayMode.AllAtOnce) {
+                gridAnswers = emptyMap()
+                if (currentSectionIndex > 0) {
+                    currentSectionIndex -= 1
+                    val previous = sections[currentSectionIndex]
+                    if (previous.displayMode == SectionDisplayMode.AllAtOnce) {
+                        answers = answers.filterNot { it.sectionId == previous.id }
                     } else {
-                        current.copy(
-                            currentSectionIndex = previousIndex,
-                            currentQuestionIndex = previousSection.questions.lastIndex,
-                            answers = current.answers.dropLast(1),
-                        )
+                        currentQuestionIndex = lastShownQuestionIndex(previous, previous.questions.size)
+                        answers = answers.dropLast(1)
                     }
                 }
+            } else if (section != null) {
+                currentQuestionIndex = lastShownQuestionIndex(section, currentQuestionIndex)
+                answers = answers.dropLast(1)
+            }
+        } else if (currentSectionIndex > 0) {
+            currentSectionIndex -= 1
+            val previous = sections[currentSectionIndex]
+            if (previous.displayMode == SectionDisplayMode.AllAtOnce) {
+                answers = answers.filterNot { it.sectionId == previous.id }
+                currentQuestionIndex = 0
+            } else {
+                currentQuestionIndex = lastShownQuestionIndex(previous, previous.questions.size)
+                answers = answers.dropLast(1)
             }
         }
+        selectedOptionId = null
+        scaleValue = 5
+        freeTextAnswer = ""
+        scheduleSave()
+    }
 
-        _uiState.update {
-            it.copy(
-                selectedOptionId = null,
-                scaleValue = WellBeingUiState.DEFAULT_SCALE_VALUE,
-                freeTextAnswer = "",
-                numberAnswer = "",
-            )
+    /** Goes back one question and puts the earlier answer back in place, as `goBack()` does on iOS. */
+    fun goBackRestoringAnswer() {
+        val earlier = answers
+        previousQuestion()
+        val section = currentSection ?: return
+        if (section.displayMode == SectionDisplayMode.AllAtOnce) {
+            val restored = section.questions.mapNotNull { question ->
+                val option = (earlier.firstOrNull { it.questionId == question.id }?.answerValue as? AnswerValue.Option)?.option
+                option?.let { question.id to it.id }
+            }
+            gridAnswers = gridAnswers + restored
+            return
+        }
+        val question = currentQuestion ?: return
+        when (val value = earlier.lastOrNull { it.sectionId == section.id && it.questionId == question.id }?.answerValue) {
+            is AnswerValue.Option -> selectedOptionId = value.option.id
+            is AnswerValue.Scale -> scaleValue = value.value
+            is AnswerValue.Text -> freeTextAnswer = value.text
+            null -> Unit
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────────
-    // Screen 3 — persistence + AI submission
-    // ─────────────────────────────────────────────────────────────────────────────
+    // MARK: - CSV
+
+    fun generateCsv(): String = CsvBuilder.build(
+        sections = sections,
+        answers = answers,
+        prediction = prediction,
+        request = submittedRequest,
+        elevatedRisk = elevatedRisk,
+        reflectionRatings = reflectionRatings,
+        string = { strings.getString(localization.currentLanguage, it) },
+    )
+
+    private fun saveCsv() {
+        hasCsv = csvSink.write(generateCsv())
+    }
+
+    // MARK: - Analysis
 
     /**
-     * Swift: `submitToAPI()`.
-     *
-     * Persist first, ask the AI second. The Swift version did the reverse-ish — it wrote a
-     * throwaway CSV with `try?` and dropped the data on the floor if the write failed — so a
-     * crash or a backgrounded app during the network call lost the entire assessment.
+     * Sends the answers to the pipeline and shows the result screen. The service retries while the Space
+     * wakes up. On failure the user stays on the loading screen with a retry option.
      */
-    fun finishAssessment() {
-        submissionJob?.cancel()
-        submissionJob = viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-
-            val state = _uiState.value
-            val rows = answerRowMapper(state.answers, state.language)
-
-            val sessionId = activeSessionId ?: runCatching {
-                sessionRepository.startSession(
-                    emotionText = state.emotionText,
-                    language = state.language,
-                    rows = rows,
-                )
-            }.getOrNull()
-            activeSessionId = sessionId
-
-            // Export the CSV for sharing (iOS: temp file handed to UIActivityViewController).
-            csvExporter.writeCsv(rows).onSuccess { uri ->
-                _uiState.update { it.copy(csvUri = uri.toString()) }
+    fun submitForAnalysis() {
+        if (analysisPhase.isInProgress) return
+        prediction = null
+        submittedRequest = null
+        val request = try {
+            PredictionRequestBuilder.build(emotionText, answers).also { it.validate() }
+        } catch (_: Exception) {
+            analysisPhase = AnalysisPhase.Failed(AnalysisError.Unexpected)
+            return
+        }
+        analysisPhase = AnalysisPhase.Connecting
+        analysisJob = viewModelScope.launch {
+            try {
+                val response = service.predict(request) { progress -> apply(progress) }
+                analysisJob = null
+                showResult(response, request)
+            } catch (cancellation: CancellationException) {
+                analysisPhase = AnalysisPhase.Idle
+                throw cancellation
+            } catch (exception: MotivBotApiException) {
+                analysisJob = null
+                analysisPhase = AnalysisPhase.Failed(exception.error.analysisError)
+            } catch (_: Exception) {
+                analysisJob = null
+                analysisPhase = AnalysisPhase.Failed(AnalysisError.Unexpected)
             }
-
-            val prompt = buildPrompt(state.emotionText, state.answers, state.language)
-
-            when (val result = motivationRepository.generateMotivation(prompt, state.language)) {
-                is AppResult.Success -> {
-                    sessionId?.let {
-                        sessionRepository.saveAiResponse(it, result.data, usedFallback = false)
-                    }
-                    _uiState.update {
-                        it.copy(isLoading = false, aiResponse = result.data, errorMessage = null)
-                    }
-                }
-
-                is AppResult.Failure -> {
-                    // Swift substituted a hard-coded English quote here, which meant a Turkish or
-                    // Persian user saw English on failure even though `api_error_fallback` was
-                    // already translated. Use the localized resource instead.
-                    val fallback = stringProvider.getString(state.language, R.string.api_error_fallback)
-                    sessionId?.let {
-                        sessionRepository.saveAiResponse(it, fallback, usedFallback = true)
-                    }
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            aiResponse = fallback,
-                            errorMessage = result.error.toUiMessage(),
-                        )
-                    }
-                }
-            }
-
-            goToScreen(AppScreen.Result)
-            _uiState.update { it.copy(shouldOfferShare = it.csvUri != null) }
         }
     }
 
-    /** Swift: the `retry_button` in `LoadingView` calling `submitToAPI()` again. */
-    fun retrySubmission() {
-        goToScreen(AppScreen.Loading)
-        finishAssessment()
+    private fun apply(progress: PredictionProgress) {
+        if (!analysisPhase.isInProgress) return
+        analysisPhase = when (progress) {
+            PredictionProgress.Connecting -> AnalysisPhase.Connecting
+            PredictionProgress.WakingUp -> AnalysisPhase.ModelWakingUp
+            PredictionProgress.Analysing -> AnalysisPhase.Analysing
+        }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────────
-    // Screen 4 — result and reflection
-    // ─────────────────────────────────────────────────────────────────────────────
+    private fun showResult(response: PredictionResponse, request: PredictionRequest) {
+        submittedRequest = request
+        prediction = response
+        val date = now()
+        resultDateMillis = date
+        elevatedRisk = isElevatedRisk(response, request)
+        saveCsv()
+        analysisPhase = AnalysisPhase.Idle
+        saveJob?.cancel()
+        saveJob = null
+        store.deleteSession()
+        store.saveResult(
+            SavedResult(language = localization.currentLanguage, completedAt = date, prediction = response, elevatedRisk = elevatedRisk),
+        )
+        currentScreen = AppScreen.Result
+    }
 
-    fun onReflectionTextChange(text: String) = _uiState.update { it.copy(reflectionText = text) }
+    // MARK: - Save & resume
 
-    fun selectFeeling(index: Int) = _uiState.update { it.copy(selectedFeelingIndex = index) }
+    /** Writes the pending save now. Call when the app leaves the foreground. */
+    fun flushPendingSave() {
+        if (saveJob == null) return
+        saveJob?.cancel()
+        saveJob = null
+        saveSessionNow()
+    }
 
-    /** Swift: `submitReflection()` — which only flipped a flag; the reflection was never stored. */
+    /** Restores the saved session: language (locked), text, answers and position. */
+    fun continueSession() {
+        val (session, restored) = pendingSession ?: return
+        pendingSession = null
+        resumableSession = null
+        sessionStartedAt = session.startedAt
+        localization.lock(session.language)
+        emotionText = session.emotionText
+        answers = restored
+        currentSectionIndex = session.sectionIndex
+        currentQuestionIndex = session.questionIndex
+        when (session.stage) {
+            SavedSession.Stage.EmotionInput -> currentScreen = AppScreen.EmotionInput
+            SavedSession.Stage.Questionnaire -> {
+                currentScreen = AppScreen.Questionnaire
+                prewarmService()
+            }
+            SavedSession.Stage.Analysis -> {
+                currentScreen = AppScreen.Loading
+                submitForAnalysis()
+            }
+        }
+    }
+
+    /** Discards the saved session and stays on the first screen. */
+    fun startOver() {
+        pendingSession = null
+        resumableSession = null
+        store.deleteSession()
+        localization.unlock()
+    }
+
+    private fun restoreSavedState() {
+        val session = store.loadSession()
+        if (session != null) {
+            val restored = session.answers.mapNotNull { it.restore(sections) }
+            val positionIsValid = session.sectionIndex in sections.indices &&
+                session.questionIndex in sections[session.sectionIndex].questions.indices
+            if (restored.size == session.answers.size && positionIsValid) {
+                pendingSession = session to restored
+                resumableSession = ResumableSession(
+                    language = session.language,
+                    startedAtMillis = session.startedAt,
+                    answeredQuestions = restored.size,
+                    totalQuestions = totalQuestions,
+                )
+                return
+            }
+            store.deleteSession()
+        }
+        val result = store.loadResult() ?: return
+        localization.lock(result.language)
+        prediction = result.prediction
+        resultDateMillis = result.completedAt
+        elevatedRisk = result.elevatedRisk
+        currentScreen = AppScreen.Result
+    }
+
+    private fun updateLanguageLock() {
+        if (currentScreen != AppScreen.EmotionInput || answers.isNotEmpty() || pendingSession != null) return
+        if (emotionText.isBlank()) localization.unlock() else localization.lock()
+    }
+
+    private fun scheduleSave() {
+        if (pendingSession != null || prediction != null) return
+        saveJob?.cancel()
+        saveJob = viewModelScope.launch {
+            delay(saveDelayMillis)
+            saveJob = null
+            saveSessionNow()
+        }
+    }
+
+    private fun saveSessionNow() {
+        if (pendingSession != null || prediction != null) return
+        if (emotionText.isBlank() && answers.isEmpty()) {
+            sessionStartedAt = null
+            store.deleteSession()
+            return
+        }
+        val startedAt = sessionStartedAt ?: now()
+        sessionStartedAt = startedAt
+        val stage = when (currentScreen) {
+            AppScreen.EmotionInput -> SavedSession.Stage.EmotionInput
+            AppScreen.Questionnaire -> SavedSession.Stage.Questionnaire
+            AppScreen.Loading, AppScreen.Result -> SavedSession.Stage.Analysis
+        }
+        store.saveSession(
+            SavedSession(
+                language = localization.currentLanguage,
+                emotionText = emotionText,
+                answers = answers.map { it.saved },
+                stage = stage,
+                sectionIndex = currentSectionIndex,
+                questionIndex = currentQuestionIndex,
+                startedAt = startedAt,
+            ),
+        )
+    }
+
+    // MARK: - Reflection
+
+    /** Records how the user feels about one topic and rewrites the CSV so the rating is shared with the results. */
+    fun rateReflection(topic: ReflectionTopic, rating: ReflectionRating) {
+        reflectionRatings = reflectionRatings + (topic to rating)
+        if (prediction != null) saveCsv()
+    }
+
+    /** Every topic must be rated; the note stays optional. */
+    val canSubmitReflection: Boolean get() = ReflectionTopic.entries.all { reflectionRatings[it] != null }
+
     fun submitReflection() {
-        val state = _uiState.value
-        viewModelScope.launch {
-            activeSessionId?.let { sessionId ->
-                sessionRepository.completeSession(
-                    sessionId = sessionId,
-                    reflection = state.reflectionText,
-                    feelingIndex = state.selectedFeelingIndex,
-                )
-            }
-            _uiState.update { it.copy(isCompleted = true) }
-        }
+        if (!canSubmitReflection) return
+        isCompleted = true
     }
 
-    fun onShareOffered() = _uiState.update { it.copy(shouldOfferShare = false) }
-
-    fun dismissError() = _uiState.update { it.copy(errorMessage = null) }
-
-    /**
-     * Swift: `restartAssessment()`.
-     *
-     * Resets the run but keeps the user's theme and language — the Swift version reset only the
-     * assessment fields too, and `isDarkMode` / the localization manager sat outside that block.
-     */
+    /** Cancels any analysis and deletes the saved session, the last result and the CSV. Unlocks the language. */
     fun restartAssessment() {
-        submissionJob?.cancel()
-        activeSessionId = null
-        _uiState.update { current ->
-            WellBeingUiState(isDarkMode = current.isDarkMode, language = current.language)
+        analysisJob?.cancel()
+        analysisJob = null
+        saveJob?.cancel()
+        saveJob = null
+        pendingSession = null
+        resumableSession = null
+        sessionStartedAt = null
+        store.deleteSession()
+        store.deleteResult()
+        csvSink.delete()
+
+        currentScreen = AppScreen.EmotionInput
+        emotionText = ""
+        currentSectionIndex = 0
+        currentQuestionIndex = 0
+        selectedOptionId = null
+        scaleValue = 5
+        freeTextAnswer = ""
+        answers = emptyList()
+        gridAnswers = emptyMap()
+        analysisPhase = AnalysisPhase.Idle
+        prediction = null
+        submittedRequest = null
+        resultDateMillis = null
+        elevatedRisk = false
+        reflectionText = ""
+        reflectionRatings = emptyMap()
+        isCompleted = false
+        hasCsv = false
+        localization.unlock()
+    }
+
+    companion object {
+        fun isElevatedRisk(prediction: PredictionResponse, request: PredictionRequest): Boolean {
+            val depression = prediction.probability(WellBeingDimension.Depression) ?: 0.0
+            return request.selfHarmItem >= 1 || depression >= PredictionResponse.PRESENT_THRESHOLD
         }
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────────
-    // Settings
-    // ─────────────────────────────────────────────────────────────────────────────
-
-    /** Swift: `toggleTheme()`. */
-    fun toggleTheme() = viewModelScope.launch {
-        settingsRepository.toggleTheme(_uiState.value.isDarkMode)
-    }
-
-    /** Swift: `LocalizationManager.toggleLanguage()`. */
-    fun toggleLanguage() = viewModelScope.launch {
-        settingsRepository.toggleLanguage(_uiState.value.language)
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────────
-
-    private companion object {
-        /** Three digits is enough for any age and blocks overflow-sized pastes. */
-        const val MAX_NUMBER_DIGITS = 3
-    }
-
-    private fun goToScreen(screen: AppScreen) = _uiState.update { it.copy(currentScreen = screen) }
-
-    private fun AppError.toUiMessage(): UiMessage = when (this) {
-        is AppError.Network -> UiMessage(R.string.error_network)
-        is AppError.Api -> UiMessage(R.string.error_api, listOf(statusCode, body.take(200)))
-        AppError.NoContent -> UiMessage(R.string.error_no_content)
-        is AppError.Unknown -> UiMessage(R.string.error_unknown)
     }
 }

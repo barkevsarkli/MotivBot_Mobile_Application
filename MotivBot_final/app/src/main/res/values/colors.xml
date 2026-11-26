@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Sampled from the MotivBot artwork (icon-source.png). -->
-    <color name="motivbot_green">#2DA367</color>
-    <color name="ic_launcher_background">#2DA367</color>
+    <!-- Top of the sunrise sky in the app icon; also the brand colour (dsBrand, light). -->
+    <color name="motivbot_sky">#5B4BC4</color>
+    <!-- Background behind the first frame: the app's light and dark background tops. -->
+    <color name="window_background">#F6F4FB</color>
 </resources>

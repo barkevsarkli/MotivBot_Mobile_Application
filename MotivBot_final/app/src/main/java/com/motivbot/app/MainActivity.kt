@@ -1,90 +1,95 @@
 package com.motivbot.app
 
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.viewModels
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.core.app.ShareCompat
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import com.motivbot.app.data.settings.ThemePreference
+import com.motivbot.app.data.settings.ThemePreferenceStore
 import com.motivbot.app.ui.MotivBotApp
-import com.motivbot.app.ui.MotivBotCallbacks
 import com.motivbot.app.ui.WellBeingViewModel
+import com.motivbot.app.ui.components.LocalThemeController
+import com.motivbot.app.ui.components.ThemeController
+import com.motivbot.app.ui.export.ExportFiles
 import com.motivbot.app.ui.theme.MotivBotTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-/**
- * Port of `MindWellApp.swift`.
- *
- * `AppCompatActivity` (rather than `ComponentActivity`) is required for
- * `AppCompatDelegate.setApplicationLocales` to apply the per-app locale below API 33 — that is the
- * mechanism replacing `LocalizationManager`'s hand-loaded bundle and the `layoutDirection`
- * environment value, since Android flips RTL automatically for Persian.
- */
 @AndroidEntryPoint
-class MainActivity : AppCompatActivity() {
+class MainActivity : ComponentActivity() {
+
+    private val viewModel: WellBeingViewModel by viewModels()
+
+    @Inject lateinit var themeStore: ThemePreferenceStore
+
+    /** Whether the screens are dark right now, so the system bar icons can be set again on demand. */
+    private var darkBars = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Must precede super.onCreate: swaps Theme.MotivBot.Splash out for Theme.MotivBot once the
-        // first frame is ready, so the robot mark covers the cold start instead of a blank window.
-        installSplashScreen()
-        enableEdgeToEdge()
+        // Removing the splash restores the bar appearance it saved when it appeared, which can undo
+        // the style set below if the first frame was drawn while the splash was still up (slow
+        // devices). Set it again once the splash is gone.
+        installSplashScreen().setOnExitAnimationListener { splash ->
+            splash.remove()
+            applySystemBars(darkBars)
+        }
         super.onCreate(savedInstanceState)
+        if (savedInstanceState == null) {
+            // An export left behind when the app was closed with the share sheet open.
+            ExportFiles.removeExports(this)
+            // Wake the Space at launch so it is likely ready by the time the questionnaire is done.
+            viewModel.prewarmService()
+        }
+
+        // Writes the debounced save right away when the app leaves the foreground.
+        lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onStop(owner: LifecycleOwner) = viewModel.flushPendingSave()
+        })
 
         setContent {
-            val viewModel: WellBeingViewModel = hiltViewModel()
-            val state by viewModel.uiState.collectAsStateWithLifecycle()
+            val preference by themeStore.preference.collectAsState(initial = ThemePreference.System)
+            val systemDark = isSystemInDarkTheme()
+            val dark = when (preference) {
+                ThemePreference.System -> systemDark
+                ThemePreference.Light -> false
+                ThemePreference.Dark -> true
+            }
+            val scope = rememberCoroutineScope()
 
-            // Swift: `.preferredColorScheme(viewModel.isDarkMode ? .dark : .light)`
-            MotivBotTheme(darkTheme = state.isDarkMode) {
-                MotivBotApp(
-                    state = state,
-                    callbacks = MotivBotCallbacks(
-                        onEmotionTextChange = viewModel::onEmotionTextChange,
-                        onSubmitEmotion = viewModel::submitEmotionAndProceed,
-                        onSelectOption = viewModel::selectOption,
-                        onSelectGridOption = viewModel::selectGridOption,
-                        onScaleChange = viewModel::onScaleValueChange,
-                        onFreeTextChange = viewModel::onFreeTextChange,
-                        onNumberChange = viewModel::onNumberChange,
-                        onNextQuestion = viewModel::nextQuestion,
-                        onPreviousQuestion = viewModel::previousQuestion,
-                        onRetry = viewModel::retrySubmission,
-                        onReflectionTextChange = viewModel::onReflectionTextChange,
-                        onSelectFeeling = viewModel::selectFeeling,
-                        onSubmitReflection = viewModel::submitReflection,
-                        onRestart = viewModel::restartAssessment,
-                        onShareCsv = {
-                            state.csvUri?.let { uri -> shareCsv(Uri.parse(uri)) }
-                            viewModel.onShareOffered()
-                        },
-                        onToggleTheme = { viewModel.toggleTheme() },
-                        onToggleLanguage = { viewModel.toggleLanguage() },
-                    ),
-                )
+            DisposableEffect(dark) {
+                darkBars = dark
+                applySystemBars(dark)
+                onDispose {}
+            }
+
+            val controller = ThemeController(preference, dark) { next -> scope.launch { themeStore.set(next) } }
+            CompositionLocalProvider(LocalThemeController provides controller) {
+                MotivBotTheme(language = viewModel.localization.currentLanguage, darkTheme = dark) {
+                    MotivBotApp(viewModel)
+                }
             }
         }
     }
 
-    /**
-     * Port of `MailView.swift`'s `ShareSheet` (`UIActivityViewController`).
-     *
-     * `ShareCompat` builds the chooser and, critically, grants the receiving app read permission
-     * on the `content://` URI — the step that has no iOS equivalent and that silently breaks
-     * sharing if omitted.
-     */
-    private fun shareCsv(uri: Uri) {
-        val intent = ShareCompat.IntentBuilder(this)
-            .setType("text/csv")
-            .setStream(uri)
-            .setChooserTitle(R.string.share_csv_title)
-            .createChooserIntent()
-            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-
-        startActivity(intent)
+    /** Light icons on the dark theme, dark icons on the light one, with both bars see-through. */
+    private fun applySystemBars(dark: Boolean) {
+        val style = if (dark) {
+            SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
+        } else {
+            SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT)
+        }
+        enableEdgeToEdge(statusBarStyle = style, navigationBarStyle = style)
     }
 }

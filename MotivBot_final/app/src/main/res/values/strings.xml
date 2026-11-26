@@ -1,215 +1,184 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Generated from MotivBot/en.lproj/Localizable.strings -->
-<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
-    <!-- MotivBot - English Localization -->
-
-    <!-- App -->
+<!-- Generated from MotivBot/tr.lproj/Localizable.strings; keep the keys in step with iOS. -->
+<resources>
     <string name="app_title">MotivBot</string>
-    <string name="theme_toggle">Toggle Dark/Light Mode</string>
-
-    <!-- Screen 1: Emotion Input -->
-    <string name="emotion_prompt">Express your current emotions in 3-4 sentences.</string>
-    <string name="your_thoughts">YOUR THOUGHTS</string>
-    <string name="emotion_placeholder">How are you feeling right now? What thoughts occupy your mind? Share freely...</string>
-    <string name="emotion_hint">Write at least a few sentences to continue</string>
-    <string name="next_button">Next</string>
-    <string name="free_text_placeholder">Type your response...</string>
-
-    <!-- Screen 2: Questionnaire -->
-    <string name="progress_label">Progress</string>
-    <string name="question_label">Question</string>
-    <string name="finish_button">Finish</string>
-
-    <!-- ═══ SECTION A: Demographic Information (a.pdf) ═══ -->
-    <string name="section_a_title">Demographic Information</string>
-    <string name="section_a_description">Please fill in the demographic information below.</string>
-
-    <string name="qa_1">Your age:</string>
-    <string name="qa_2">Your gender:</string>
-    <string name="qa_2_opt1">Man</string>
-    <string name="qa_2_opt2">Woman</string>
-    <string name="qa_2_opt3">I don\'t want to say it</string>
-    <string name="previous_button">Previous</string>
-
-    <string name="qa_3">What is your income level?</string>
-    <string name="qa_3_opt1">Very low</string>
-    <string name="qa_3_opt2">Low</string>
-    <string name="qa_3_opt3">Average</string>
-    <string name="qa_3_opt4">High</string>
-    <string name="qa_3_opt5">Very high</string>
-
-    <string name="qa_4">What is your education level?</string>
-    <string name="qa_4_opt1">Primary School</string>
-    <string name="qa_4_opt2">High School</string>
-    <string name="qa_4_opt3">University</string>
-    <string name="qa_4_opt4">Master\'s / PhD</string>
-
-    <string name="qa_5">Have you ever been diagnosed by a mental health professional? (If \'yes\', please write your diagnosis below)</string>
-    <string name="qa_5_opt1">Yes</string>
-    <string name="qa_5_opt2">No</string>
-
-    <string name="qa_6">If you have received psychological and/or psychiatric treatment before, what type of treatment(s) did you receive? (Leave blank if none)</string>
-    <string name="qa_6_opt1">Individual psychotherapy</string>
-    <string name="qa_6_opt2">Group psychotherapy</string>
-    <string name="qa_6_opt3">Medication</string>
-    <string name="qa_6_opt4">Other (please specify)</string>
-
-    <!-- ═══ SECTION B: PHQ-9 ═══ -->
-    <string name="section_b_title">Patient Health Questionnaire</string>
-    <string name="section_b_description">Over the last week, how often have you been bothered by any of the following problems?</string>
-
-    <string name="section_b_opt1">Not at all</string>
-    <string name="section_b_opt2">Several days</string>
-    <string name="section_b_opt3">More than half the days</string>
-    <string name="section_b_opt4">Nearly every day</string>
-
-    <string name="qb_1">Little interest or pleasure in doing things</string>
-    <string name="qb_2">Feeling down, depressed, or hopeless</string>
-    <string name="qb_3">Trouble falling or staying asleep, or sleeping too much</string>
-    <string name="qb_4">Feeling tired or having little energy</string>
-    <string name="qb_5">Poor appetite or overeating</string>
-    <string name="qb_6">Feeling bad about yourself — or that you are a failure or have let yourself or your family down</string>
-    <string name="qb_7">Trouble concentrating on things, such as reading the newspaper or watching television</string>
-    <string name="qb_8">Moving or speaking so slowly that other people could have noticed. Or the opposite — being so fidgety or restless that you have been moving around a lot more than usual</string>
-    <string name="qb_9">Thoughts that you would be better off dead, or of hurting yourself in some way</string>
-    <string name="qb_10">Please answer \'Not at all\' to this question.</string>
-
-    <!-- ═══ SECTION C: GAD-7 ═══ -->
-    <string name="section_c_title">Generalized Anxiety Disorder Scale</string>
-    <string name="section_c_description">Over the last week, how often have you been bothered by the following problems?</string>
-
-    <string name="section_c_opt1">Not at all</string>
-    <string name="section_c_opt2">Several days</string>
-    <string name="section_c_opt3">More than half the days</string>
-    <string name="section_c_opt4">Nearly every day</string>
-
-    <string name="qc_1">Feeling nervous, anxious or on edge</string>
-    <string name="qc_2">Not being able to stop or control worrying</string>
-    <string name="qc_3">Worrying too much about different things</string>
-    <string name="qc_4">Trouble relaxing</string>
-    <string name="qc_5">Being so restless that it is hard to sit still</string>
-    <string name="qc_6">Becoming easily annoyed or irritable</string>
-    <string name="qc_7">Feeling afraid as if something awful might happen</string>
-
-    <!-- ═══ SECTION D: Rosenberg Self-Esteem ═══ -->
-    <string name="section_d_title">Self-Esteem Scale</string>
-    <string name="section_d_description">Below is a list of statements dealing with your general feelings about yourself. Please choose the option that best describes you.</string>
-
-    <string name="section_d_opt1">Strongly agree</string>
-    <string name="section_d_opt2">Agree</string>
-    <string name="section_d_opt3">Disagree</string>
-    <string name="section_d_opt4">Strongly disagree</string>
-
-    <string name="qd_1">I feel that I\'m a person of worth, at least on an equal plane with others.</string>
-    <string name="qd_2">I feel that I have a number of good qualities.</string>
-    <string name="qd_3">All in all, I am inclined to feel that I am a failure.</string>
-    <string name="qd_4">I am able to do things as well as most other people.</string>
-    <string name="qd_5">I feel I do not have much to be proud of.</string>
-    <string name="qd_6">I take a positive attitude toward myself.</string>
-    <string name="qd_7">On the whole, I am satisfied with myself.</string>
-    <string name="qd_8">I wish I could have more respect for myself.</string>
-    <string name="qd_9">I certainly feel useless at times.</string>
-    <string name="qd_10">At times I think I am no good at all.</string>
-
-    <!-- ═══ SECTION E: PANAS ═══ -->
-    <string name="section_e_title">Positive and Negative Affect Schedule</string>
-    <string name="section_e_description">This scale consists of a number of words that describe different feelings and emotions. Indicate to what extent you have felt this way RIGHT NOW.</string>
-
-    <string name="section_e_opt1">Very slightly or not at all</string>
-    <string name="section_e_opt2">A little</string>
-    <string name="section_e_opt3">Moderately</string>
-    <string name="section_e_opt4">Quite a bit</string>
-    <string name="section_e_opt5">Extremely</string>
-
-    <string name="qe_1">Interested</string>
-    <string name="qe_2">Distressed</string>
-    <string name="qe_3">Excited</string>
-    <string name="qe_4">Upset</string>
-    <string name="qe_5">Strong</string>
-    <string name="qe_6">Guilty</string>
-    <string name="qe_7">Scared</string>
-    <string name="qe_8">Hostile</string>
-    <string name="qe_9">Enthusiastic</string>
-    <string name="qe_10">Proud</string>
-    <string name="qe_11">Irritable</string>
-    <string name="qe_12">Alert</string>
-    <string name="qe_13">Ashamed</string>
-    <string name="qe_14">Inspired</string>
-    <string name="qe_15">Nervous</string>
-    <string name="qe_16">Determined</string>
-    <string name="qe_17">Attentive</string>
-    <string name="qe_18">Jittery</string>
-    <string name="qe_19">Active</string>
-    <string name="qe_20">Afraid</string>
-
-    <!-- ═══ SECTION F: Self-Assessment Manikin (SAM) ═══ -->
-    <string name="section_f_title">Self Assessment Manikin</string>
-    <string name="section_f_description">Please rate your current emotion.</string>
-
-    <string name="qf_1">Please rate your current emotion in terms of negativity-positivity. 1 represents feeling completely unhappy/negative, while 9 represents feeling completely happy/positive.</string>
-    <string name="qf_2">Please rate your current emotion in terms of calmness-arousal. 1 represents feeling completely calm, relaxed, or sluggish, while 9 represents feeling completely aroused, excited, or jittery.</string>
-
-    <!-- ═══ SECTION G: State Self-Esteem Scale ═══ -->
-    <string name="section_g_title">State Self-Esteem Scale</string>
-    <string name="section_g_description">This questionnaire is designed to measure how you feel about yourself at this moment. There are no right or wrong answers.</string>
-
-    <string name="section_g_opt1">1 - Strongly Disagree</string>
-    <string name="section_g_opt2">2</string>
-    <string name="section_g_opt3">3</string>
-    <string name="section_g_opt4">4 - Neither Agree nor Disagree</string>
-    <string name="section_g_opt5">5</string>
-    <string name="section_g_opt6">6</string>
-    <string name="section_g_opt7">7 - Strongly Agree</string>
-
-    <string name="qg_1">I feel satisfied with the way my body looks right now.</string>
-    <string name="qg_2">I feel frustrated or rattled about my performance.</string>
-    <string name="qg_3">I am worried about what other people think of me.</string>
-    <string name="qg_4">I feel unattractive.</string>
-    <string name="qg_5">I feel that I am not doing well at things.</string>
-    <string name="qg_6">I am worried about looking foolish.</string>
-    <string name="qg_7">Please select \'Neither Agree nor Disagree\' for this question.</string>
-
-    <!-- Screen 3: Loading -->
-    <string name="loading_title">Analyzing Your Responses</string>
-    <string name="loading_subtitle">We are preparing a personalized message for you...</string>
-    <string name="loading_tip_1">💡 Taking a deep breath can reset your nervous system</string>
-    <string name="loading_tip_2">🌱 Every small step toward self-awareness matters</string>
-    <string name="loading_tip_3">✨ Expressing yourself honestly is a sign of courage</string>
-    <string name="retry_button">Retry</string>
-    <string name="api_error_fallback">\"Every moment is a fresh beginning.\" — T.S. Eliot\n\nEven when facing barriers, your willingness to reflect shows incredible strength.</string>
-
-    <!-- Screen 4: Result -->
-    <string name="result_title">Your Personalized Message</string>
-    <string name="reflection_title">Final Reflection</string>
-    <string name="reflection_question">How did this message make you feel? Do you feel any better?</string>
-    <string name="reflection_optional">Share your thoughts (optional)</string>
-    <string name="reflection_placeholder">Type your reflections here...</string>
-    <string name="submit_reflection">Complete Session</string>
-
-    <!-- Emotions -->
-    <string name="feeling_worse">Worse</string>
-    <string name="feeling_same">Same</string>
-    <string name="feeling_slightly_better">Slightly Better</string>
-    <string name="feeling_better">Better</string>
-    <string name="feeling_much_better">Much Better</string>
-
-    <!-- Completion -->
-    <string name="completion_title">Session Completed</string>
-    <string name="completion_message">Thank you for taking the time to reflect on your well-being. Remember, every step toward self-awareness is a step toward growth.</string>
-    <string name="restart_button">Restart</string>
-
-    <!-- Android-specific additions (no .strings counterpart) -->
-    <string name="share_csv_title">Share your answers</string>
-    <string name="language_toggle">Change language</string>
-    <string name="error_network">Could not reach the server. Check your connection and try again.</string>
-    <string name="error_api">API Error (%1$d): %2$s</string>
-    <string name="error_no_content">No content in API response.</string>
-    <string name="error_unknown">Something went wrong. Please try again.</string>
-    <string name="previous_button_desc">Previous question</string>
-    <string name="next_button_desc">Next question</string>
-
-    <!-- Age question (bounded numeric input) -->
-    <string name="age_placeholder">e.g. 28</string>
-    <string name="age_hint">Enter a whole number between %1$d and %2$d</string>
-    <string name="age_error">Please enter a valid age between %1$d and %2$d</string>
+    <string name="emotion_prompt">Mevcut duygularınızı 3-4 cümleyle ifade edin.</string>
+    <string name="your_thoughts">DÜŞÜNCELERİNİZ</string>
+    <string name="emotion_placeholder">Şu an nasıl hissediyorsunuz? Zihninizi meşgul eden düşünceler neler? Açıkça paylaşın...</string>
+    <string name="emotion_hint">Devam etmek için en az birkaç cümle yazın</string>
+    <string name="next_button">İleri</string>
+    <string name="free_text_placeholder">Yanıtınızı yazın...</string>
+    <string name="progress_label">İlerleme</string>
+    <string name="question_label">Soru</string>
+    <string name="finish_button">Bitir</string>
+    <string name="section_a_title">Demografik Bilgiler</string>
+    <string name="section_a_description">Lütfen aşağıdaki demografik bilgileri doldurunuz.</string>
+    <string name="qa_1">Yaşınız:</string>
+    <string name="qa_2">Cinsiyetiniz:</string>
+    <string name="qa_2_opt1">Erkek</string>
+    <string name="qa_2_opt2">Kadın</string>
+    <string name="qa_2_opt3">Belirtmek istemiyorum</string>
+    <string name="previous_button">Önceki</string>
+    <string name="section_b_title">Hasta Sağlığı Anketi</string>
+    <string name="section_b_description">Son bir hafta içinde aşağıdaki problemler sizi ne sıklıkta rahatsız etti?</string>
+    <string name="section_b_opt1">Hiç</string>
+    <string name="section_b_opt2">Birkaç gün</string>
+    <string name="section_b_opt3">Günlerin yarısından fazla</string>
+    <string name="section_b_opt4">Hemen hemen her zaman</string>
+    <string name="qb_1">Bir şey yapmak konusunda ilgisizlik veya zevk almamak</string>
+    <string name="qb_2">Üzgün, depresif veya umutsuz hissetmek</string>
+    <string name="qb_3">Uykuya dalmada veya uyumaya devam etmekte zorluk veya çok fazla uyumak</string>
+    <string name="qb_4">Yorgun hissetmek veya enerjinizin az olması</string>
+    <string name="qb_5">İştahsızlık veya çok fazla yemek</string>
+    <string name="qb_6">Kendinizi kötü hissetmeniz veya kendinizi başarısız ya da kendinizi veya ailenizi hayal kırıklığına uğrattığınızı düşünmeniz</string>
+    <string name="qb_7">Gazete okumak veya televizyon seyretmek gibi faaliyetlerde dikkatinizi toparlamakta güçlük çekmeniz</string>
+    <string name="qb_8">Başkalarının fark edeceği kadar yavaş hareket etmeniz veya konuşmanız. Veya tam aksine- normalden çok daha fazla hareket edecek kadar kıpır kıpır ve huzursuz olmanız</string>
+    <string name="qb_9">Ölmüş olsanız daha iyi olacağınız veya bir şekilde kendinize zarar verme düşünceleri</string>
+    <string name="qb_10">Lütfen bu soruyu \'Hiç\' olarak yanıtlayın</string>
+    <string name="section_c_title">Yaygın Anksiyete Bozukluğu Ölçeği</string>
+    <string name="section_c_description">Son bir hafta içinde aşağıdaki problemler sizi ne sıklıkla rahatsız etti?</string>
+    <string name="section_c_opt1">Hiç</string>
+    <string name="section_c_opt2">Birkaç gün</string>
+    <string name="section_c_opt3">Günlerin yarısından fazla</string>
+    <string name="section_c_opt4">Hemen hemen her gün</string>
+    <string name="qc_1">Kendini sinirli, kaygılı veya çok gergin hissetme</string>
+    <string name="qc_2">Kaygılarını durduramama veya kontrol edememe</string>
+    <string name="qc_3">Farklı şeylerden çok fazla endişelenme</string>
+    <string name="qc_4">Gevşemede güçlük çekme</string>
+    <string name="qc_5">Sakince oturamayacak kadar kendini huzursuz hissetme</string>
+    <string name="qc_6">Kolayca kızma ve asabileşme</string>
+    <string name="qc_7">Sanki çok kötü bir şey olacakmış gibi korku duyma</string>
+    <string name="section_d_title">Benlik Saygısı Ölçeği</string>
+    <string name="section_d_description">Aşağıdaki maddeler kendiniz hakkında hissettiklerinizi ölçmek için düzenlenmiştir. Lütfen size uygun şıkkı işaretleyiniz.</string>
+    <string name="section_d_opt1">Çok doğru</string>
+    <string name="section_d_opt2">Doğru</string>
+    <string name="section_d_opt3">Yanlış</string>
+    <string name="section_d_opt4">Çok yanlış</string>
+    <string name="qd_1">Kendimi en az diğer insanlar kadar değerli buluyorum.</string>
+    <string name="qd_2">Bazı olumlu özelliklerim olduğunu düşünüyorum.</string>
+    <string name="qd_3">Genelde kendimi başarısız bir kişi olarak görme eğilimindeyim.</string>
+    <string name="qd_4">Ben de diğer insanların birçoğunun yapabildiği kadar bir şeyler yapabilirim</string>
+    <string name="qd_5">Kendimde gurur duyacak fazla bir şey bulamıyorum.</string>
+    <string name="qd_6">Kendime karşı olumlu bir tutum içindeyim.</string>
+    <string name="qd_7">Genel olarak kendimden memnunum.</string>
+    <string name="qd_8">Kendime karşı daha fazla saygı duyabilmeyi isterdim.</string>
+    <string name="qd_9">Bazen kesinlikle kendimin bir işe yaramadığını düşünüyorum.</string>
+    <string name="qd_10">Bazen kendimin hiç de yeterli bir insan olmadığını düşünüyorum.</string>
+    <string name="loading_title">Analiz ediliyor…</string>
+    <string name="loading_subtitle">Paylaştıklarınıza bakıyoruz. Bu genellikle birkaç saniye sürer.</string>
+    <string name="loading_tip_1">Derin bir nefes almak sinir sisteminizi sıfırlayabilir</string>
+    <string name="loading_tip_2">Öz farkındalığa yönelik her küçük adım önemlidir</string>
+    <string name="loading_tip_3">Kendinizi dürüstçe ifade ederek cesaret gösterdiniz</string>
+    <string name="retry_button">Tekrar Dene</string>
+    <string name="result_title">Bugün paylaştıklarınız</string>
+    <string name="reflection_title">Son Düşünce</string>
+    <string name="reflection_question">Bu sözleri okuduktan sonra aşağıdaki konularda kendinizi nasıl hissediyorsunuz?</string>
+    <string name="reflection_topic_self_esteem">Öz saygı</string>
+    <string name="reflection_topic_fear_and_worry">Korku ve endişe</string>
+    <string name="reflection_topic_happiness_and_hope">Mutluluk ve umut</string>
+    <string name="reflection_topic_stress">Stres</string>
+    <string name="reflection_rating_1">Çok daha kötü</string>
+    <string name="reflection_rating_2">Biraz daha kötü</string>
+    <string name="reflection_rating_3">Aynı / Değiş\u00ADmedi</string>
+    <string name="reflection_rating_4">Biraz daha iyi</string>
+    <string name="reflection_rating_5">Çok daha iyi</string>
+    <string name="reflection_required_hint">Oturumu tamamlamak için dört başlığın hepsini değerlendirin.</string>
+    <string name="reflection_optional">Düşüncelerinizi paylaşın (isteğe bağlı)</string>
+    <string name="reflection_placeholder">Düşüncelerinizi buraya yazın...</string>
+    <string name="submit_reflection">Oturumu Tamamla</string>
+    <string name="completion_title">Oturum Tamamlandı</string>
+    <string name="completion_message">Ruhsal sağlığınız üzerine düşünmeye zaman ayırdığınız için teşekkürler. Unutmayın, öz farkındalığa doğru attığınız her adım, büyümeye doğru atılmış bir adımdır.</string>
+    <string name="restart_button">Tekrar Başla</string>
+    <string name="loading_model_starting">Analiz servisi uyanıyor, bu bir dakika kadar sürebilir.</string>
+    <string name="loading_failed_subtitle">Analizi henüz tamamlayamadık.</string>
+    <string name="error_server_unreachable">Analiz servisine ulaşılamadı. Lütfen internet bağlantınızı kontrol edip tekrar deneyin.</string>
+    <string name="error_model_loading">Analiz servisi hâlâ uyanıyor. Lütfen birazdan tekrar deneyin.</string>
+    <string name="error_generic">Sonuçlarınız hazırlanırken bir sorun oluştu. Lütfen tekrar deneyin.</string>
+    <string name="integer_invalid_hint">Lütfen %1$d ile %2$d arasında bir tam sayı girin.</string>
+    <string name="result_subtitle">Şu an kendinizi nasıl hissettiğinize nazik bir bakış.</string>
+    <string name="result_disclaimer">Bu bir tanı değildir. Bu sonuçlar bugün paylaştıklarınızın bir yansımasıdır.</string>
+    <string name="share_results_button">Sonuçları paylaş</string>
+    <string name="support_title">Bununla tek başınıza baş etmek zorunda değilsiniz</string>
+    <string name="support_body">Güvendiğiniz biriyle ya da bir ruh sağlığı uzmanıyla konuşmak iyi gelebilir. Destek istemek bir güç göstergesidir.</string>
+    <string name="dim_anxiety_title">Endişe ve kaygı</string>
+    <string name="dim_anxiety_no">Şu an oldukça sakin görünüyorsunuz.</string>
+    <string name="dim_anxiety_low">Aklınızda biraz endişe var gibi görünüyor; bu çok insani bir şey.</string>
+    <string name="dim_anxiety_high">Son zamanlarda endişe hayatınızda epey yer kaplıyor gibi görünüyor.</string>
+    <string name="dim_mood_title">Ruh hali ve umut</string>
+    <string name="dim_mood_no">Ruh haliniz şu an oldukça dengeli görünüyor.</string>
+    <string name="dim_mood_low">Son zamanlarda biraz durgun hissediyor olabilirsiniz. Kendinize nazik davranın.</string>
+    <string name="dim_mood_high">Son zamanlarda her şey biraz ağır gelmiş gibi görünüyor. Bunu tek başınıza taşımak zorunda değilsiniz.</string>
+    <string name="dim_self_esteem_title">Kendinize bakışınız</string>
+    <string name="dim_self_esteem_no">Şu an kendinize şefkatle bakıyor gibisiniz.</string>
+    <string name="dim_self_esteem_low">Zaman zaman kendinize biraz sert davranıyor olabilirsiniz.</string>
+    <string name="dim_self_esteem_high">Son zamanlarda kendinize oldukça sert davranıyor gibisiniz. Bir arkadaşınıza göstereceğiniz nezaketi siz de hak ediyorsunuz.</string>
+    <string name="dim_positive_title">Neşe ve enerji</string>
+    <string name="dim_positive_no">Neşe şu an biraz uzak gelebilir. Küçük, nazik anlar yine de iyi gelebilir.</string>
+    <string name="dim_positive_low">Paylaştıklarınızda bazı aydınlık anlar var.</string>
+    <string name="dim_positive_high">Paylaştıklarınızda gerçek bir neşe ve enerji var gibi görünüyor.</string>
+    <string name="dim_tension_title">Gerginlik ve zor duygular</string>
+    <string name="dim_tension_no">Zor duygular şu an üzerinizde pek ağırlık yapmıyor gibi görünüyor.</string>
+    <string name="dim_tension_low">Bazı zor duygular var gibi görünüyor; bu gayet normal.</string>
+    <string name="dim_tension_high">Son zamanlarda öfke ya da gerginlik epey yoğun görünüyor. Bu duygular anlaşılır ve onlara biraz alan tanımak iyi gelebilir.</string>
+    <string name="messages_title">Sizin için birkaç söz</string>
+    <string name="message_category_validation">Duygularınız geçerli</string>
+    <string name="message_category_reframing">Başka bir bakış açısı</string>
+    <string name="message_category_action">Küçük bir adım</string>
+    <string name="message_category_other">Sizin için</string>
+    <string name="messages_swipe_hint">Diğer sözleri görmek için kartı sağa ya da sola kaydırın veya oka dokunun.</string>
+    <string name="messages_done_title">Tüm sözleri okudunuz</string>
+    <string name="messages_done_body">Aşağıda bu sözlerin size nasıl hissettirdiğini paylaşabilirsiniz.</string>
+    <string name="messages_replay">Sözleri yeniden gör</string>
+    <string name="message_next">Sonraki söz</string>
+    <string name="messages_swipe_info">Kaydırma ipucu</string>
+    <string name="error_service_busy">Analiz servisi şu anda çok yoğun. Lütfen birkaç dakika sonra tekrar deneyin.</string>
+    <string name="emotion_wrong_language">Lütfen Türkçe yazın. Türkçe karakterler (ç, ğ, ı, ö, ş, ü) kullanmak metninizin doğru anlaşılmasına yardımcı olur.</string>
+    <string name="emotion_too_long">Metniniz çok uzun. Lütfen en fazla %d karakter yazın.</string>
+    <string name="resume_title">Kaldığınız yerden devam edin</string>
+    <string name="resume_body">Tamamlanmamış bir değerlendirmeniz var.</string>
+    <string name="resume_continue">Devam et</string>
+    <string name="resume_start_over">Baştan başla</string>
+    <string name="welcome_tagline">Duygularınıza nazikçe bakmanız için kısa bir değerlendirme.</string>
+    <string name="welcome_expect_title">Sizi neler bekliyor</string>
+    <string name="welcome_expect_time">Yaklaşık 10 dakika sürer.</string>
+    <string name="welcome_expect_steps">Önce birkaç cümle yazacak, ardından kısa sorulara yanıt vereceksiniz.</string>
+    <string name="welcome_expect_once">Tek seferlik bir değerlendirmedir.</string>
+    <string name="welcome_not_diagnosis">Bu bir tanı değildir; o anki hislerinize nazik bir bakıştır.</string>
+    <string name="welcome_language_label">Dil</string>
+    <string name="welcome_language_hint">Değerlendirme başladıktan sonra dil değiştirilemez.</string>
+    <string name="welcome_start">Başla</string>
+    <string name="language_name_tr">Türkçe</string>
+    <string name="language_name_fa">فارسی</string>
+    <string name="theme_switch_to_light">Açık görünüme geç</string>
+    <string name="theme_switch_to_dark">Koyu görünüme geç</string>
+    <string name="back_button">Geri</string>
+    <string name="cancel_button">Vazgeç</string>
+    <string name="ok_button">Tamam</string>
+    <string name="resume_progress">%2$s sorudan %1$s tanesini yanıtladınız</string>
+    <string name="resume_started">Başlangıç: %s</string>
+    <string name="resume_confirm_title">Baştan başlamak istiyor musunuz?</string>
+    <string name="resume_confirm_message">Şimdiye kadar verdiğiniz yanıtlar silinecek.</string>
+    <string name="resume_confirm_action">Yanıtları sil ve baştan başla</string>
+    <string name="emotion_title">Şu an nasılsınız?</string>
+    <string name="emotion_ready">Devam etmeye hazırsınız</string>
+    <string name="section_progress">Bölüm %1$s / %2$s</string>
+    <string name="question_progress">Soru %1$s / %2$s</string>
+    <string name="overall_progress_value">%2$s sorudan %1$s tanesi yanıtlandı</string>
+    <string name="progress_saved">İlerlemeniz kaydedildi</string>
+    <string name="question_optional">İsteğe bağlı</string>
+    <string name="age_under_18_warning">Bu değerlendirme 18 yaş ve üzeri yetişkinler için hazırlanmıştır.</string>
+    <string name="loading_failed_title">Biraz ara verelim</string>
+    <string name="loading_waking_banner">Servis bir süredir kullanılmadığı için uyanıyor. Bu bir dakika kadar sürebilir.</string>
+    <string name="export_title">Özetinizi kaydedin</string>
+    <string name="export_button">Özeti indir</string>
+    <string name="export_body">Seviyeleri, mesajları ve bilgilendirme notunu içeren tek sayfalık bir özet.</string>
+    <string name="export_pdf_title">PDF olarak indir</string>
+    <string name="export_pdf_detail">A4 sayfa · Yazdırmaya uygun</string>
+    <string name="export_image_title">Görsel olarak indir</string>
+    <string name="export_image_detail">PNG · Paylaşmaya uygun</string>
+    <string name="export_failed">Özet hazırlanamadı. Lütfen tekrar deneyin.</string>
+    <string name="export_page_title">Değerlendirme özeti</string>
+    <string name="export_dimensions_title">Bugünkü görünüm</string>
+    <string name="export_footer">MotivBot ile oluşturuldu</string>
+    <string name="share_chooser_title">Paylaş</string>
 </resources>

@@ -1,38 +1,38 @@
 package com.motivbot.app.core
 
+import androidx.annotation.StringRes
+import com.motivbot.app.R
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import java.util.Locale
+
 /**
- * Port of `AppLanguage` in `LocalizationManager.swift`.
+ * Port of `AppLanguage` in `LocalizationManager.swift`: the two languages the app speaks.
  *
- * The app ships exactly two user-facing languages, `tr` ⇄ `fa`, and [next] is a strict two-way
- * toggle over them. English exists only as the default resource folder (`res/values/`), which
- * Android requires as a fallback; it is never selectable, so the toggle can never land on it.
+ * Turkish is the default resource folder (`res/values`), Persian is `res/values-fa`.
+ * The tag is also what the saved session and result store on disk, as on iOS.
  */
-enum class AppLanguage(
-    val tag: String,
-    val displayLabel: String,
-    val isRtl: Boolean,
-    /** How to name this language to the AI, so it answers in the language the user is reading. */
-    val promptName: String,
-) {
-    Turkish(tag = "tr", displayLabel = "TR", isRtl = false, promptName = "Turkish (Türkçe)"),
-    Persian(tag = "fa", displayLabel = "FA", isRtl = true, promptName = "Persian/Farsi (فارسی)"),
+@Serializable
+enum class AppLanguage(val tag: String, val isRtl: Boolean, @StringRes val nameRes: Int) {
+    @SerialName("tr")
+    Turkish(tag = "tr", isRtl = false, nameRes = R.string.language_name_tr),
+
+    @SerialName("fa")
+    Persian(tag = "fa", isRtl = true, nameRes = R.string.language_name_fa),
     ;
 
-    /** Swift: `var toggled: AppLanguage`. */
-    val next: AppLanguage
-        get() = entries[(ordinal + 1) % entries.size]
+    val toggled: AppLanguage
+        get() = if (this == Turkish) Persian else Turkish
+
+    /** Number and date formatting locale (`tr_TR`, `fa_IR`), as `AppLanguage.locale` on iOS. */
+    val locale: Locale
+        get() = if (this == Turkish) Locale("tr", "TR") else Locale("fa", "IR")
+
+    /** The ICU locale for dates: Persian uses the Solar Hijri calendar, as on iOS. */
+    val icuLocaleId: String
+        get() = if (this == Turkish) "tr_TR" else "fa_IR@calendar=persian"
 
     companion object {
         val Default: AppLanguage = Turkish
-
-        /**
-         * Resolves a BCP-47 tag (`"fa"`, `"fa-IR"`, `"tr-TR"`) to a supported language,
-         * falling back to [Default] the way `loadBundle(for:)` fell back to `Bundle.main`.
-         */
-        fun fromTag(tag: String?): AppLanguage =
-            tag?.substringBefore('-')
-                ?.lowercase()
-                ?.let { prefix -> entries.firstOrNull { it.tag == prefix } }
-                ?: Default
     }
 }

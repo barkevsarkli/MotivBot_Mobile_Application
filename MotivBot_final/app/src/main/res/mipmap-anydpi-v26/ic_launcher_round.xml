@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  The sunrise icon from the iOS app (Assets.xcassets/AppIcon). The full artwork is the background layer,
+  scaled so the sun stays inside the safe zone, with the sky and hill stretched out to the layer's edges.
+  Night mode picks the dark artwork (mipmap-night-*); themed icons use the iOS tinted artwork.
+-->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@color/ic_launcher_background" />
-    <foreground android:drawable="@mipmap/ic_launcher_foreground" />
-    <monochrome android:drawable="@mipmap/ic_launcher_foreground" />
+    <background android:drawable="@mipmap/ic_launcher_background" />
+    <foreground android:drawable="@android:color/transparent" />
+    <monochrome android:drawable="@mipmap/ic_launcher_monochrome" />
 </adaptive-icon>

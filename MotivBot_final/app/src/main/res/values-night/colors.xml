@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Top of the dark sunrise artwork. -->
+    <color name="motivbot_sky">#2A254F</color>
+    <color name="window_background">#12111C</color>
+</resources>

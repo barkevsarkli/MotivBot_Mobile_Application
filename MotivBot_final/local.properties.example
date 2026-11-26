@@ -1,2 +1,3 @@
 sdk.dir=/Users/<you>/Library/Android/sdk
-OPENAI_API_KEY=sk-your-key-here
+# Optional: point the app at another copy of the pipeline Space.
+# MOTIVBOT_API_BASE_URL=https://flightmaestro-motivbot-pipeline.hf.space

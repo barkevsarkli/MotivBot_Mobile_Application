@@ -10,18 +10,17 @@ plugins {
 }
 
 /**
- * The Swift original embedded the OpenAI key as a string literal in `OpenAIService.swift`.
- * Here it is read from `local.properties` (git-ignored) or the `OPENAI_API_KEY` environment
- * variable, so it never reaches version control.
+ * The MotivBot pipeline on Hugging Face Spaces, the same one the iOS app calls (`MotivBotAPIBaseURL`
+ * in Info.plist). Override it with `MOTIVBOT_API_BASE_URL` in local.properties or the environment.
  */
-val openAiApiKey: String = run {
+val apiBaseUrl: String = run {
     val local = rootProject.file("local.properties")
     val fromLocal = if (local.exists()) {
-        Properties().apply { local.inputStream().use(::load) }.getProperty("OPENAI_API_KEY")
+        Properties().apply { local.inputStream().use(::load) }.getProperty("MOTIVBOT_API_BASE_URL")
     } else {
         null
     }
-    fromLocal ?: System.getenv("OPENAI_API_KEY") ?: ""
+    fromLocal ?: System.getenv("MOTIVBOT_API_BASE_URL") ?: "https://flightmaestro-motivbot-pipeline.hf.space"
 }
 
 android {
@@ -32,16 +31,16 @@ android {
         applicationId = "com.motivbot.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField("String", "OPENAI_API_KEY", "\"$openAiApiKey\"")
-        buildConfigField("String", "OPENAI_BASE_URL", "\"https://api.openai.com/\"")
+        buildConfigField("String", "MOTIVBOT_API_BASE_URL", "\"$apiBaseUrl\"")
 
-        // tr / fa / en are the three bundled locales, matching the .lproj folders of the iOS app.
-        resourceConfigurations += setOf("en", "tr", "fa")
+        // Turkish is the default resource folder (res/values); Persian lives in res/values-fa.
+        // Like the iOS app, there is no English UI.
+        resourceConfigurations += setOf("tr", "fa")
     }
 
     buildTypes {
@@ -69,13 +68,13 @@ android {
         buildConfig = true
     }
 
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
+
     packaging {
         resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
     }
-}
-
-ksp {
-    arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 dependencies {
@@ -99,23 +98,14 @@ dependencies {
     implementation(libs.hilt.navigation.compose)
     ksp(libs.hilt.compiler)
 
-    implementation(libs.room.runtime)
-    implementation(libs.room.ktx)
-    ksp(libs.room.compiler)
-
-    implementation(libs.retrofit)
-    implementation(libs.retrofit.kotlinx.serialization)
     implementation(libs.okhttp)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
-    debugImplementation(libs.okhttp.logging)
 
     implementation(libs.androidx.datastore.preferences)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(libs.turbine)
-    testImplementation(libs.mockk)
     testImplementation(libs.okhttp.mockwebserver)
 
     androidTestImplementation(libs.androidx.junit)

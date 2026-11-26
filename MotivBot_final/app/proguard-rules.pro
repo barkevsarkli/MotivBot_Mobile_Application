@@ -2,14 +2,10 @@
 -keepattributes *Annotation*, InnerClasses
 -dontnote kotlinx.serialization.**
 
--keepclassmembers class com.motivbot.app.data.remote.dto.** {
+-keepclassmembers @kotlinx.serialization.Serializable class com.motivbot.app.** {
     *** Companion;
-}
--keepclasseswithmembers class com.motivbot.app.data.remote.dto.** {
     kotlinx.serialization.KSerializer serializer(...);
 }
-
-# Retrofit
--keep,allowobfuscation,allowshrinking interface retrofit2.Call
--keep,allowobfuscation,allowshrinking class retrofit2.Response
--keep,allowobfuscation,allowshrinking class kotlin.coroutines.Continuation
+-keepclasseswithmembers class com.motivbot.app.** {
+    kotlinx.serialization.KSerializer serializer(...);
+}
