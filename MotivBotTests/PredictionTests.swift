@@ -25,8 +25,6 @@ enum Fixture {
         var result: [UserAnswer] = [
             UserAnswer(sectionId: 1, questionId: 1, answerValue: .text(age)),
             UserAnswer(sectionId: 1, questionId: 2, answerValue: .option(option(2, value: genderValue))),
-            // "No" to the diagnosis question, so the treatment question is skipped.
-            UserAnswer(sectionId: 1, questionId: 5, answerValue: .option(option(5, value: 0))),
         ]
         for (index, value) in phq9.enumerated() {
             result.append(UserAnswer(sectionId: 2, questionId: 7 + index, answerValue: .option(option(7 + index, value: value))))
@@ -267,38 +265,43 @@ struct WellBeingViewModelPredictionTests {
         #expect(!viewModel.elevatedRisk)
     }
 
-    @Test func messageSwipesAreRecordedInCSV() async throws {
+    @Test func reflectionRatingsAreRecordedInCSV() async throws {
         let viewModel = makeViewModel(StubService(.success(try Fixture.response())))
         await viewModel.submitForAnalysis()
-        let messages = try #require(viewModel.prediction?.messages)
 
-        viewModel.rateMessage(messages[0], liked: true)
-        viewModel.rateMessage(messages[1], liked: false)
+        viewModel.rateReflection(.selfEsteem, .muchBetter)
+        viewModel.rateReflection(.happinessAndHope, .same)
+        viewModel.rateReflection(.stress, .muchWorse)
 
-        #expect(viewModel.messageFeedback[messages[0]] == true)
-        #expect(viewModel.messageFeedback[messages[1]] == false)
-        #expect(viewModel.messageFeedback[messages[2]] == nil)
+        #expect(viewModel.reflectionRatings[.selfEsteem] == .muchBetter)
+        #expect(viewModel.reflectionRatings[.fearAndWorry] == nil)
         let csv = try String(contentsOf: try #require(viewModel.csvFileURL), encoding: .utf8)
-        #expect(csv.contains("Message category,Relevance,Message,Feedback"))
-        #expect(csv.contains(",liked\n"))
-        #expect(csv.contains(",disliked\n"))
+        #expect(csv.contains("Message category,Relevance,Message\n"))
+        #expect(csv.contains("Rating (1 = much worse; 2 = a bit worse; 3 = same; 4 = a bit better; 5 = much better)\n"))
+        #expect(csv.contains("\nself_esteem,5\n"))
+        #expect(csv.contains("\nfear_and_worry,\n"))
+        #expect(csv.contains("\nhappiness_and_hope,3\n"))
+        #expect(csv.contains("\nstress,1\n"))
 
         viewModel.restartAssessment()
-        #expect(viewModel.messageFeedback.isEmpty)
+        #expect(viewModel.reflectionRatings.isEmpty)
     }
 
-    @Test func reflectionNeedsAFeeling() async throws {
+    @Test func reflectionNeedsEveryTopicRated() async throws {
         let viewModel = makeViewModel(StubService(.success(try Fixture.response())))
         await viewModel.submitForAnalysis()
 
         viewModel.reflectionText = "Biraz rahatladım"
+        viewModel.rateReflection(.selfEsteem, .slightlyBetter)
+        viewModel.rateReflection(.fearAndWorry, .slightlyWorse)
+        viewModel.rateReflection(.happinessAndHope, .same)
         viewModel.submitReflection()
         #expect(!viewModel.canSubmitReflection)
         #expect(!viewModel.isCompleted)
 
         // The note stays optional.
         viewModel.reflectionText = ""
-        viewModel.selectedFeelingIndex = 2
+        viewModel.rateReflection(.stress, .muchBetter)
         viewModel.submitReflection()
         #expect(viewModel.isCompleted)
     }
@@ -344,50 +347,48 @@ struct WellBeingViewModelPredictionTests {
         }
     }
 
-    /// Answers age and gender, then the diagnosis question with `diagnosisOptionId` (1 = yes, 2 = no).
-    private func answerDemographics(diagnosisOptionId: Int) -> WellBeingViewModel {
+    @Test func demographicsAskOnlyAgeAndGender() {
+        #expect(TestData.sections[0].questions.map(\.id) == [1, 2])
+        let keys = TestData.sections.flatMap(\.questions).map(\.textKey)
+        #expect(!keys.contains("qa_5"))
+        #expect(!keys.contains("qa_6"))
+    }
+
+    @Test func genderLeadsStraightToPHQ9() {
         let viewModel = WellBeingViewModel(service: StubService(.failure(.decoding)), store: InMemorySessionStore())
         viewModel.freeTextAnswer = "30"
         viewModel.nextQuestion()
         viewModel.selectOption(2)
         viewModel.nextQuestion()
-        #expect(viewModel.currentQuestion?.id == 5)
-        viewModel.selectOption(diagnosisOptionId)
-        viewModel.nextQuestion()
-        return viewModel
-    }
-
-    @Test func demographicsAskNoIncomeOrEducation() {
-        #expect(TestData.sections[0].questions.map(\.id) == [1, 2, 5, 6])
-    }
-
-    @Test func noDiagnosisSkipsTreatmentQuestion() {
-        let viewModel = answerDemographics(diagnosisOptionId: 2)
         #expect(viewModel.currentSectionIndex == 1)
         #expect(viewModel.currentQuestion?.id == 7)
-        #expect(!viewModel.answers.contains { $0.questionId == 6 })
-        #expect(viewModel.shownQuestionCount(in: viewModel.sections[0]) == 3)
-    }
-
-    @Test func diagnosisMakesTreatmentQuestionRequired() {
-        let viewModel = answerDemographics(diagnosisOptionId: 1)
-        #expect(viewModel.currentQuestion?.id == 6)
-        viewModel.freeTextAnswer = "  "
-        #expect(!viewModel.canProceedQuestion)
-        viewModel.freeTextAnswer = "Bireysel psikoterapi"
-        #expect(viewModel.canProceedQuestion)
-        viewModel.nextQuestion()
-        #expect(viewModel.currentQuestion?.id == 7)
-    }
-
-    @Test func goingBackPastSkippedQuestionReturnsToDiagnosis() {
-        let viewModel = answerDemographics(diagnosisOptionId: 2)
-        viewModel.previousQuestion()
-        #expect(viewModel.currentQuestion?.id == 5)
         #expect(viewModel.answers.map(\.questionId) == [1, 2])
+        #expect(viewModel.shownQuestionCount(in: viewModel.sections[0]) == 2)
 
-        viewModel.selectOption(1)
-        viewModel.nextQuestion()
-        #expect(viewModel.currentQuestion?.id == 6)
+        viewModel.previousQuestion()
+        #expect(viewModel.currentSectionIndex == 0)
+        #expect(viewModel.currentQuestion?.id == 2)
+    }
+
+    @Test func reflectionScaleHasFiveSteps() {
+        #expect(ReflectionRating.allCases.map(\.rawValue) == [1, 2, 3, 4, 5])
+        #expect(ReflectionRating.allCases.map(\.titleKey) == (1...5).map { "reflection_rating_\($0)" })
+    }
+
+    /// The wording requested in the professor's review, in both languages.
+    @Test func reflectionLabelsUseReviewedWording() {
+        let localization = LocalizationManager()
+        // Soft hyphens (U+00AD) only add line-break points; the visible wording is checked without them.
+        let label = { (rating: ReflectionRating) in
+            localization.localizedString(rating.titleKey).replacingOccurrences(of: "\u{00AD}", with: "")
+        }
+        localization.setLanguage(.turkish)
+        #expect(ReflectionRating.allCases.map(label)
+                == ["Çok daha kötü", "Biraz daha kötü", "Aynı / Değişmedi", "Biraz daha iyi", "Çok daha iyi"])
+        #expect(localization.localizedString(ReflectionTopic.happinessAndHope.titleKey) == "Mutluluk ve umut")
+
+        localization.setLanguage(.persian)
+        #expect(ReflectionRating.allCases.map(label)
+                == ["خیلی بدتر", "کمی بدتر", "مثل قبل / تغییری نکرده", "کمی بهتر", "خیلی بهتر"])
     }
 }

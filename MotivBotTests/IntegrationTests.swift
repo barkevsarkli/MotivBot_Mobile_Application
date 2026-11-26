@@ -549,7 +549,9 @@ struct PersistenceTests {
         #expect(relaunched.currentScreen == .questionnaire)
         #expect(relaunched.emotionText == persianText)
         #expect(relaunched.answers.count == 2)
-        #expect(relaunched.currentQuestion?.id == 5)
+        // Demographics end after gender, so the session resumes at the first PHQ-9 question.
+        #expect(relaunched.currentSectionIndex == 1)
+        #expect(relaunched.currentQuestion?.id == 7)
         #expect(relaunched.resumableSession == nil)
     }
 
@@ -570,6 +572,23 @@ struct PersistenceTests {
         var broken = session()
         broken.answers = [SavedAnswer(sectionId: 1, questionId: 2, value: .option(id: 99))]
         store.session = broken
+
+        let viewModel = WellBeingViewModel(service: StubService(.failure(.decoding)), store: store)
+        #expect(viewModel.resumableSession == nil)
+        #expect(store.session == nil)
+    }
+
+    /// A session saved before the diagnosis question (id 5) was removed cannot be resumed.
+    @Test func sessionWithRemovedDiagnosisAnswerIsDiscarded() {
+        let store = InMemorySessionStore()
+        var old = session()
+        old.answers = [
+            SavedAnswer(sectionId: 1, questionId: 1, value: .text("30")),
+            SavedAnswer(sectionId: 1, questionId: 2, value: .option(id: 2)),
+            SavedAnswer(sectionId: 1, questionId: 5, value: .option(id: 2)),
+        ]
+        old.questionIndex = 3
+        store.session = old
 
         let viewModel = WellBeingViewModel(service: StubService(.failure(.decoding)), store: store)
         #expect(viewModel.resumableSession == nil)

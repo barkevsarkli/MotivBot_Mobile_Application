@@ -103,22 +103,6 @@ struct TestData {
                         AnswerOption(id: 2, textKey: "qa_2_opt2", value: 2),
                         AnswerOption(id: 3, textKey: "qa_2_opt3", value: 3)
                     ]
-                ),
-                Question(
-                    id: 5,
-                    textKey: "qa_5",
-                    type: .singleChoice,
-                    options: [
-                        AnswerOption(id: 1, textKey: "qa_5_opt1", value: 1),
-                        AnswerOption(id: 2, textKey: "qa_5_opt2", value: 0)
-                    ]
-                ),
-                // Asked, and required, only after "yes" to qa_5.
-                Question(
-                    id: 6,
-                    textKey: "qa_6",
-                    type: .freeText,
-                    showIf: QuestionCondition(questionId: 5, optionId: 1)
                 )
             ]
         ),
@@ -292,4 +276,39 @@ enum WellBeingDimension: String, CaseIterable, Identifiable {
         case (false, .high), (true, .no): return .care
         }
     }
+}
+
+// MARK: - Reflection
+
+/// What the reflection asks about after the motivational messages. Each topic is rated on five steps.
+enum ReflectionTopic: String, CaseIterable, Identifiable, Hashable {
+    case selfEsteem = "self_esteem"
+    case fearAndWorry = "fear_and_worry"
+    case happinessAndHope = "happiness_and_hope"
+    case stress
+
+    var id: String { rawValue }
+    var titleKey: String { "reflection_topic_\(rawValue)" }
+
+    var systemImage: String {
+        switch self {
+        case .selfEsteem: return "person.crop.circle.badge.checkmark"
+        case .fearAndWorry: return "cloud.drizzle"
+        case .happinessAndHope: return "sun.max"
+        case .stress: return "bolt.heart"
+        }
+    }
+}
+
+/// How the user feels about a topic after reading the messages, from 1 (much worse) through
+/// 3 (the same) to 5 (much better). The number is what goes into the CSV.
+enum ReflectionRating: Int, CaseIterable, Identifiable, Hashable {
+    case muchWorse = 1
+    case slightlyWorse = 2
+    case same = 3
+    case slightlyBetter = 4
+    case muchBetter = 5
+
+    var id: Int { rawValue }
+    var titleKey: String { "reflection_rating_\(rawValue)" }
 }

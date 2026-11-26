@@ -27,16 +27,6 @@
 "qa_2_opt3" = "نمی‌خواهم بگویم";
 "previous_button" = "قبلی";
 
-"qa_5" = "آیا تاکنون توسط یک متخصص بهداشت روان تشخیصی برای شما داده شده است؟ (اگر پاسخ شما «بله» است، لطفاً تشخیص را بنویسید)";
-"qa_5_opt1" = "بله";
-"qa_5_opt2" = "خیر";
-
-"qa_6" = "اگر قبلاً درمان روان‌شناختی و/یا روان‌پزشکی دریافت کرده‌اید، چه نوع درمان/درمان‌هایی دریافت کرده‌اید؟ (اگر قبلاً درمان روان‌شناختی و/یا روان‌پزشکی دریافت نکرده‌اید، این سؤال را خالی بگذارید)";
-"qa_6_opt1" = "روان‌درمانی فردی";
-"qa_6_opt2" = "روان‌درمانی گروهی";
-"qa_6_opt3" = "دارودرمانی";
-"qa_6_opt4" = "سایر (لطفاً مشخص کنید)";
-
 /* ═══ بخش B: پرسشنامه سلامت بیمار (b.pdf) ═══ */
 "section_b_title" = "پرسشنامه سلامت بیمار";
 "section_b_description" = "در یک هفته گذشته، مشکلات زیر چقدر شما را آزار داده است؟";
@@ -163,18 +153,22 @@
 /* صفحه ۴: نتیجه */
 "result_title" = "آنچه امروز به اشتراک گذاشتید";
 "reflection_title" = "تأمل نهایی";
-"reflection_question" = "بعد از این بررسی چه احساسی دارید؟";
-"reflection_required_hint" = "برای تکمیل جلسه یکی را انتخاب کنید.";
+"reflection_question" = "پس از خواندن این جمله‌ها، دربارهٔ موارد زیر چه احساسی دارید؟";
+"reflection_topic_self_esteem" = "عزت نفس";
+"reflection_topic_fear_and_worry" = "ترس و نگرانی";
+"reflection_topic_happiness_and_hope" = "شادی و امید شما";
+"reflection_topic_stress" = "استرس";
+"reflection_rating_1" = "خیلی بدتر";
+"reflection_rating_2" = "کمی بدتر";
+"reflection_rating_3" = "مثل قبل / تغییری نکرده";
+"reflection_rating_4" = "کمی بهتر";
+"reflection_rating_5" = "خیلی بهتر";
+"reflection_required_hint" = "برای پایان دادن به جلسه، هر چهار مورد را ارزیابی کنید.";
 "reflection_optional" = "نظرات خود را به اشتراک بگذارید (اختیاری)";
 "reflection_placeholder" = "تأملات خود را اینجا بنویسید...";
 "submit_reflection" = "تکمیل جلسه";
 
 /* احساسات */
-"feeling_worse" = "بدتر";
-"feeling_same" = "همان";
-"feeling_slightly_better" = "کمی بهتر";
-"feeling_better" = "بهتر";
-"feeling_much_better" = "خیلی بهتر";
 
 /* تکمیل */
 "completion_title" = "جلسه تکمیل شد";
@@ -227,12 +221,12 @@
 "message_category_reframing" = "نگاهی دیگر";
 "message_category_action" = "یک قدم کوچک";
 "message_category_other" = "برای شما";
-"messages_swipe_hint" = "جمله‌ای را که نپسندیدید به چپ و جمله‌ای را که پسندیدید به راست بکشید.";
-"message_like" = "پسندیدم";
-"message_dislike" = "نپسندیدم";
-"messages_done_title" = "همهٔ جمله‌ها را ارزیابی کردید";
-"messages_done_body" = "از بازخورد شما سپاسگزاریم.";
+"messages_swipe_hint" = "برای دیدن جمله‌های دیگر، کارت را به راست یا چپ بکشید یا روی پیکان بزنید.";
+"messages_done_title" = "همهٔ جمله‌ها را خواندید";
+"messages_done_body" = "در پایین می‌توانید بگویید این جمله‌ها چه حسی به شما دادند.";
 "messages_replay" = "دیدن دوبارهٔ جمله‌ها";
+"message_next" = "جملهٔ بعدی";
+"messages_swipe_info" = "راهنمای کشیدن کارت‌ها";
 
 /* MARK: integration */
 "error_service_busy" = "سرویس تحلیل در حال حاضر بسیار شلوغ است. لطفاً چند دقیقه دیگر دوباره تلاش کنید.";

@@ -84,9 +84,8 @@ class WellBeingViewModel {
     
     // Result / Reflection state
     var reflectionText: String = ""
-    var selectedFeelingIndex: Int? = nil
-    /// Swipe feedback on the motivational messages: true when liked (swiped right), false when disliked (swiped left).
-    private(set) var messageFeedback: [PredictionResponse.Message: Bool] = [:]
+    /// How the user feels about each `ReflectionTopic` after reading the messages. All four are required.
+    private(set) var reflectionRatings: [ReflectionTopic: ReflectionRating] = [:]
     var isCompleted: Bool = false
     var showShareSheet: Bool = false
     var csvFileURL: URL? = nil
@@ -124,13 +123,6 @@ class WellBeingViewModel {
     
     let sections = TestData.sections
     
-    let feelingEmojis: [(emoji: String, labelKey: String)] = [
-        ("😢", "feeling_worse"),
-        ("😐", "feeling_same"),
-        ("🙂", "feeling_slightly_better"),
-        ("😊", "feeling_better"),
-        ("🤩", "feeling_much_better")
-    ]
     
     
     var currentSection: TestSection? {
@@ -440,11 +432,14 @@ class WellBeingViewModel {
                 csvString += "\(dimension.rawValue),\(String(format: "%.3f", probability)),\(level.rawValue)\n"
             }
             csvString += "elevated_risk,\(elevatedRisk)\n"
-            csvString += "\nMessage category,Relevance,Message,Feedback\n"
+            csvString += "\nMessage category,Relevance,Message\n"
             for message in prediction.messages {
                 let text = message.text.replacingOccurrences(of: "\n", with: " ").replacingOccurrences(of: ",", with: ";")
-                let feedback = messageFeedback[message].map { $0 ? "liked" : "disliked" } ?? ""
-                csvString += "\(message.category),\(message.score),\(text),\(feedback)\n"
+                csvString += "\(message.category),\(message.score),\(text)\n"
+            }
+            csvString += "\nReflection after the messages,Rating (1 = much worse; 2 = a bit worse; 3 = same; 4 = a bit better; 5 = much better)\n"
+            for topic in ReflectionTopic.allCases {
+                csvString += "\(topic.rawValue),\(reflectionRatings[topic].map { "\($0.rawValue)" } ?? "")\n"
             }
         }
 
@@ -661,17 +656,17 @@ class WellBeingViewModel {
 
     // MARK: - Reflection
     
-    /// Records a swipe on a message and rewrites the CSV so the feedback is shared with the results.
-    func rateMessage(_ message: PredictionResponse.Message, liked: Bool) {
-        messageFeedback[message] = liked
+    /// Records how the user feels about one topic and rewrites the CSV so the rating is shared with the results.
+    func rateReflection(_ topic: ReflectionTopic, _ rating: ReflectionRating) {
+        reflectionRatings[topic] = rating
         if prediction != nil {
             saveCSV()
         }
     }
 
-    /// The feeling is required; the note stays optional.
+    /// Every topic must be rated; the note stays optional.
     var canSubmitReflection: Bool {
-        selectedFeelingIndex != nil
+        ReflectionTopic.allCases.allSatisfy { reflectionRatings[$0] != nil }
     }
 
     func submitReflection() {
@@ -712,8 +707,7 @@ class WellBeingViewModel {
             resultDate = nil
             elevatedRisk = false
             reflectionText = ""
-            selectedFeelingIndex = nil
-            messageFeedback = [:]
+            reflectionRatings = [:]
             isCompleted = false
             showShareSheet = false
             csvFileURL = nil

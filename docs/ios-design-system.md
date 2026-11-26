@@ -116,8 +116,10 @@ Two text modifiers:
 | `SegmentedProgressBar` | `DSProgress.swift` | One segment per section, with width weighted by question count. Mirrors in RTL. VoiceOver reads it as a single value. |
 | `ProgressRing` | `DSProgress.swift` | Resume prompt. Mirrors in RTL. |
 | `LevelIndicator` | `DSProgress.swift` | 3 steps (filled or outlined) instead of percentages. Readable in black and white. |
-| `MessageCard` | `DSResultComponents.swift` | A large slide (at least 380 pt tall, 32 pt corners) tinted by `MessageCategoryStyle` (validation, reframing, action, other): the category in a pill, an opening quote mark, the message in `DSFont.quote` (title2), and the category symbol as a faint watermark. |
-| `MessageDeck` | `DSResultComponents.swift` | The messages as a stack of slides; up to two cards peek out behind the top one, and every slide takes the height of the tallest message so the deck does not jump. Swipe right = liked, left = not liked; the directions stay physical in Persian. The 64 pt like (filled brand) and dislike buttons and VoiceOver actions do the same; progress is a row of dots. Reduce Motion: the card fades out instead of flying off. |
+| `MessageCard` | `DSResultComponents.swift` | A large slide (at least 380 pt tall, 32 pt corners) tinted by `MessageCategoryStyle` (validation, reframing, action, other): the category in a pill, the message in `DSFont.quote` (title2), and the category symbol as a faint watermark. When the pipeline sends an author the message is styled as a quote: an opening quote mark above it and "— Author" below it. Without an author neither is shown, so the message never looks like an uncredited quote. |
+| `MessageDeck` | `DSResultComponents.swift` | The messages as a stack of slides; up to two cards peek out behind the top one, and every slide takes the height of the tallest message so the deck does not jump. Swiping the top card either way, the 64 pt arrow (`arrow.forward`, so it points left in Persian) or the VoiceOver action shows the next message; nothing is rated on the cards. Progress is a row of dots. Reduce Motion: the card fades out instead of flying off. |
+| `SwipeTip` | `DSResultComponents.swift` | The pop-up that explains swiping. It opens by itself about a second after the results appear, closes after five seconds, and opens again from the info button next to the messages title. |
+| `ReflectionRatingRow` | `DSResultComponents.swift` | One reflection topic with five segments (much worse, a bit worse, same, a bit better, much better). Labels wrap onto up to three lines; the segments wrap into two rows at accessibility sizes. |
 | `Banner` | `DSResultComponents.swift` | `info` (sky) and `notice` (honey) only. There is no error style on purpose. |
 | `ThemeToggle` | `DSControls.swift` | Follows the system by default. A tap switches to the opposite of the system appearance, the next tap back to the system. Stored in `@AppStorage("themePreference")`, applied in `MindWellApp`. |
 | `LanguagePicker` | `DSControls.swift` | Each language is written in its own script. Disabled when the language is locked. |
@@ -223,9 +225,9 @@ The screenshots predate the message deck and still show the support card and tod
 The results screen has these parts, in this order:
 
 1. Header: "What you shared today" and a short subtitle.
-2. **Messages**: up to three cards ordered validation, reframing, action, shown one at a time as a `MessageDeck`.
-   Swiping right means the message was liked, left that it was not. The feedback is kept in
-   `viewModel.messageFeedback` and written to the CSV. When every card is rated a thank-you card offers to show them
+2. **Messages**: up to three slides ordered validation, reframing, action, shown one at a time as a `MessageDeck`.
+   Swiping either way or tapping the arrow shows the next message. A small pop-up (`SwipeTip`) explains this once,
+   and the info button next to the title shows it again. When every message has been seen a card offers to show them
    again.
 3. Disclaimer: this is not a diagnosis.
 4. **Export** is not on the page any more. A download button (`square.and.arrow.down`) sits next to the theme
@@ -233,8 +235,9 @@ The results screen has these parts, in this order:
    a miniature of the summary page, a PDF row (A4, for printing) and a PNG row (for sharing), and the CSV share
    button when `csvFileURL` is set. The chosen file is rendered in the sheet, the sheet closes, and the share
    sheet opens, so two sheets never overlap.
-5. **Reflection**: feeling chips (text only, no emoji), an optional note, and Submit. A feeling is required: Submit
-   stays disabled until one is chosen.
+5. **Reflection**: after reading the messages, the user rates four topics (self-esteem, fear and worry, happiness and
+   hope, stress) on five steps: much worse (1), a bit worse (2), same / unchanged (3), a bit better (4), much better (5).
+   Every topic must be rated before Submit is enabled; the note stays optional. The ratings are written to the CSV as 1-5.
 6. **Completion** (after Submit): a leaf that bounces once, a thank-you message, and Restart. Restart also deletes
    exported files.
 
@@ -323,7 +326,10 @@ the behaviour testable and keep logic out of views.
 
 ## Notes
 
-- Questions, options and scoring are unchanged. The `qa_5` question is untouched.
+- Demographics ask only age and gender. The diagnosis (`qa_5`) and treatment (`qa_6`) questions were removed after
+  the professor's review; question ids 7 and up are unchanged. A half-finished session saved by an older build that
+  reached those questions no longer matches the questionnaire, so it is discarded on launch instead of resumed.
+- Other questions, options and scoring are unchanged.
 - The CSV share is unchanged and left to the backend agents.
 - Reflection storage will be added later. The UI makes no claims about it.
 - All new strings are in `tr.lproj` and `fa.lproj/Localizable.strings`, under `/* MARK: design */`. Both files pass

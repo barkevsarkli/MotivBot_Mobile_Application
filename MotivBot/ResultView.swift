@@ -12,6 +12,9 @@ struct ResultView: View {
     @State private var pendingExportFile: ResultExportFile?
     @State private var pendingCSVShare = false
     @State private var hasAppeared = false
+    /// The swipe tip pops up once by itself; the info button next to the messages title shows it again.
+    @State private var showSwipeTip = false
+    @State private var hasShownSwipeTip = false
 
     var body: some View {
         @Bindable var viewModel = viewModel
@@ -120,23 +123,53 @@ struct ResultView: View {
         let ordered = MessageCategoryStyle.ordered(messages)
 
         return VStack(alignment: .leading, spacing: DSSpacing.s) {
-            sectionTitle("messages_title")
+            HStack(spacing: DSSpacing.xs) {
+                sectionTitle("messages_title")
+                Spacer(minLength: 0)
+                swipeTipButton
+            }
             MessageDeck(
                 messages: ordered,
                 strings: MessageDeck.Strings(
                     hint: localization.localizedString("messages_swipe_hint"),
-                    like: localization.localizedString("message_like"),
-                    dislike: localization.localizedString("message_dislike"),
+                    next: localization.localizedString("message_next"),
                     doneTitle: localization.localizedString("messages_done_title"),
                     doneBody: localization.localizedString("messages_done_body"),
                     replay: localization.localizedString("messages_replay"),
                     categoryTitle: { localization.localizedString($0.titleKey) }
-                ),
-                startIndex: ordered.firstIndex { viewModel.messageFeedback[$0] == nil } ?? ordered.count
-            ) { message, liked in
-                viewModel.rateMessage(message, liked: liked)
-            }
+                )
+            )
         }
+        .task { await showSwipeTipOnce() }
+    }
+
+    private var swipeTipButton: some View {
+        Button {
+            showSwipeTip = true
+        } label: {
+            Image(systemName: "info.circle")
+                .font(.system(.body, weight: .semibold))
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                .foregroundStyle(Color.dsBrand)
+                .frame(width: DSSize.minTap, height: DSSize.minTap)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.dsPressable)
+        .accessibilityLabel(localization.localizedString("messages_swipe_info"))
+        .popover(isPresented: $showSwipeTip, arrowEdge: .top) {
+            SwipeTip(text: localization.localizedString("messages_swipe_hint"))
+                .presentationCompactAdaptation(.popover)
+        }
+    }
+
+    /// Pops the swipe tip up shortly after the cards appear, and closes it again after a few seconds.
+    private func showSwipeTipOnce() async {
+        guard !hasShownSwipeTip else { return }
+        guard (try? await Task.sleep(for: .seconds(1.2))) != nil else { return }
+        hasShownSwipeTip = true
+        showSwipeTip = true
+        guard (try? await Task.sleep(for: .seconds(5))) != nil else { return }
+        showSwipeTip = false
     }
 
     private var disclaimer: some View {
@@ -182,19 +215,21 @@ struct ResultView: View {
                     .dsBodyText()
             }
 
-            ChipGroup {
-                ForEach(Array(viewModel.feelingEmojis.enumerated()), id: \.offset) { index, feeling in
-                    SelectableChip(
-                        title: localization.localizedString(feeling.labelKey),
-                        isSelected: viewModel.selectedFeelingIndex == index
-                    ) {
+            VStack(alignment: .leading, spacing: DSSpacing.m) {
+                ForEach(ReflectionTopic.allCases) { topic in
+                    ReflectionRatingRow(
+                        title: localization.localizedString(topic.titleKey),
+                        systemImage: topic.systemImage,
+                        ratingTitle: { localization.localizedString($0.titleKey) },
+                        selection: viewModel.reflectionRatings[topic]
+                    ) { rating in
                         withAnimation(DSMotion.quick) {
-                            viewModel.selectedFeelingIndex = index
+                            viewModel.rateReflection(topic, rating)
                         }
                     }
                 }
             }
-            .sensoryFeedback(.selection, trigger: viewModel.selectedFeelingIndex)
+            .sensoryFeedback(.selection, trigger: viewModel.reflectionRatings)
 
             if !viewModel.canSubmitReflection {
                 Text(localization.localizedString("reflection_required_hint"))
