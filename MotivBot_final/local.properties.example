@@ -1,3 +1,11 @@
 sdk.dir=/Users/<you>/Library/Android/sdk
 # Optional: point the app at another copy of the pipeline Space.
 # MOTIVBOT_API_BASE_URL=https://flightmaestro-motivbot-pipeline.hf.space
+
+# Release signing for ./gradlew assembleRelease / bundleRelease. Keep the keystore outside the repo
+# and back it up: every update must be signed with the same key. The same names work as environment
+# variables on CI.
+# MOTIVBOT_KEYSTORE_FILE=/Users/<you>/Keystores/motivbot-release.jks
+# MOTIVBOT_KEYSTORE_PASSWORD=...
+# MOTIVBOT_KEY_ALIAS=motivbot
+# MOTIVBOT_KEY_PASSWORD=...

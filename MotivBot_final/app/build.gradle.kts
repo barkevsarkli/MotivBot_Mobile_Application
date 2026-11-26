@@ -9,19 +9,25 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
+val localProperties = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) file.inputStream().use(::load)
+}
+
+/** A setting from local.properties, or else from the environment (for CI). */
+fun setting(name: String): String? = localProperties.getProperty(name) ?: System.getenv(name)
+
 /**
  * The MotivBot pipeline on Hugging Face Spaces, the same one the iOS app calls (`MotivBotAPIBaseURL`
  * in Info.plist). Override it with `MOTIVBOT_API_BASE_URL` in local.properties or the environment.
  */
-val apiBaseUrl: String = run {
-    val local = rootProject.file("local.properties")
-    val fromLocal = if (local.exists()) {
-        Properties().apply { local.inputStream().use(::load) }.getProperty("MOTIVBOT_API_BASE_URL")
-    } else {
-        null
-    }
-    fromLocal ?: System.getenv("MOTIVBOT_API_BASE_URL") ?: "https://flightmaestro-motivbot-pipeline.hf.space"
-}
+val apiBaseUrl: String = setting("MOTIVBOT_API_BASE_URL") ?: "https://flightmaestro-motivbot-pipeline.hf.space"
+
+/**
+ * The release keystore, which is kept outside the repo. Without these settings a release build is
+ * left unsigned. See local.properties.example.
+ */
+val releaseKeystore: File? = setting("MOTIVBOT_KEYSTORE_FILE")?.let(::file)?.takeIf { it.exists() }
 
 android {
     namespace = "com.motivbot.app"
@@ -43,11 +49,23 @@ android {
         resourceConfigurations += setOf("tr", "fa")
     }
 
+    signingConfigs {
+        if (releaseKeystore != null) {
+            create("release") {
+                storeFile = releaseKeystore
+                storePassword = setting("MOTIVBOT_KEYSTORE_PASSWORD")
+                keyAlias = setting("MOTIVBOT_KEY_ALIAS")
+                keyPassword = setting("MOTIVBOT_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         debug {
             applicationIdSuffix = ".debug"
         }
         release {
+            signingConfig = signingConfigs.findByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
